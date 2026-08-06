@@ -13,6 +13,7 @@
 
     # Git
     ~/.gitconfig: git/gitconfig
+    ~/.config/git/hooks/pre-commit: git/hooks/pre-commit
 
     # Claude Code — individual children only. ~/.claude also holds
     # projects/, history.jsonl and caches, which must not be tracked.
@@ -37,6 +38,10 @@
       url: https://github.com/asdf-vm/asdf-nodejs
       versions:
         - 24.18.0
+    - plugin: gitleaks
+      url: https://github.com/jmcvetta/asdf-gitleaks.git
+      versions:
+        - 8.30.1
 
 # The asdf directive above reports success even when it installs nothing.
 - shell:

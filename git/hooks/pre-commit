@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Block commits that stage credential material.
+#
+# Installed globally via core.hooksPath. A repo setting its own core.hooksPath
+# overrides this, so repos with their own hooks are unaffected.
+#
+# Fails closed: no scanner means no commit. A secret scanner that silently
+# skips itself is worse than none, because it reads as protection.
+set -uo pipefail
+
+export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks not found — run ~/dotfiles/install" >&2
+    exit 1
+fi
+
+exec gitleaks git --staged --no-banner --redact
