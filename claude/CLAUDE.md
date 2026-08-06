@@ -11,9 +11,9 @@ GFM/YAML, no frontmatter or generator dialects.
 
 ## Shell environment
 - Bash tool runs **non-interactive** shells that **don't source `~/.bashrc`** — env from the login
-  profile isn't guaranteed. When a command needs the nvm-managed `node`, source nvm first:
-  `. "$HOME/.nvm/nvm.sh"`. That puts the active version on `PATH` with no version number baked in,
-  so it survives node upgrades.
+  profile isn't guaranteed. `node` is normally on `PATH` regardless, inherited from the shell that
+  launched Claude Code (`NVM_CD_FLAGS` in the environment is the tell). If it is missing, source nvm:
+  `. "$HOME/.nvm/nvm.sh"` — no version number in the path, so it survives node upgrades.
 - `python3`, `jq` (`/usr/bin/jq`), and Docker are available.
 - **In the Bash tool's shell, `grep` is not GNU grep.** Claude Code injects a `grep` shell function
   that re-execs its own binary as ugrep (`exec -a ugrep "$CLAUDE_CODE_EXECPATH" -G --ignore-files …`).
