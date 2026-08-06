@@ -15,6 +15,15 @@ BRANCH="main"
 
 cd "${REPO}" || exit 1
 
+# The timer and the SessionEnd hook can fire at the same moment; two runs would
+# collide on .git/index.lock. A skipped run is not a failure — the next one
+# picks up whatever this one would have done.
+exec 9>"${HOME}/.dotfiles-sync.lock"
+if ! flock -n 9; then
+    echo "another sync is running; skipping"
+    exit 0
+fi
+
 fail() {
     printf '%s\n' "$*" >"${MARKER}"
     echo "dotfiles sync: $*" >&2
