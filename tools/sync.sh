@@ -9,8 +9,8 @@
 # next shell. A sync that stops silently is worse than no sync.
 set -uo pipefail
 
-REPO="${HOME}/dotfiles"
-MARKER="${HOME}/.dotfiles-sync-failed"
+REPO="${DOTFILES_REPO:-${HOME}/dotfiles}"
+MARKER="${DOTFILES_MARKER:-${HOME}/.dotfiles-sync-failed}"
 BRANCH="main"
 
 cd "${REPO}" || exit 1
