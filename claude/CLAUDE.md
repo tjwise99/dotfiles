@@ -171,6 +171,10 @@ request; GitHub work goes through `gh`, browser automation through the Playwrigh
   traps: an agent that overwrites its report in place gives a reader between two writes stale text with
   nothing indicating which version they hold, so ask for the head SHA in the file; and messages cross, so
   a ruling and a status report can each be written without sight of the other.
+- **Tell a subagent it may refuse your number, and treat refusal as signal.** An agent twice declined a
+  word target rather than silently pick facts to drop; both times the target was wrong, not the writing.
+  A compliant one would have hit it and hidden the cost. When delegating verification, name the baseline
+  — otherwise two true numbers disagree.
 - **Freeze the branch while reviewers read it, and mean it.** On #68 I insisted on this, then edited the
   exact file a reviewer was attacking. Its findings survived only because it tested clean `git archive`
   extractions and recorded the md5 of what it read. Brief reviewers to do that; do not rely on it.
@@ -195,6 +199,9 @@ request; GitHub work goes through `gh`, browser automation through the Playwrigh
   which had survived a grep for the deleted mechanism's *name* because the comment described it
   without naming it. Nothing failed, CI was green, and the false claim would have reached merge. The
   same rule binds every claim of the form "I checked X": run it, or say plainly that you did not.
+- **Check that the claim you write is the claim you tested.** A correct 404 against one host became
+  "this machine cannot be rebuilt" at the top of a handoff; the archive had moved and still served the
+  exact package. The check was right, the sentence wasn't — and the sentence is what gets acted on.
 - **Verify a ticket's premise before building against it.** Reproduce the defect it asserts against the
   checks that exist today, and design only after it reproduces. #80 described a re-parent the gate
   already caught; an implementation, its wiring, five documents and a review pass were all built before
