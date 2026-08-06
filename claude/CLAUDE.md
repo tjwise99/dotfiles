@@ -77,12 +77,19 @@ anyone meant it to be.
 
 **Writing to any of these writes to a public repo**, because they are symlinks into it:
 
-| Path | |
+| Symlink — do not write here | Real path — write here |
 |---|---|
-| `~/.claude/CLAUDE.md` | this file |
-| `~/.claude/agents/`, `~/.claude/skills/`, `~/.claude/settings.json` | |
-| `~/lessons/`, `~/PROJECT_PLAYBOOK.md` | |
-| `~/.bashrc`, `~/.gitconfig` | |
+| `~/.claude/CLAUDE.md` | `~/dotfiles/claude/CLAUDE.md` (this file) |
+| `~/.claude/settings.json` | `~/dotfiles/claude/settings.json` |
+| `~/.claude/agents/`, `~/.claude/skills/` | `~/dotfiles/claude/agents/`, `~/dotfiles/claude/skills/` |
+| `~/lessons/` | `~/dotfiles/notes/lessons/` |
+| `~/PROJECT_PLAYBOOK.md` | `~/dotfiles/notes/PROJECT_PLAYBOOK.md` |
+| `~/.bashrc` | `~/dotfiles/bash/bashrc` |
+| `~/.gitconfig` | `~/dotfiles/git/gitconfig` |
+
+**Write to the right column.** The Edit tool refuses to write through a symlink, so the left column
+costs a wasted call. Targets verified with `readlink -f`, not copied from memory — if a path here
+does not resolve, re-check rather than guessing the layout.
 
 **A gitleaks pre-commit hook runs, and it only catches credential-shaped strings.** It will not stop
 an SSID, a MAC address, an internal IP or subnet, a hostname, a device serial, a router model, a
