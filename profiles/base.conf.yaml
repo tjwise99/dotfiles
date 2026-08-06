@@ -29,6 +29,10 @@
     # Toolchain
     ~/.tool-versions: asdf/tool-versions
 
+    # Sync timer
+    ~/.config/systemd/user/dotfiles-sync.service: systemd/dotfiles-sync.service
+    ~/.config/systemd/user/dotfiles-sync.timer: systemd/dotfiles-sync.timer
+
 - shell:
     - command: ./asdf/install-asdf.sh
       description: Install asdf
@@ -49,3 +53,6 @@
       description: Verify the toolchain actually installed
       stdout: true
       stderr: true
+    - command: ./systemd/enable-timer.sh
+      description: Enable the sync timer
+      stdout: true

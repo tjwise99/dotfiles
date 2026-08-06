@@ -1,0 +1,7 @@
+[Unit]
+Description=Sync the dotfiles repo with origin
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/tools/sync.sh

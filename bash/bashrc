@@ -132,3 +132,8 @@ if [ -n "$GITHUB_MCP_PAT" ] && [ -z "$GH_TOKEN" ]; then
   echo $GH_TOKEN | gh auth login --with-token
 fi
 # <<< claude gh auth <<<
+
+# The sync timer is silent on success; this is how a failure reaches you.
+if [ -f "$HOME/.dotfiles-sync-failed" ]; then
+  printf '\033[33mdotfiles sync failed:\033[0m %s\n' "$(cat "$HOME/.dotfiles-sync-failed")"
+fi

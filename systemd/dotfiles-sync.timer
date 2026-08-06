@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync the dotfiles repo every 20 minutes
+
+[Timer]
+# OnCalendar rather than OnUnitActiveSec: Persistent= only catches up missed
+# runs for calendar timers, which is what a laptop that is often closed needs.
+OnCalendar=*:0/20
+Persistent=true
+
+[Install]
+WantedBy=timers.target
