@@ -11,9 +11,9 @@ GFM/YAML, no frontmatter or generator dialects.
 
 ## Shell environment
 - Bash tool runs **non-interactive** shells that **don't source `~/.bashrc`** — env from the login
-  profile isn't guaranteed. When a command needs the nvm-managed `node`, prepend its bin dir:
-  `export PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH`. Do **not** `source ~/.nvm/nvm.sh` — it
-  exits 11 (`~/.npmrc` prefix/globalconfig conflict) — and do not modify `~/.npmrc` to "fix" it.
+  profile isn't guaranteed. When a command needs the nvm-managed `node`, source nvm first:
+  `. "$HOME/.nvm/nvm.sh"`. That puts the active version on `PATH` with no version number baked in,
+  so it survives node upgrades.
 - `python3`, `jq` (`/usr/bin/jq`), and Docker are available.
 - **In the Bash tool's shell, `grep` is not GNU grep.** Claude Code injects a `grep` shell function
   that re-execs its own binary as ugrep (`exec -a ugrep "$CLAUDE_CODE_EXECPATH" -G --ignore-files …`).
@@ -57,7 +57,9 @@ built-in `--jq`, purpose-built subcommands).
 **None configured** (`claude mcp list` → "No MCP servers configured"). Both were removed at the user's
 request; GitHub work goes through `gh`, browser automation through the Playwright CLI. To restore:
 - **github** (removed 2026-07-18): `claude mcp add --transport http github https://api.githubcopilot.com/mcp --header "Authorization: Bearer ${GITHUB_MCP_PAT}"`
-- **playwright** (removed 2026-07-15): `claude mcp add-json playwright '{"type":"stdio","command":"/home/tjwise/.nvm/versions/node/v24.18.0/bin/npx","args":["-y","@playwright/mcp@latest"],"env":{}}'` (nvm npx path — there's no system node)
+- **playwright** (removed 2026-07-15): MCP spawns without a shell, so `command` must be an absolute
+  npx path and there's no system node — get the current one with `. ~/.nvm/nvm.sh && which npx`, then
+  `claude mcp add-json playwright '{"type":"stdio","command":"<npx-path>","args":["-y","@playwright/mcp@latest"],"env":{}}'`
 
 ## Working style
 - **`@`-mentioning an agent definition file means adopt that persona inline** — read the definition

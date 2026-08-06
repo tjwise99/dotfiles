@@ -10,9 +10,8 @@
     ~/.bashrc: bash/bashrc
     ~/.profile: bash/profile
 
-    # Git / npm
+    # Git
     ~/.gitconfig: git/gitconfig
-    ~/.npmrc: npm/npmrc
 
     # Claude Code — individual children only. ~/.claude also holds
     # projects/, history.jsonl and caches, which must not be tracked.
