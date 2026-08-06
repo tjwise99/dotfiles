@@ -1,0 +1,5 @@
+# WSL-only links.
+#
+# Empty by design: ~/.aws and ~/.azure are symlinks into /mnt/c/Users/tjwis
+# and belong to the Windows profile, so they are neither tracked nor deployed.
+- link: {}

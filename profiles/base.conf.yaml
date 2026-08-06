@@ -1,0 +1,26 @@
+- defaults:
+    link:
+      relink: true
+      create: true
+
+- clean: ["~", "~/.claude"]
+
+- link:
+    # Shell
+    ~/.bashrc: bash/bashrc
+    ~/.profile: bash/profile
+
+    # Git / npm
+    ~/.gitconfig: git/gitconfig
+    ~/.npmrc: npm/npmrc
+
+    # Claude Code — individual children only. ~/.claude also holds
+    # projects/, history.jsonl and caches, which must not be tracked.
+    ~/.claude/CLAUDE.md: claude/CLAUDE.md
+    ~/.claude/agents: claude/agents
+    ~/.claude/skills: claude/skills
+    ~/.claude/commands: claude/commands
+
+    # Notes
+    ~/lessons: notes/lessons
+    ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md

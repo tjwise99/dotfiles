@@ -1,0 +1,12 @@
+local/*
+!local/.gitkeep
+
+# Machine-local or credential-bearing — never track.
+claude/settings.local.json
+claude/.credentials.json
+claude/projects/
+claude/history.jsonl
+*.key
+*.pem
+*_token
+.DS_Store

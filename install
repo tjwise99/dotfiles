@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${BASEDIR}"
+
+detect_host() {
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        echo wsl
+        return
+    fi
+    if [ -r /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        . /etc/os-release
+        case "${ID:-}" in
+            manjaro | arch) echo manjaro; return ;;
+        esac
+    fi
+    echo unknown
+}
+
+HOST="${DOTFILES_HOST:-$(detect_host)}"
+
+git submodule update --init --recursive dotbot
+
+CONFIGS=(profiles/base.conf.yaml)
+if [ -f "profiles/${HOST}.conf.yaml" ]; then
+    CONFIGS+=("profiles/${HOST}.conf.yaml")
+else
+    echo "warning: host '${HOST}' has no profile; applying base only" >&2
+fi
+
+for config in "${CONFIGS[@]}"; do
+    echo "==> ${config}"
+    ./dotbot/bin/dotbot -d "${BASEDIR}" -c "${config}" "${@}"
+done

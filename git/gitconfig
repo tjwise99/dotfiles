@@ -1,0 +1,7 @@
+[push]
+	autoSetupRemote = true
+[core]
+	editor = vim
+[user]
+	name = Wise
+	email = tjwise99@gmail.com
