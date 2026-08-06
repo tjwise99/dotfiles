@@ -53,6 +53,10 @@
       description: Verify the toolchain actually installed
       stdout: true
       stderr: true
+    - command: ./asdf/npm-globals.sh
+      description: Install global npm packages
+      stdout: true
+      stderr: true
     - command: ./systemd/enable-timer.sh
       description: Enable the sync timer
       stdout: true
