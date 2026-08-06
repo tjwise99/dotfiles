@@ -68,6 +68,36 @@ built-in `--jq`, purpose-built subcommands).
   jobs). To actually wait, poll `gh api repos/<owner>/<repo>/actions/runs/<id> --jq .status` until
   `completed`, or poll `commits/<sha>/check-runs`.
 
+## `~/dotfiles` auto-publishes to a PUBLIC repo every 20 minutes
+
+`dotfiles-sync.timer` (`OnCalendar=*:0/20`) runs `~/dotfiles/tools/sync.sh`, which does
+**`git add -A`, commit, and `git push`** to `github.com/tjwise99/dotfiles` — **public**. No review
+step, no curation: anything sitting in that tree gets published within 20 minutes, whether or not
+anyone meant it to be.
+
+**Writing to any of these writes to a public repo**, because they are symlinks into it:
+
+| Path | |
+|---|---|
+| `~/.claude/CLAUDE.md` | this file |
+| `~/.claude/agents/`, `~/.claude/skills/`, `~/.claude/settings.json` | |
+| `~/lessons/`, `~/PROJECT_PLAYBOOK.md` | |
+| `~/.bashrc`, `~/.gitconfig` | |
+
+**A gitleaks pre-commit hook runs, and it only catches credential-shaped strings.** It will not stop
+an SSID, a MAC address, an internal IP or subnet, a hostname, a device serial, a router model, a
+person's address, or a client name. That class of detail is the actual exposure here — it is not
+secret-shaped, so nothing blocks it, and together it fingerprints a home or office network. Notes
+written up from a real system are exactly where it appears.
+
+So: **before writing anything into those paths, strip identifying detail** — describe *"a
+wall-mounted Pi kiosk"* and *"a LAN host"*, never the SSID, the address, or the serial. Keep the
+specifics in the project's own directory, which is not synced. `~/dotfiles/.gitignore` covers
+`local/*`, `*.key`, `*.pem` and the Claude credential files — nothing else.
+
+Corollary for new projects: **a project directory under `~/dotfiles` is a published project.** Put
+work elsewhere unless publication is intended.
+
 ## MCP servers
 **None configured** (`claude mcp list` → "No MCP servers configured"). Both were removed at the user's
 request; GitHub work goes through `gh`, browser automation through the Playwright CLI. To restore:
