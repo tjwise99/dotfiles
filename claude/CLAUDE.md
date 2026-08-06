@@ -12,8 +12,9 @@ GFM/YAML, no frontmatter or generator dialects.
 ## Shell environment
 - Bash tool runs **non-interactive** shells that **don't source `~/.bashrc`** — env from the login
   profile isn't guaranteed. `node` is normally on `PATH` regardless, inherited from the shell that
-  launched Claude Code (`NVM_CD_FLAGS` in the environment is the tell). If it is missing, source nvm:
-  `. "$HOME/.nvm/nvm.sh"` — no version number in the path, so it survives node upgrades.
+  launched Claude Code. If it is missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
+  managed by asdf and declared in `~/.tool-versions` (from the dotfiles repo) — install a new one by
+  adding it there and re-running `~/dotfiles/install`, not by hand.
 - `python3`, `jq` (`/usr/bin/jq`), and Docker are available.
 - **In the Bash tool's shell, `grep` is not GNU grep.** Claude Code injects a `grep` shell function
   that re-execs its own binary as ugrep (`exec -a ugrep "$CLAUDE_CODE_EXECPATH" -G --ignore-files …`).
@@ -58,7 +59,7 @@ built-in `--jq`, purpose-built subcommands).
 request; GitHub work goes through `gh`, browser automation through the Playwright CLI. To restore:
 - **github** (removed 2026-07-18): `claude mcp add --transport http github https://api.githubcopilot.com/mcp --header "Authorization: Bearer ${GITHUB_MCP_PAT}"`
 - **playwright** (removed 2026-07-15): MCP spawns without a shell, so `command` must be an absolute
-  npx path and there's no system node — get the current one with `. ~/.nvm/nvm.sh && which npx`, then
+  npx path and there's no system node — get the current one with `asdf which npx`, then
   `claude mcp add-json playwright '{"type":"stdio","command":"<npx-path>","args":["-y","@playwright/mcp@latest"],"env":{}}'`
 
 ## Working style

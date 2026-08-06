@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Repo infrastructure: present in the tree, deliberately never deployed.
 EXEMPT_FILES = {".gitignore", ".gitmodules", "install", "README.md"}
-EXEMPT_DIRS = {"dotbot", "local", "profiles", "tools"}
+EXEMPT_DIRS = {"dotbot", "dotbot-plugins", "local", "profiles", "tools"}
 
 
 def tracked_files():
@@ -31,8 +31,12 @@ def tracked_files():
 
 
 def manifest_sources():
-    """Collect every link source named by any profile."""
-    sources = set()
+    """Every link source, and every shell command, named by any profile.
+
+    A file is deployed either by being linked into place or by being run, so
+    both count as coverage.
+    """
+    sources, commands = set(), []
     for profile in sorted((ROOT / "profiles").glob("*.conf.yaml")):
         for block in yaml.safe_load(profile.read_text()) or []:
             for target, spec in (block.get("link") or {}).items():
@@ -44,16 +48,22 @@ def manifest_sources():
                         sources.add(spec["path"])
                 else:
                     sources.add(spec)
-    return {Path(s) for s in sources}
+            for entry in block.get("shell") or []:
+                commands.append(
+                    entry["command"] if isinstance(entry, dict) else entry
+                )
+    return {Path(s) for s in sources}, commands
 
 
 def main():
-    sources = manifest_sources()
+    sources, commands = manifest_sources()
 
-    unwired = [
-        f for f in tracked_files()
-        if not any(f == s or s in f.parents for s in sources)
-    ]
+    def deployed(path):
+        if any(path == s or s in path.parents for s in sources):
+            return True
+        return any(str(path) in command for command in commands)
+
+    unwired = [f for f in tracked_files() if not deployed(f)]
     dangling = [s for s in sources if not (ROOT / s).exists()]
 
     for f in sorted(unwired):

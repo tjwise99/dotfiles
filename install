@@ -21,7 +21,11 @@ detect_host() {
 
 HOST="${DOTFILES_HOST:-$(detect_host)}"
 
-git submodule update --init --recursive dotbot
+# asdf installs to ~/.local/bin with shims in ~/.asdf/shims. Dotbot's asdf
+# directive needs both before ~/.bashrc has ever been sourced.
+export PATH="${HOME}/.local/bin:${HOME}/.asdf/shims:${PATH}"
+
+git submodule update --init --recursive dotbot dotbot-plugins/dotbot-asdf
 
 CONFIGS=(profiles/base.conf.yaml)
 if [ -f "profiles/${HOST}.conf.yaml" ]; then
@@ -32,5 +36,6 @@ fi
 
 for config in "${CONFIGS[@]}"; do
     echo "==> ${config}"
-    ./dotbot/bin/dotbot -d "${BASEDIR}" -c "${config}" "${@}"
+    ./dotbot/bin/dotbot -d "${BASEDIR}" \
+        --plugin-dir dotbot-plugins/dotbot-asdf -c "${config}" "${@}"
 done

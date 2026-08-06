@@ -32,14 +32,23 @@ Secrets and anything that differs per machine live in `local/`, which is never t
 cheap to regenerate, so they are deliberately not synced — a fresh `./install` gives you a working
 environment with the credentials left to fill in.
 
-## Deferred
+## Toolchain
 
-**asdf — declare the toolchain, not just the config.** This repo deploys configuration but no
-runtimes, so `./install` on a machine without node produces a working shell that cannot run
-anything. That is the same incompleteness as `local/` leaving credentials out, and the Manjaro
-laptop is the case where it bites. asdf would put a `.tool-versions` in the repo and install the
-runtimes named there, making the deploy whole. Cost: nvm and asdf both want to own node's `PATH`,
-so WSL would have to migrate off nvm rather than run both.
+Runtimes are managed by [asdf](https://asdf-vm.com) and declared in `asdf/tool-versions`, linked to
+`~/.tool-versions`. `./install` installs the asdf binary into `~/.local/bin`, then installs every
+version named there — so a fresh machine gets a working toolchain, not just config pointing at one.
+
+Add a runtime by naming its plugin in `profiles/base.conf.yaml`, adding a line to
+`asdf/tool-versions`, and re-running `./install`.
+
+`asdf/verify-tools.sh` runs last and fails the install if any declared version is missing. Dotbot's
+asdf directive exits 0 even when it installs nothing, which would otherwise leave a machine with
+config and no runtimes while reporting success.
+
+Adding `python` here needs care: `tools/check-manifest.py` and Dotbot itself run under `python3`,
+and shimming it would put them on an asdf Python without PyYAML.
+
+## Deferred
 
 **`~/.claude/settings.json` is not linked.** Claude Code writes to it. If it replaces the file
 rather than writing in place, a symlink breaks and the repo silently stops receiving changes —

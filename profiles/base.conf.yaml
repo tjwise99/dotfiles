@@ -1,6 +1,7 @@
 - defaults:
     link:
       relink: true
+      force: true
       create: true
 
 - clean: ["~", "~/.claude"]
@@ -23,3 +24,23 @@
     # Notes
     ~/lessons: notes/lessons
     ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md
+
+    # Toolchain
+    ~/.tool-versions: asdf/tool-versions
+
+- shell:
+    - command: ./asdf/install-asdf.sh
+      description: Install asdf
+
+- asdf:
+    - plugin: nodejs
+      url: https://github.com/asdf-vm/asdf-nodejs
+      versions:
+        - 24.18.0
+
+# The asdf directive above reports success even when it installs nothing.
+- shell:
+    - command: ./asdf/verify-tools.sh
+      description: Verify the toolchain actually installed
+      stdout: true
+      stderr: true
