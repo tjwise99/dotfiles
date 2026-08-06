@@ -24,6 +24,20 @@ GFM/YAML, no frontmatter or generator dialects.
   **When grep's behaviour is itself under test, call `/usr/bin/grep` or invoke the script under test.**
   A doctored-regex case seeded as a bash pipeline measures a different engine than the code does, and
   reports a defect that is not there — this inverted a reviewer's finding on PR #88.
+- **A pipeline reports the LAST command's status.** `just verify | tail -50` reports `tail`'s exit
+  code, so a failing gate reads as green — this nearly got reported as a passing `verify`. Never
+  append `; echo "exit=$?"` to a pipeline and believe it. Redirect to a file and test `$?`, or
+  capture `st=("${PIPESTATUS[@]}")` **on the very next line** — `PIPESTATUS` is clobbered by the
+  following command, including the `echo` used to read it.
+- **`set -o pipefail` + `grep -q` inverts a successful match.** `grep -q` exits on the first hit, the
+  producer takes SIGPIPE and dies 141, and `pipefail` returns that — so the condition is false
+  *precisely when the pattern matches*. It silently turned a whole service-disabling script into a
+  no-op. Worse, it is invisible from here: the Bash tool's ugrep shim returns 0 while the same line
+  in a `#!/bin/bash` script returns 141. Test the tool directly (`systemctl is-enabled X`), match a
+  captured variable with `[[ $var == *pat* ]]`, or use `grep -c` and compare the count.
+- **The general form of both: if "it passed" would look identical when the thing failed, nothing was
+  measured.** Applies past the shell — a test with no assertion, a mock that always succeeds, a
+  health check grepping for a string absent from healthy *and* unhealthy output.
 
 ## GitHub: `gh` CLI for the API, git + SSH for pushes
 GitHub account: **`tjwise99`**. No GitHub MCP — use the `gh` CLI for all API work (token-friendly:

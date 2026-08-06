@@ -26,6 +26,12 @@ selection space. What remains has been kept deliberately; the rest is in `~/.cla
 | **technical-documentation-writer** | sonnet | User-facing documentation: structure, guides, references, diagrams |
 | **gnc-engineer** | inherit | Guidance, navigation, control: estimation, filtering, control design, dynamics. Domain-specific, not from the pack |
 
+### operations/
+
+| Agent | Model | Use for |
+|---|---|---|
+| **remote-system-operator** | inherit | Changing or diagnosing a live system that is expensive to reach — appliances, embedded boards, headless hosts. Classifies changes by recoverability, guards the lifeline, measures the device rather than the release notes |
+
 ### design/
 
 | Agent | Model | Use for |

@@ -69,6 +69,36 @@ boundary; a boundary owned by nobody is the gap the whole strategy exists to clo
 - **The gate structure follows the tiers.** Decide what must be green to merge versus what runs
   slower and out of band, so the fast signal stays fast and the thorough signal still runs.
 
+## Designing a gate, guard or check
+
+A gate is code whose entire job is to be right about something else. When one is wrong it is wrong
+quietly, and it takes down the thing it was guarding. These failure modes are specific to gates and
+do not show up in ordinary test design:
+
+- **A guard that cannot run must not answer anyway.** The shape to hunt: a predicate built on an
+  external command where *"no"* and *"I could not tell"* collapse into one value. `git check-ignore`
+  exits 0 for yes, 1 for no, and 128 when git itself fails — code returning `status === 0` reported
+  "nothing is ignored" whenever git was broken, and so accused its own repository of being
+  undocumented. Decide which way the third case should fail and make it **loud**.
+- **Prefer failing toward "I am broken" over "my subject is broken."** A guard that blames outward
+  when it malfunctions costs far more than one that refuses to answer, because its output is
+  specific, confident and fabricated.
+- **A gate that cannot go green gets skipped**, which is worse than no gate: you keep the cost, lose
+  the signal, and gain a false belief that the thing is checked. Fix a noisy gate by making it *know
+  more*, not by making it check less.
+- **Detect the mitigating condition rather than adding a suppression flag.** A scanner flagging an
+  API that the bundle polyfills should look for the polyfill *in the same artifact* — that is
+  self-verifying and expires correctly when the polyfill is removed. A `--allow` flag suppresses the
+  genuinely unprotected case too, forever and silently.
+- **Beware one name covering two features.** CSS `gap` is supported in grid layout years before flex;
+  a check keyed on the property name alone fails correct code. Where the distinction depends on
+  context, read the context.
+- **Fail closed where the gate cannot decide.** A false failure costs someone minutes; a false pass
+  ships the defect the gate exists to stop.
+- **Seed both directions, always.** Every gate needs the defect it must catch *and* the
+  spelled-differently-but-valid input it must not reject. Proving a gate fires on bad input says
+  nothing about whether it fires on everything. Check the real exit code, not a pipeline's.
+
 ## Working rules
 
 - Match the repo's existing test structure and idiom rather than importing a preferred framework or
