@@ -24,8 +24,8 @@ fail() {
 # Reported, not enforced: a tracked file no profile deploys should still be
 # backed up. Losing it to protect it would be the wrong trade.
 gate_note=""
-if ! python3 tools/check-manifest.py >/dev/null 2>&1; then
-    gate_note="manifest gate failing — run tools/check-manifest.py"
+if ! python3 tools/check-manifest.py --deployed >/dev/null 2>&1; then
+    gate_note="manifest gate failing — run tools/check-manifest.py --deployed"
 fi
 
 if [ -n "$(git status --porcelain)" ]; then

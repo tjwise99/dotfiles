@@ -48,14 +48,26 @@ config and no runtimes while reporting success.
 Adding `python` here needs care: `tools/check-manifest.py` and Dotbot itself run under `python3`,
 and shimming it would put them on an asdf Python without PyYAML.
 
-## Deferred
+## Sync
 
-**`~/.claude/settings.json` is not linked.** Claude Code writes to it. If it replaces the file
-rather than writing in place, a symlink breaks and the repo silently stops receiving changes —
-the failure a symlink deploy otherwise cannot have. Determine which it does before adding it.
+`tools/sync.sh` commits local changes, rebases onto `origin/main`, and pushes — skipping the commit
+entirely when nothing changed. A systemd user timer runs it every 20 minutes (`Persistent=true`, so
+a laptop that was closed catches up on boot), and a Claude Code `SessionEnd` hook runs it when a
+session finishes.
+
+It never resolves a conflict. Tracked files are symlinked into `$HOME`, so a bad merge would rewrite
+live shell config rather than a repo copy; on conflict it aborts and leaves the tree untouched.
+
+Failures write `~/.dotfiles-sync-failed`, which `bash/bashrc` reports at the next shell. A sync that
+stops silently is worse than no sync, because you would believe you were backed up.
 
 ## tools/check-manifest.py
 
 Asserts the manifest and the tracked tree agree in both directions: every tracked file is deployed
 by some profile, and every source a profile names exists. A file added to the repo but not wired
 into a profile would otherwise sit here forever without reaching any machine.
+
+`--deployed` adds a third direction — every target is still a symlink into this repo. A tool that
+replaces a managed file instead of writing through it breaks the link silently, and the repo keeps
+looking healthy while no longer receiving changes. `~/.claude/settings.json` is the likeliest
+candidate, since Claude Code writes to it.

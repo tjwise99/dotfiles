@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Assert the manifest and the tracked tree agree, in both directions.
+"""Assert the manifest agrees with the repo, and optionally with this machine.
 
-Every tracked file must be deployed by some profile, and every source a
-profile names must exist. Either gap means a file is in the repo that no
-machine would ever receive, or a link that will fail at apply time.
+Without --deployed: every tracked file is deployed by some profile, and every
+source a profile names exists. Repo-internal, so it runs in a fresh clone.
+
+With --deployed: every target the manifest names is still a symlink into this
+repo. A tool that replaces a managed file rather than writing through it breaks
+the link silently, and the repo stops receiving changes while still looking
+healthy.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,6 +24,36 @@ EXEMPT_FILES = {".gitignore", ".gitmodules", "install", "README.md"}
 EXEMPT_DIRS = {"dotbot", "dotbot-plugins", "local", "profiles", "tools"}
 
 
+def profiles():
+    for profile in sorted((ROOT / "profiles").glob("*.conf.yaml")):
+        for block in yaml.safe_load(profile.read_text()) or []:
+            yield block
+
+
+def manifest_links():
+    """Every target -> source pair named by any profile."""
+    links = {}
+    for block in profiles():
+        for target, spec in (block.get("link") or {}).items():
+            if spec is None:
+                # Dotbot infers the source from the target's basename.
+                links[target] = Path(target).name.lstrip(".")
+            elif isinstance(spec, dict):
+                if "path" in spec:
+                    links[target] = spec["path"]
+            else:
+                links[target] = spec
+    return links
+
+
+def shell_commands():
+    return [
+        entry["command"] if isinstance(entry, dict) else entry
+        for block in profiles()
+        for entry in (block.get("shell") or [])
+    ]
+
+
 def tracked_files():
     out = subprocess.run(
         ["git", "-C", str(ROOT), "ls-files"],
@@ -30,50 +65,58 @@ def tracked_files():
     ]
 
 
-def manifest_sources():
-    """Every link source, and every shell command, named by any profile.
-
-    A file is deployed either by being linked into place or by being run, so
-    both count as coverage.
-    """
-    sources, commands = set(), []
-    for profile in sorted((ROOT / "profiles").glob("*.conf.yaml")):
-        for block in yaml.safe_load(profile.read_text()) or []:
-            for target, spec in (block.get("link") or {}).items():
-                if spec is None:
-                    # Dotbot infers the source from the target's basename.
-                    sources.add(Path(target).name.lstrip("."))
-                elif isinstance(spec, dict):
-                    if "path" in spec:
-                        sources.add(spec["path"])
-                else:
-                    sources.add(spec)
-            for entry in block.get("shell") or []:
-                commands.append(
-                    entry["command"] if isinstance(entry, dict) else entry
-                )
-    return {Path(s) for s in sources}, commands
-
-
-def main():
-    sources, commands = manifest_sources()
+def check_repo():
+    """Tracked tree and manifest cover each other."""
+    sources = {Path(s) for s in manifest_links().values()}
+    commands = shell_commands()
 
     def deployed(path):
         if any(path == s or s in path.parents for s in sources):
             return True
         return any(str(path) in command for command in commands)
 
-    unwired = [f for f in tracked_files() if not deployed(f)]
-    dangling = [s for s in sources if not (ROOT / s).exists()]
+    problems = [f"tracked but never deployed: {f}" for f in sorted(tracked_files())
+                if not deployed(f)]
+    problems += [f"manifest names a missing source: {s}" for s in sorted(sources)
+                 if not (ROOT / s).exists()]
+    return problems, len(sources)
 
-    for f in sorted(unwired):
-        print(f"tracked but never deployed: {f}", file=sys.stderr)
-    for s in sorted(dangling):
-        print(f"manifest names a missing source: {s}", file=sys.stderr)
 
-    if unwired or dangling:
+def check_deployment():
+    """Every manifest target is still a live symlink into this repo."""
+    problems = []
+    for target, source in sorted(manifest_links().items()):
+        path = Path(os.path.expanduser(target))
+        expected = (ROOT / source).resolve()
+
+        if not path.is_symlink():
+            if path.exists():
+                problems.append(
+                    f"replaced by a real file — edits are NOT reaching the repo: {target}"
+                )
+            else:
+                problems.append(f"not deployed: {target}")
+            continue
+
+        actual = Path(os.path.realpath(path))
+        if actual != expected:
+            problems.append(f"points at {actual}, expected {expected}: {target}")
+    return problems
+
+
+def main():
+    problems, source_count = check_repo()
+    checked_deployment = "--deployed" in sys.argv
+    if checked_deployment:
+        problems += check_deployment()
+
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    if problems:
         return 1
-    print(f"manifest ok — {len(sources)} sources cover the tracked tree")
+
+    scope = "tracked tree" + (" and this machine" if checked_deployment else "")
+    print(f"manifest ok — {source_count} sources cover the {scope}")
     return 0
 
 

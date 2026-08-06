@@ -18,6 +18,7 @@
     # Claude Code — individual children only. ~/.claude also holds
     # projects/, history.jsonl and caches, which must not be tracked.
     ~/.claude/CLAUDE.md: claude/CLAUDE.md
+    ~/.claude/settings.json: claude/settings.json
     ~/.claude/agents: claude/agents
     ~/.claude/skills: claude/skills
     ~/.claude/commands: claude/commands
