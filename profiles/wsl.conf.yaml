@@ -1,5 +1,18 @@
 # WSL-only links.
 #
-# Empty by design: ~/.aws and ~/.azure are symlinks into /mnt/c/Users/tjwis
-# and belong to the Windows profile, so they are neither tracked nor deployed.
-- link: {}
+# ~/.aws and ~/.azure are deliberately absent: they are symlinks into the
+# Windows user profile, so they are neither tracked nor deployed.
+#
+# Each profile is a separate dotbot invocation, so it needs its own defaults —
+# the block in base.conf.yaml does not carry over into this process.
+- defaults:
+    link:
+      relink: true
+      force: true
+      create: true
+
+- link:
+    # This is the host whose login shell is bash. Interactive bash is the only
+    # thing that sources bashrc, so on a zsh host the link is dead weight that
+    # makes edits to ~/.bashrc look like they take effect when they do not.
+    ~/.bashrc: bash/bashrc

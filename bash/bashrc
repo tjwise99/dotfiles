@@ -115,44 +115,8 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-# Guarded, because nested shells (tmux, subshells, editors, Claude Code) re-run
-# this file over an already-populated PATH and would stack duplicates. Same
-# idiom as /etc/profile.d/home-local-bin.sh, which prepends before this runs —
-# so skipping is safe, the entry is already ahead of the system directories.
-case ":${PATH}:" in
-  *":$HOME/.local/bin:"*) ;;
-  *) export PATH="$HOME/.local/bin:$PATH" ;;
-esac
 
-case ":${PATH}:" in
-  *":$HOME/.asdf/shims:"*) ;;
-  *) export PATH="$HOME/.asdf/shims:$PATH" ;;
-esac
-
-# ssh consults this only when no tty is attached, so interactive shells keep
-# prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
-# (Claude Code, .desktop launchers) that otherwise hit the absent
-# /usr/lib/ssh/ssh-askpass.
-if [ -x "$HOME/.local/bin/zenity-askpass" ]; then
-  export SSH_ASKPASS="$HOME/.local/bin/zenity-askpass"
-  export SUDO_ASKPASS="$SSH_ASKPASS"
-fi
-
-# GitHub MCP server auth for Claude Code — reads a dedicated PAT so it's
-# independent of the deployment token (~/.mig_token). Rotate by overwriting
-# ~/.claude_github_token; no MCP config change needed.
-export GITHUB_MCP_PAT="$(cat ~/.claude_github_token 2>/dev/null)"
-
-# >>> claude gh auth >>>
-# Authenticate the GitHub CLI (gh) with the same PAT the tooling already uses,
-# so `gh` is logged in in every shell without storing a second copy of the token.
-if [ -n "$GITHUB_MCP_PAT" ] && [ -z "$GH_TOKEN" ]; then
-  export GH_TOKEN="$GITHUB_MCP_PAT"
-  echo $GH_TOKEN | gh auth login --with-token
-fi
-# <<< claude gh auth <<<
-
-# The sync timer is silent on success; this is how a failure reaches you.
-if [ -f "$HOME/.dotfiles-sync-failed" ]; then
-  printf '\033[33mdotfiles sync failed:\033[0m %s\n' "$(cat "$HOME/.dotfiles-sync-failed")"
-fi
+# PATH, askpass, gh auth, EDITOR and the sync-failure report — shared verbatim
+# with zsh/zshrc, which is why they live in one file rather than two copies that
+# have to be kept in step by hand.
+[ -r "${HOME}/dotfiles/shell/common.sh" ] && . "${HOME}/dotfiles/shell/common.sh"

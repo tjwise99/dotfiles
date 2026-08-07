@@ -1,8 +1,8 @@
 # ~/.zshrc — interactive zsh config for the Manjaro laptop.
 #
-# The WSL box runs bash; this laptop's login shell is zsh. Everything under
-# "shared with bash/bashrc" has to stay in step with bash/bashrc, because that
-# file is never sourced here — most importantly the sync-failure report.
+# The WSL box runs bash; this laptop's login shell is zsh, and bash/bashrc is
+# not deployed here at all. What both shells need lives in shell/common.sh,
+# sourced below; what is zsh- or laptop-specific stays in this file.
 
 # Manjaro's stock zsh setup (completion, keybindings, syntax highlighting) and
 # its powerline prompt. Guarded: the repo also has to make sense on a host that
@@ -20,48 +20,11 @@ USE_POWERLINE="true"
 # underneath it rather than scrolling off the top.
 command -v fastfetch >/dev/null 2>&1 && fastfetch
 
-# ---------------------------------------------------------------- shared with
-# ------------------------------------------------------------- bash/bashrc --
+# --------------------------------------------------------- shared with bash --
 
-# Guarded, because nested shells (tmux, subshells, editors, Claude Code) re-run
-# this file over an already-populated PATH and would stack duplicates. Same
-# idiom as /etc/profile.d/home-local-bin.sh, which prepends before this runs —
-# so skipping is safe, the entry is already ahead of the system directories.
-case ":${PATH}:" in
-  *":${HOME}/.local/bin:"*) ;;
-  *) export PATH="${HOME}/.local/bin:${PATH}" ;;
-esac
-
-case ":${PATH}:" in
-  *":${HOME}/.asdf/shims:"*) ;;
-  *) export PATH="${HOME}/.asdf/shims:${PATH}" ;;
-esac
-
-# ssh consults this only when no tty is attached, so interactive shells keep
-# prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
-# (Claude Code, .desktop launchers) that otherwise hit the absent
-# /usr/lib/ssh/ssh-askpass.
-if [ -x "${HOME}/.local/bin/zenity-askpass" ]; then
-  export SSH_ASKPASS="${HOME}/.local/bin/zenity-askpass"
-  export SUDO_ASKPASS="${SSH_ASKPASS}"
-fi
-
-# GitHub MCP server auth for Claude Code — reads a dedicated PAT so it stays
-# independent of the deployment token. Rotate by overwriting the file.
-export GITHUB_MCP_PAT="$(cat "${HOME}/.claude_github_token" 2>/dev/null)"
-
-# Log gh in with the same PAT, so it is authenticated in every shell without a
-# second copy of the token. Also gated on gh existing: it is not installed on
-# this laptop, and bash/bashrc's copy would print "command not found" per shell.
-if [ -n "${GITHUB_MCP_PAT}" ] && [ -z "${GH_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
-  export GH_TOKEN="${GITHUB_MCP_PAT}"
-  echo "${GH_TOKEN}" | gh auth login --with-token
-fi
-
-# The sync timer is silent on success; this is how a failure reaches you.
-if [ -f "${HOME}/.dotfiles-sync-failed" ]; then
-  printf '\033[33mdotfiles sync failed:\033[0m %s\n' "$(cat "${HOME}/.dotfiles-sync-failed")"
-fi
+# PATH, askpass, gh auth, EDITOR and the sync-failure report. bash/bashrc reads
+# the same file, so these no longer have to be kept in step by hand.
+[ -r "${HOME}/dotfiles/shell/common.sh" ] && source "${HOME}/dotfiles/shell/common.sh"
 
 # ------------------------------------------------------------------ generic --
 

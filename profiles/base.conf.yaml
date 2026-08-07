@@ -7,8 +7,11 @@
 - clean: ["~", "~/.claude"]
 
 - link:
-    # Shell
-    ~/.bashrc: bash/bashrc
+    # Shell. bash/bashrc is per-host (see wsl.conf.yaml) because a login shell
+    # that is not bash never sources it. bash/profile stays here: lightdm's
+    # Xsession sources ~/.profile before starting the graphical session, so on
+    # the laptop it is the only file that can put a directory on the session
+    # PATH, independently of which shell that host logs in with.
     ~/.profile: bash/profile
 
     # Git

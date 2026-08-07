@@ -9,9 +9,9 @@
       create: true
 
 - link:
-    # This laptop's login shell is zsh, not bash. bash/bashrc is still linked by
-    # base (for non-interactive and ssh-into-bash cases) but is never sourced
-    # interactively here, so the sync-failure report lives in zsh/zshrc too.
+    # This laptop's login shell is zsh, so bash/bashrc is not deployed here —
+    # non-interactive bash returns before reading it, and an inbound ssh gets
+    # zsh. What both shells need is in shell/common.sh, which this sources.
     ~/.zshrc: zsh/zshrc
 
     # Desktop configs are linked as whole directories, not file by file, so a
