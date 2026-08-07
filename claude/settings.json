@@ -8,7 +8,6 @@
       "Read",
       "Grep",
       "Glob",
-      "Write(//tmp/claude-1000/**)",
       "Edit(//tmp/claude-1000/**)",
       "Bash(cat:*)",
       "Bash(head:*)",

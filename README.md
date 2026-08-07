@@ -50,7 +50,9 @@ and shimming it would put them on an asdf Python without PyYAML.
 
 `install-asdf.sh` resolves the release tag with `sed` rather than `jq`. `jq` is not part of a base
 Manjaro install, and a bootstrap script that needs a package the host may not have is a bootstrap
-script that fails on exactly the machine it was meant to set up.
+script that fails on exactly the machine it was meant to set up. The `jq` in the asdf block above is
+not a reason to switch back: it is installed *by* that block, so it does not exist yet at the point
+`install-asdf.sh` runs.
 
 `gh` is registered in the asdf plugin index as `github-cli`, so `asdf/tool-versions` names
 `github-cli` while the command stays `gh`.

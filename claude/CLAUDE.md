@@ -15,7 +15,8 @@ GFM/YAML, no frontmatter or generator dialects.
   launched Claude Code. If it is missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
   managed by asdf and declared in `~/.tool-versions` (from the dotfiles repo) — install a new one by
   adding it there and re-running `~/dotfiles/install`, not by hand.
-- `python3`, `jq` (`/usr/bin/jq`), and Docker are available.
+- `python3` and Docker are available. `jq` is asdf-managed at `~/.asdf/shims/jq` — there is no
+  `/usr/bin/jq`, so a script run without the shims on `PATH` gets exit 127, not a jq error.
 - **In the Bash tool's shell, `grep` is not GNU grep.** Claude Code injects a `grep` shell function
   that re-execs its own binary as ugrep (`exec -a ugrep "$CLAUDE_CODE_EXECPATH" -G --ignore-files …`).
   The two disagree on syntax — ugrep takes `(?:…)` as a non-capturing group under `-E`, GNU grep
