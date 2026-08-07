@@ -2,6 +2,7 @@ local/*
 !local/.gitkeep
 
 # Machine-local or credential-bearing — never track.
+gh/hosts.yml
 claude/settings.local.json
 claude/.credentials.json
 claude/projects/

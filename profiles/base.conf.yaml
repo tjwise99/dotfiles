@@ -23,6 +23,15 @@
     ~/.claude/skills: claude/skills
     ~/.claude/commands: claude/commands
 
+    # gh CLI — config.yml only. hosts.yml sits beside it holding the account
+    # and token, and stays unmanaged for the same reason ~/.claude is linked
+    # child by child rather than wholesale.
+    #
+    # `gh config set` rewrites the file in place through the symlink. It keeps
+    # comments attached to a key but discards anything above the first one, so
+    # notes about this file belong here or in the README, not in its header.
+    ~/.config/gh/config.yml: gh/config.yml
+
     # Notes
     ~/lessons: notes/lessons
     ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md

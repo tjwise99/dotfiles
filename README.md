@@ -21,7 +21,7 @@ touching anything.
 | Path | Contents |
 | --- | --- |
 | `profiles/` | The manifest — what gets linked where, per host |
-| `bash/`, `git/`, `npm/` | Shell and tool config |
+| `bash/`, `zsh/`, `git/`, `gh/` | Shell and tool config |
 | `claude/` | `CLAUDE.md`, agents, skills, commands |
 | `notes/` | `lessons/`, `PROJECT_PLAYBOOK.md` |
 | `local/` | Gitignored. Keys and machine-specific config |
@@ -47,6 +47,34 @@ config and no runtimes while reporting success.
 
 Adding `python` here needs care: `tools/check-manifest.py` and Dotbot itself run under `python3`,
 and shimming it would put them on an asdf Python without PyYAML.
+
+`install-asdf.sh` resolves the release tag with `sed` rather than `jq`. `jq` is not part of a base
+Manjaro install, and a bootstrap script that needs a package the host may not have is a bootstrap
+script that fails on exactly the machine it was meant to set up.
+
+`gh` is registered in the asdf plugin index as `github-cli`, so `asdf/tool-versions` names
+`github-cli` while the command stays `gh`.
+
+## Shells
+
+The WSL box runs bash; the Manjaro laptop runs zsh. `bash/bashrc` is linked everywhere, but on the
+laptop nothing sources it interactively, so `zsh/zshrc` carries its own copy of the shared block —
+the asdf PATH and, more importantly, the sync-failure report. **Changing that block in one file
+means changing it in the other**; a laptop whose zshrc lost the report would stop telling you that
+backups had failed, which is the one thing the sync design depends on.
+
+Host-specific aliases — anything naming a real host, account or disk — go in `local/zshrc.local`,
+which `zsh/zshrc` sources if present. This repo is public and pushes itself every 20 minutes.
+
+## gh
+
+Only `gh/config.yml` is tracked. `hosts.yml` sits beside it holding the account and OAuth token and
+is gitignored; the token itself lives in the system keyring and is cheap to reissue with
+`gh auth login`, so it is not worth syncing.
+
+`gh config set` rewrites the file in place through the symlink. It preserves comments attached to a
+key but drops anything above the first one, so notes about the file belong in
+`profiles/base.conf.yaml` or here — not in its header, where the next write will eat them.
 
 ## Sync
 
