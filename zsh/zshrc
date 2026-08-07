@@ -14,6 +14,10 @@ USE_POWERLINE="true"
 # pywal colours. Applied after the prompt so the palette wins.
 [[ -r "${HOME}/.cache/wal/sequences" ]] && cat "${HOME}/.cache/wal/sequences"
 
+# Login banner. Runs ahead of the sync-failure report below so that report lands
+# underneath it rather than scrolling off the top.
+command -v fastfetch >/dev/null 2>&1 && fastfetch
+
 # ---------------------------------------------------------------- shared with
 # ------------------------------------------------------------- bash/bashrc --
 
