@@ -20,6 +20,15 @@ USE_POWERLINE="true"
 export PATH="${HOME}/.local/bin:${PATH}"
 export PATH="${HOME}/.asdf/shims:${PATH}"
 
+# ssh consults this only when no tty is attached, so interactive shells keep
+# prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
+# (Claude Code, .desktop launchers) that otherwise hit the absent
+# /usr/lib/ssh/ssh-askpass.
+if [ -x "${HOME}/.local/bin/zenity-askpass" ]; then
+  export SSH_ASKPASS="${HOME}/.local/bin/zenity-askpass"
+  export SUDO_ASKPASS="${SSH_ASKPASS}"
+fi
+
 # GitHub MCP server auth for Claude Code — reads a dedicated PAT so it stays
 # independent of the deployment token. Rotate by overwriting the file.
 export GITHUB_MCP_PAT="$(cat "${HOME}/.claude_github_token" 2>/dev/null)"

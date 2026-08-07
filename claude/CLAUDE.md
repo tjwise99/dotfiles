@@ -39,6 +39,10 @@ GFM/YAML, no frontmatter or generator dialects.
 - **The general form of both: if "it passed" would look identical when the thing failed, nothing was
   measured.** Applies past the shell — a test with no assertion, a mock that always succeeds, a
   health check grepping for a string absent from healthy *and* unhealthy output.
+- **Password prompts are answerable — run them, don't hand them back.** No tty but `DISPLAY` is set,
+  so `SSH_ASKPASS`/`SUDO_ASKPASS` (→ `~/.local/bin/zenity-askpass`, set in `claude/settings.json`)
+  put the prompt on the desktop. ssh uses it automatically; **sudo only under `sudo -A`**. Needs a
+  graphical session, so headless/cron skips it; sudo then caches ~15 min.
 
 ## GitHub: `gh` CLI for the API, git + SSH for pushes
 GitHub account: **`tjwise99`**. No GitHub MCP — use the `gh` CLI for all API work (token-friendly:
