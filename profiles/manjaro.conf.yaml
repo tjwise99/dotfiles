@@ -13,3 +13,20 @@
     # base (for non-interactive and ssh-into-bash cases) but is never sourced
     # interactively here, so the sync-failure report lives in zsh/zshrc too.
     ~/.zshrc: zsh/zshrc
+
+    # Desktop configs are linked as whole directories, not file by file, so a
+    # new script dropped into one is picked up without touching this file. The
+    # cost is that generated output lands in the repo too — .gitignore carries
+    # the exclusions, and theme/README.md says which files are rendered.
+    ~/.config/theme: theme
+    ~/.config/i3: i3
+    ~/.config/polybar: polybar
+    ~/.config/ranger: ranger
+    ~/.config/htop: htop
+    ~/.config/ccstatusline: ccstatusline
+
+    # Not directories: these two live at fixed paths in $HOME. .Xresources is
+    # hand-written (Xft DPI) rather than rendered from theme/ — i3 merges it at
+    # login, whereas the theme templates render only when theme.sh is run.
+    ~/.xprofile: x/xprofile
+    ~/.Xresources: x/Xresources

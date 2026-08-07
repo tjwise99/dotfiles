@@ -1,0 +1,12 @@
+! Declares the DPI every other app already assumes. Unset, winit reads the
+! panel's real EDID size (~142 DPI on this 14" 1080p) and scales alacritty to
+! 1.5x while polybar, dunst and GTK stay at 96. Merged at login by i3, which is
+! why it lives here rather than in the theme templates -- those are rendered
+! only when theme.sh is run by hand.
+Xft.dpi: 96
+
+Xft.antialias: 1
+Xft.hinting:   1
+Xft.hintstyle: hintslight
+Xft.rgba:      rgb
+Xft.lcdfilter: lcddefault

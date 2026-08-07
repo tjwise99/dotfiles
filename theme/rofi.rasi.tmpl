@@ -1,0 +1,110 @@
+/* GENERATED from ~/.config/theme/rofi.rasi.tmpl by theme.sh
+   Edit the template, not this file. */
+
+configuration {
+    modes:               "drun,run,window";
+    show-icons:          true;
+    icon-theme:          "Papirus-Dark";
+    drun-display-format: "{name}";
+    display-drun:        "Apps";
+    display-run:         "Run";
+    display-window:      "Windows";
+    sidebar-mode:        true;
+    terminal:            "alacritty";
+}
+
+* {
+    font:             "@font@";
+    text-color:       @fg@;
+    background-color: transparent;
+}
+
+window {
+    width:            640px;
+    location:         center;
+    anchor:           center;
+    border:           @frame_width@px solid;
+    border-color:     @rofi_border@;
+    border-radius:    @corner_radius@px;
+    background-color: @rofi_bg@;
+    children:         [ mainbox ];
+}
+
+mainbox {
+    padding:  @padding@px;
+    spacing:  @padding@px;
+    children: [ inputbar, message, listview, mode-switcher ];
+}
+
+inputbar {
+    background-color: @rofi_bg_alt@;
+    border-radius:    @corner_radius@px;
+    padding:          10px @hpadding@px;
+    spacing:          10px;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color: @accent@;
+}
+
+entry {
+    placeholder:       "Search";
+    placeholder-color: @muted@;
+    cursor:            text;
+}
+
+listview {
+    lines:        8;
+    columns:      1;
+    fixed-height: false;
+    scrollbar:    false;
+    spacing:      2px;
+}
+
+element {
+    padding:       8px @hpadding@px;
+    border-radius: @corner_radius@px;
+    spacing:       12px;
+    cursor:        pointer;
+}
+
+/* Every state needs an explicit background-color: rofi merges this theme over
+   its built-in default, and a state left unset keeps the default's light row
+   background rather than falling back to the transparent global above. */
+element normal.normal    { background-color: transparent; text-color: @fg@;     }
+element normal.urgent    { background-color: transparent; text-color: @urgent@; }
+element normal.active    { background-color: transparent; text-color: @accent@; }
+element alternate.normal { background-color: transparent; text-color: @fg@;     }
+element alternate.urgent { background-color: transparent; text-color: @urgent@; }
+element alternate.active { background-color: transparent; text-color: @accent@; }
+
+element selected.normal  { background-color: @accent@; text-color: @accent_fg@; }
+element selected.urgent  { background-color: @urgent@; text-color: @accent_fg@; }
+element selected.active  { background-color: @accent@; text-color: @accent_fg@; }
+
+element-icon { size: 28px; vertical-align: 0.5; }
+element-text { vertical-align: 0.5; }
+
+message {
+    background-color: @rofi_bg_alt@;
+    border-radius:    @corner_radius@px;
+    padding:          8px @hpadding@px;
+}
+
+mode-switcher {
+    spacing: 8px;
+}
+
+button {
+    padding:          8px;
+    border-radius:    @corner_radius@px;
+    background-color: @rofi_bg_alt@;
+    text-color:       @muted@;
+    cursor:           pointer;
+}
+
+button selected {
+    background-color: @accent@;
+    text-color:       @accent_fg@;
+}

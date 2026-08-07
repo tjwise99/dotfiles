@@ -11,3 +11,15 @@ claude/history.jsonl
 *.pem
 *_token
 .DS_Store
+
+# Rendered by ~/.config/theme/theme.sh from the .tmpl files beside them. The
+# templates are the source; these are output and would churn on every run.
+theme/xresources
+polybar/config.ini
+
+# Droppings inside directory-linked configs. Those directories are linked whole
+# so new files are picked up automatically — which also picks up these.
+__pycache__/
+*.pyc
+*.bak
+*.bak-*

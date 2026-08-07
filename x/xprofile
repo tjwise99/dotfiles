@@ -1,0 +1,7 @@
+#!/bin/sh
+# Sourced by lightdm before the session starts. i3 evaluates set_from_resource
+# when it parses its config, so pywal's colours must already be in xrdb by then
+# or client.focused falls back to the hardcoded defaults.
+
+[ -r "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources"
+command -v wal >/dev/null 2>&1 && wal -R -n >/dev/null 2>&1
