@@ -47,6 +47,13 @@
       url: https://github.com/jmcvetta/asdf-gitleaks.git
       versions:
         - 8.30.1
+    # Registered as "github-cli", not "gh" — the binary and the plugin have
+    # different names, so ~/.tool-versions names github-cli while the command
+    # stays gh.
+    - plugin: github-cli
+      url: https://github.com/bartlomiejdanek/asdf-github-cli.git
+      versions:
+        - 2.97.0
 
 # The asdf directive above reports success even when it installs nothing.
 - shell:
