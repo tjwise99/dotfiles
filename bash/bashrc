@@ -115,9 +115,19 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-export PATH="$HOME/.local/bin:$PATH"
+# Guarded, because nested shells (tmux, subshells, editors, Claude Code) re-run
+# this file over an already-populated PATH and would stack duplicates. Same
+# idiom as /etc/profile.d/home-local-bin.sh, which prepends before this runs —
+# so skipping is safe, the entry is already ahead of the system directories.
+case ":${PATH}:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
 
-export PATH="$HOME/.asdf/shims:$PATH"
+case ":${PATH}:" in
+  *":$HOME/.asdf/shims:"*) ;;
+  *) export PATH="$HOME/.asdf/shims:$PATH" ;;
+esac
 
 # ssh consults this only when no tty is attached, so interactive shells keep
 # prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
