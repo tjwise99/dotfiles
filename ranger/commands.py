@@ -36,3 +36,39 @@ class fzf_select(Command):
                 self.fm.cd(fzf_file)
             else:
                 self.fm.select_file(fzf_file)
+
+
+class trash(Command):
+    """
+    :trash
+
+    Move the selection to the freedesktop trash. Recoverable with :restore.
+    Bound to dD, <DELETE> and <F8>; :delete still removes permanently.
+    """
+    def execute(self):
+        import subprocess
+        selection = self.fm.thistab.get_selection()
+        if not selection:
+            self.fm.notify("Nothing selected", bad=True)
+            return
+        paths = [f.path for f in selection]
+        try:
+            subprocess.check_call(["trash-put", "--"] + paths)
+        except OSError:
+            self.fm.notify("trash-put not found - install trash-cli", bad=True)
+            return
+        except subprocess.CalledProcessError as err:
+            self.fm.notify("trash-put failed (exit %d)" % err.returncode, bad=True)
+            return
+        self.fm.notify("Trashed %d item(s) - :restore to undo" % len(paths))
+        self.fm.thisdir.load_content()
+
+
+class restore(Command):
+    """
+    :restore
+
+    Interactively restore files from the trash.
+    """
+    def execute(self):
+        self.fm.execute_console("shell -w trash-restore")
