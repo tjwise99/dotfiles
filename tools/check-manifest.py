@@ -15,9 +15,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
-
 ROOT = Path(__file__).resolve().parent.parent
+
+# Fall back to the PyYAML the dotbot submodule vendors, which install already uses.
+sys.path.append(str(ROOT / "dotbot/lib/pyyaml/lib"))
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    sys.exit("PyYAML unavailable — run: git submodule update --init --recursive")
 
 # Repo infrastructure: present in the tree, deliberately never deployed.
 EXEMPT_FILES = {".gitignore", ".gitmodules", "install", "README.md"}
