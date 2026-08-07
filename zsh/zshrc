@@ -11,8 +11,10 @@ USE_POWERLINE="true"
 [[ -e /usr/share/zsh/manjaro-zsh-config ]] && source /usr/share/zsh/manjaro-zsh-config
 [[ -e /usr/share/zsh/manjaro-zsh-prompt ]] && source /usr/share/zsh/manjaro-zsh-prompt
 
-# pywal colours. Applied after the prompt so the palette wins.
-[[ -r "${HOME}/.cache/wal/sequences" ]] && cat "${HOME}/.cache/wal/sequences"
+# Deliberately does NOT emit ~/.cache/wal/sequences. Those are OSC-4 codes that
+# reprogram the palette at runtime, overriding whatever the terminal loaded from
+# its own config -- which made every shell gold regardless of the active theme.
+# The terminal is themed by ~/.config/theme instead; see its README.
 
 # Login banner. Runs ahead of the sync-failure report below so that report lands
 # underneath it rather than scrolling off the top.
