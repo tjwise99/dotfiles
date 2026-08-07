@@ -6,8 +6,13 @@ set -euo pipefail
 INSTALL_DIR="${HOME}/.local/bin"
 API="https://api.github.com/repos/asdf-vm/asdf/releases/latest"
 
-latest="$(curl -fsSL "${API}" | jq -r .tag_name)"
-if [ -z "${latest}" ] || [ "${latest}" = "null" ]; then
+# Parsed with sed rather than jq: jq is not part of a base Manjaro install, and
+# a bootstrap script that needs a package the host may not have defeats the
+# point. One field out of a known-shaped response does not need a JSON parser.
+latest="$(curl -fsSL "${API}" \
+    | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    | head -n1)"
+if [ -z "${latest}" ]; then
     echo "could not resolve the latest asdf release" >&2
     exit 1
 fi

@@ -1,2 +1,15 @@
 # Manjaro-only links (terminal emulator, fonts, anything GUI).
-- link: {}
+#
+# Each profile is a separate dotbot invocation, so it needs its own defaults —
+# the block in base.conf.yaml does not carry over into this process.
+- defaults:
+    link:
+      relink: true
+      force: true
+      create: true
+
+- link:
+    # This laptop's login shell is zsh, not bash. bash/bashrc is still linked by
+    # base (for non-interactive and ssh-into-bash cases) but is never sourced
+    # interactively here, so the sync-failure report lives in zsh/zshrc too.
+    ~/.zshrc: zsh/zshrc

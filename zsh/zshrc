@@ -1,0 +1,56 @@
+# ~/.zshrc — interactive zsh config for the Manjaro laptop.
+#
+# The WSL box runs bash; this laptop's login shell is zsh. Everything under
+# "shared with bash/bashrc" has to stay in step with bash/bashrc, because that
+# file is never sourced here — most importantly the sync-failure report.
+
+# Manjaro's stock zsh setup (completion, keybindings, syntax highlighting) and
+# its powerline prompt. Guarded: the repo also has to make sense on a host that
+# does not ship these.
+USE_POWERLINE="true"
+[[ -e /usr/share/zsh/manjaro-zsh-config ]] && source /usr/share/zsh/manjaro-zsh-config
+[[ -e /usr/share/zsh/manjaro-zsh-prompt ]] && source /usr/share/zsh/manjaro-zsh-prompt
+
+# pywal colours. Applied after the prompt so the palette wins.
+[[ -r "${HOME}/.cache/wal/sequences" ]] && cat "${HOME}/.cache/wal/sequences"
+
+# ---------------------------------------------------------------- shared with
+# ------------------------------------------------------------- bash/bashrc --
+
+export PATH="${HOME}/.local/bin:${PATH}"
+export PATH="${HOME}/.asdf/shims:${PATH}"
+
+# GitHub MCP server auth for Claude Code — reads a dedicated PAT so it stays
+# independent of the deployment token. Rotate by overwriting the file.
+export GITHUB_MCP_PAT="$(cat "${HOME}/.claude_github_token" 2>/dev/null)"
+
+# Log gh in with the same PAT, so it is authenticated in every shell without a
+# second copy of the token. Also gated on gh existing: it is not installed on
+# this laptop, and bash/bashrc's copy would print "command not found" per shell.
+if [ -n "${GITHUB_MCP_PAT}" ] && [ -z "${GH_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+  export GH_TOKEN="${GITHUB_MCP_PAT}"
+  echo "${GH_TOKEN}" | gh auth login --with-token
+fi
+
+# The sync timer is silent on success; this is how a failure reaches you.
+if [ -f "${HOME}/.dotfiles-sync-failed" ]; then
+  printf '\033[33mdotfiles sync failed:\033[0m %s\n' "$(cat "${HOME}/.dotfiles-sync-failed")"
+fi
+
+# ------------------------------------------------------------------ generic --
+
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias dirsize='sudo du -hc . | sort -rh | head -20'
+
+# Java apps that render blank under a reparenting WM (i3).
+alias fixWindows='export _JAVA_AWT_WM_NONREPARENTING=0'
+
+# -------------------------------------------------------------------- local --
+
+# Host-specific aliases — university logins, NAS addresses, partition layouts.
+# This repo is public and pushes itself every 20 minutes, so anything naming a
+# real host or account belongs in local/, which is gitignored.
+[[ -r "${HOME}/dotfiles/local/zshrc.local" ]] && source "${HOME}/dotfiles/local/zshrc.local"
