@@ -58,6 +58,20 @@ alias la='ls -A'
 alias l='ls -CF'
 alias dirsize='sudo du -hc . | sort -rh | head -20'
 
+# Leave the shell in whatever directory ranger quit from. --choosedir writes the
+# final path to a temp file; `command` avoids recursing into this function.
+ranger() {
+  local tempfile
+  tempfile="$(mktemp -t ranger-cd.XXXXXX)" || return
+  command ranger --choosedir="${tempfile}" -- "${@:-${PWD}}"
+  if [ -f "${tempfile}" ]; then
+    local dest
+    dest="$(cat -- "${tempfile}")"
+    [ -n "${dest}" ] && [ -d "${dest}" ] && [ "${dest}" != "${PWD}" ] && cd -- "${dest}"
+  fi
+  rm -f -- "${tempfile}"
+}
+
 # Java apps that render blank under a reparenting WM (i3).
 alias fixWindows='export _JAVA_AWT_WM_NONREPARENTING=0'
 
