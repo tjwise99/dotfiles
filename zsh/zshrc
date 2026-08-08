@@ -11,14 +11,23 @@
 # the rest of the path in this file's text.
 
 # Completion. Manjaro's stock config set this up; nothing on Ubuntu does.
+# zsh selects its keymap from EDITOR/VISUAL, and shell/common.sh sets both to
+# vim, so the line editor comes up in vi mode unless this says otherwise. Before
+# every bindkey below, which it would otherwise reset.
+bindkey -e
+
 mkdir -p "${HOME}/.cache/zsh"
 autoload -U compinit colors zcalc
 fpath+=("${HOME}/dotfiles/zsh/plugins/zsh-completions/src")
 compinit -d "${HOME}/.cache/zsh/zcompdump"
 colors
 zstyle ':completion:*' cache-path "${HOME}/.cache/zsh/compcache"
+zstyle ':completion:*' use-cache on
 zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' rehash true
+zstyle ':completion:*' accept-exact '*(N)'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
 
 # ~/.p10k.zsh is Manjaro's own generated config, tracked as zsh/p10k.zsh so the
 # prompt survives the move off /usr/share looking exactly as it did.
@@ -30,13 +39,37 @@ source "${HOME}/dotfiles/zsh/plugins/zsh-history-substring-search/zsh-history-su
 # Last, per its README: it wraps widgets the plugins above define.
 source "${HOME}/dotfiles/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
+# Keys whose escape sequence zsh leaves unbound. terminfo is consulted where the
+# terminal reports one, because the literal sequences differ between terminals
+# and the literals below are only the common case.
+zmodload zsh/terminfo
+[[ -n "${terminfo[khome]}" ]] && bindkey "${terminfo[khome]}" beginning-of-line
+[[ -n "${terminfo[kend]}"  ]] && bindkey "${terminfo[kend]}"  end-of-line
+bindkey '^[[H'    beginning-of-line
+bindkey '^[[7~'   beginning-of-line
+bindkey '^[[F'    end-of-line
+bindkey '^[[8~'   end-of-line
+bindkey '^[[3~'   delete-char
+bindkey '^[[2~'   overwrite-mode
+bindkey '^[[5~'   history-beginning-search-backward
+bindkey '^[[6~'   history-beginning-search-forward
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;5C' forward-word
+bindkey '^H'      backward-kill-word
+bindkey '^[[Z'    undo
+bindkey '^[[A'    history-substring-search-up
+bindkey '^[[B'    history-substring-search-down
 
-HISTFILE="${HOME}/.zsh_history"
+# Drops / & . ; from the set, so word-wise motion stops at path segments.
+WORDCHARS=${WORDCHARS//\/[&.;]}
+
+# ~/.zhistory rather than zsh's default: it is where this machine's history
+# already is, and pointing elsewhere strands it rather than losing it, which is
+# the harder failure to notice.
+HISTFILE="${HOME}/.zhistory"
 HISTSIZE=10000
 SAVEHIST=10000
-setopt hist_ignore_dups share_history
+setopt appendhistory inc_append_history histignorealldups histignorespace
 
 # Ahead of the shared block so the sync health report lands underneath it
 # rather than scrolling off the top.

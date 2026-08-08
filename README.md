@@ -113,6 +113,15 @@ Those paths are written out in full rather than built from a variable, because
 `tools/check-manifest.py` vouches for a tracked file by finding its path as a literal string in a
 deployed one, and an interpolated prefix is never contiguous with the rest of the path.
 
+`zsh/zshrc` also carries the shell behaviour that came with `manjaro-zsh-config` — the emacs
+keymap, the bindings for keys zsh leaves unbound (Home, End, Delete, page keys, word-wise motion),
+`WORDCHARS`, the completion styles and the history options. None of it is plugin config, and all of
+it was invisible while a distro package supplied it: only the laptop had any of it, and dropping the
+package would silently take it away. `bindkey -e` in particular is load-bearing — zsh picks its
+keymap from `EDITOR`, which `shell/common.sh` sets to vim, so without it the line editor starts in
+vi mode. `HISTFILE` stays at `~/.zhistory` for the same reason: the history is already there, and
+pointing elsewhere strands it rather than losing it, which is harder to notice.
+
 `shell/common.sh` holds what both shells need — the asdf PATH, askpass, `gh` auth, `EDITOR`, the
 aliases, the `ranger` wrapper and the sync health report — and both rc files source it, so there is
 one copy. It must stay POSIX sh. Every block in it is guarded on the capability it needs rather than

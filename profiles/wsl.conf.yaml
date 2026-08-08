@@ -3,7 +3,7 @@
 # ~/.aws and ~/.azure are deliberately absent: they are symlinks into the
 # Windows user profile, so they are neither tracked nor deployed.
 #
-# This file is nearly empty by design. Everything the WSL box needs is now in
+# This file is nearly empty by design. Everything the WSL box needs lives in
 # base.conf.yaml, because the only thing it genuinely lacks is X — and nothing
 # in base needs it. A line arriving here should have to argue that it does.
 #
