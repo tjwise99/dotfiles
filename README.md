@@ -17,7 +17,12 @@ manjaro) and applies `profiles/base.conf.yaml` followed by that host's profile. 
 touching anything.
 
 `./install --packages` additionally installs what [Packages](#packages) declares. It is the only
-step that needs root, so it is opt-in and every other step stays runnable unattended.
+step that needs root, so it is opt-in and every other step stays runnable unattended — but on a
+genuinely fresh machine it is not optional, because asdf compiles and the compiler is one of the
+things it installs.
+
+Bringing up a WSL box has prerequisites that live on the Windows side and a first-run order that
+matters: [`BOOTSTRAP-WSL.md`](BOOTSTRAP-WSL.md).
 
 ## Layout
 
