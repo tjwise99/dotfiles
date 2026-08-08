@@ -1,0 +1,96 @@
+# What each host installs from its own package manager.
+#
+# Tiers, by who owns the tool:
+#   1  asdf, in asdf/tool-versions  — one pinned version, every host, no names here
+#   2  shared: below                — distro plumbing asdf cannot provide
+#   3  manjaro: below               — needs X, so it exists on one host only
+#
+# Tier 2 is the only place a tool carries two names, and so the only place the
+# two hosts can disagree. Keeping it short is the design: a tool that moves up
+# to tier 1 stops needing a mapping, and tier 3 has one column.
+#
+# TRIPWIRE: past roughly 25-30 entries under `shared:`, hand-maintaining this
+# mapping has stopped paying, and the answer is a package manager that is itself
+# cross-distro — Nix with Home Manager, or Homebrew on Linux — not more rows.
+# Recorded here because nothing measures it: the file gets one row longer at a
+# time and no single addition ever looks like the one that tipped it.
+#
+# An entry with no name for a supported host is written `unavailable` with the
+# reason. packages/resolve.py errors on a missing column rather than returning a
+# shorter list, so the marker is the only way to say "not here" on purpose.
+
+shared:
+  - name: build toolchain
+    pacman: base-devel
+    apt: build-essential
+    why: asdf plugins compile their runtimes
+
+  # Needed to clone this repo, so it is already present before anything here
+  # runs. Declared anyway: this is what the environment requires, not what is
+  # left to do.
+  - name: git
+    pacman: git
+    apt: git
+
+  - name: curl
+    pacman: curl
+    apt: curl
+    why: asdf plugins fetch releases with it
+
+  - name: unzip
+    pacman: unzip
+    apt: unzip
+
+  - name: zsh
+    pacman: zsh
+    apt: zsh
+    why: the login shell on both hosts
+
+  - name: vim
+    pacman: vim
+    apt: vim
+    why: shell/common.sh resolves EDITOR to it
+
+  - name: ranger
+    pacman: ranger
+    apt: ranger
+    why: TUI, so not desktop-only
+
+  - name: htop
+    pacman: htop
+    apt: htop
+
+  - name: fastfetch
+    pacman: fastfetch
+    apt: fastfetch
+    why: zsh/zshrc runs it as the login banner
+
+# Needs an X server. The test is not whether it looks like a desktop thing:
+# ranger and htop read that way and are shared, because they run over ssh.
+manjaro:
+  - {name: xorg-server}
+  - {name: i3-wm}
+  - {name: polybar}
+  - {name: rofi}
+  - {name: dunst}
+  - {name: picom}
+  - {name: alacritty}
+  - {name: lightdm}
+  - {name: feh}
+  - {name: ttf-jetbrains-mono-nerd, why: ranger/devicons.py and the polybar glyphs}
+  - {name: xclip, why: clipboard; the WSL equivalent is clip.exe, not a package}
+
+# Built from the AUR, which pacman does not do. Separate because the command
+# differs, not because the tier does.
+manjaro-aur:
+  - {name: betterlockscreen}
+  - {name: i3lock-color}
+
+# Packages installed before this manifest existed are recorded per host, in
+# packages/baseline-manjaro.txt and packages/baseline-wsl.txt, untriaged. Those
+# two names are written out because resolve.py builds the path from the host,
+# so the literal string appears nowhere else for tools/check-manifest.py to
+# vouch for the file with. Without that file the undeclared
+# direction would report every package the ISO shipped, and a check whose output
+# nobody reads is not a check. resolve.py --verify fails if it is missing rather
+# than running half of what it claims to run.
