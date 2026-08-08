@@ -113,14 +113,21 @@ Those paths are written out in full rather than built from a variable, because
 `tools/check-manifest.py` vouches for a tracked file by finding its path as a literal string in a
 deployed one, and an interpolated prefix is never contiguous with the rest of the path.
 
-`zsh/zshrc` also carries the shell behaviour that came with `manjaro-zsh-config` — the emacs
-keymap, the bindings for keys zsh leaves unbound (Home, End, Delete, page keys, word-wise motion),
-`WORDCHARS`, the completion styles and the history options. None of it is plugin config, and all of
-it was invisible while a distro package supplied it: only the laptop had any of it, and dropping the
-package would silently take it away. `bindkey -e` in particular is load-bearing — zsh picks its
-keymap from `EDITOR`, which `shell/common.sh` sets to vim, so without it the line editor starts in
-vi mode. `HISTFILE` stays at `~/.zhistory` for the same reason: the history is already there, and
+`zsh/zshrc` also carries the shell behaviour that came with `manjaro-zsh-config` — the bindings for
+keys zsh leaves unbound (Home, End, Delete, page keys, word-wise motion), `WORDCHARS`, the
+completion styles and the history options. None of it is plugin config, and all of it was invisible
+while a distro package supplied it: only the laptop had any of it, and dropping the package would
+silently take it away. `HISTFILE` stays at `~/.zhistory` because the history is already there, and
 pointing elsewhere strands it rather than losing it, which is harder to notice.
+
+The keymap is vi. `edit-command-line` on `v` is the reason — it opens the line under construction in
+`$EDITOR` and runs what comes back — with text objects and `surround` bound so `ci"` and `cs'"`
+behave as they do in vim. Every binding for a named key is installed in `viins` and `vicmd` both,
+and insert mode keeps `^A ^E ^W ^U ^K ^R` and a working backspace, so no existing habit has to be
+unlearned before normal mode is worth reaching for. `KEYTIMEOUT=1` is what makes Escape respond
+immediately; the escape sequences that would otherwise be lost to it are bound explicitly rather
+than resolved by timing. The mode itself is reported by the `vi_mode` segment in `~/.p10k.zsh` and
+by the cursor, which is a block in normal mode and a beam in insert.
 
 `shell/common.sh` holds what both shells need — the asdf PATH, askpass, `gh` auth, `EDITOR`, the
 aliases, the `ranger` wrapper and the sync health report — and both rc files source it, so there is

@@ -10,12 +10,21 @@
 # string in a deployed one, and an interpolated prefix is never contiguous with
 # the rest of the path in this file's text.
 
-# Completion. Manjaro's stock config set this up; nothing on Ubuntu does.
-# zsh selects its keymap from EDITOR/VISUAL, and shell/common.sh sets both to
-# vim, so the line editor comes up in vi mode unless this says otherwise. Before
-# every bindkey below, which it would otherwise reset.
-bindkey -e
+# vi keymap. zsh would also reach it on its own, since it picks from EDITOR and
+# shell/common.sh sets that to vim — choosing it here is what makes the rest of
+# this file's bindings deliberate rather than a side effect. The vi_mode segment
+# in ~/.p10k.zsh reports which mode the line is in.
+#
+# Before every bindkey below, which it would otherwise reset.
+bindkey -v
 
+# Delay zsh waits for the rest of a multi-key sequence, in hundredths of a
+# second. The default 0.4s is the lag between pressing Escape and normal mode
+# arriving. Arrow and function keys survive it because their sequences are bound
+# explicitly below rather than resolved by timing.
+KEYTIMEOUT=1
+
+# Completion. Manjaro's stock config set this up; nothing on Ubuntu does.
 mkdir -p "${HOME}/.cache/zsh"
 autoload -U compinit colors zcalc
 fpath+=("${HOME}/dotfiles/zsh/plugins/zsh-completions/src")
@@ -42,23 +51,80 @@ source "${HOME}/dotfiles/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highligh
 # Keys whose escape sequence zsh leaves unbound. terminfo is consulted where the
 # terminal reports one, because the literal sequences differ between terminals
 # and the literals below are only the common case.
+#
+# Bound in both keymaps. A key that works while typing and stops working after
+# Escape is what makes a modal editor feel broken rather than modal.
 zmodload zsh/terminfo
-[[ -n "${terminfo[khome]}" ]] && bindkey "${terminfo[khome]}" beginning-of-line
-[[ -n "${terminfo[kend]}"  ]] && bindkey "${terminfo[kend]}"  end-of-line
-bindkey '^[[H'    beginning-of-line
-bindkey '^[[7~'   beginning-of-line
-bindkey '^[[F'    end-of-line
-bindkey '^[[8~'   end-of-line
-bindkey '^[[3~'   delete-char
-bindkey '^[[2~'   overwrite-mode
-bindkey '^[[5~'   history-beginning-search-backward
-bindkey '^[[6~'   history-beginning-search-forward
-bindkey '^[[1;5D' backward-word
-bindkey '^[[1;5C' forward-word
-bindkey '^H'      backward-kill-word
-bindkey '^[[Z'    undo
-bindkey '^[[A'    history-substring-search-up
-bindkey '^[[B'    history-substring-search-down
+for _km in viins vicmd; do
+  [[ -n "${terminfo[khome]}" ]] && bindkey -M "${_km}" "${terminfo[khome]}" beginning-of-line
+  [[ -n "${terminfo[kend]}"  ]] && bindkey -M "${_km}" "${terminfo[kend]}"  end-of-line
+  bindkey -M "${_km}" '^[[H'    beginning-of-line
+  bindkey -M "${_km}" '^[[7~'   beginning-of-line
+  bindkey -M "${_km}" '^[[F'    end-of-line
+  bindkey -M "${_km}" '^[[8~'   end-of-line
+  bindkey -M "${_km}" '^[[3~'   delete-char
+  bindkey -M "${_km}" '^[[5~'   history-beginning-search-backward
+  bindkey -M "${_km}" '^[[6~'   history-beginning-search-forward
+  bindkey -M "${_km}" '^[[1;5D' backward-word
+  bindkey -M "${_km}" '^[[1;5C' forward-word
+  bindkey -M "${_km}" '^[[Z'    undo
+  bindkey -M "${_km}" '^[[A'    history-substring-search-up
+  bindkey -M "${_km}" '^[[B'    history-substring-search-down
+done
+unset _km
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+# Kept working in insert mode, so nothing already in the fingers has to be
+# unlearned before normal mode is worth reaching for. '^?' is not decoration:
+# zsh's vi insert mode otherwise refuses to backspace past where insert began.
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^H' backward-kill-word
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^Y' yank
+bindkey -M viins '^R' history-incremental-search-backward
+
+# `v` in normal mode opens the line being edited in $EDITOR and runs whatever
+# comes back, which is the reason to be in this keymap at all.
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd 'v' edit-command-line
+
+# Text objects and surround, so ci" ci( da{ cs'" ds( behave as they do in vim.
+autoload -Uz select-bracketed select-quoted surround
+zle -N select-bracketed
+zle -N select-quoted
+zle -N delete-surround surround
+zle -N add-surround surround
+zle -N change-surround surround
+for _km in visual viopp; do
+  for _c in {a,i}${(s..)^:-'()[]{}<>bB'}; do bindkey -M "${_km}" "${_c}" select-bracketed; done
+  for _c in {a,i}{\',\",\`};            do bindkey -M "${_km}" "${_c}" select-quoted; done
+done
+unset _km _c
+bindkey -M vicmd 'cs' change-surround
+bindkey -M vicmd 'ds' delete-surround
+bindkey -M vicmd 'ys' add-surround
+bindkey -M visual 'S' add-surround
+
+# Block cursor in normal mode, beam in insert. Added as hooks rather than by
+# defining zle-line-init directly, which powerlevel10k also installs.
+autoload -Uz add-zle-hook-widget
+_cursor_for_keymap() {
+  case ${KEYMAP} in
+    vicmd) printf '\e[2 q' ;;
+    *)     printf '\e[6 q' ;;
+  esac
+}
+_cursor_beam() { printf '\e[6 q'; }
+zle -N _cursor_for_keymap
+zle -N _cursor_beam
+add-zle-hook-widget keymap-select _cursor_for_keymap
+add-zle-hook-widget line-init _cursor_beam
 
 # Drops / & . ; from the set, so word-wise motion stops at path segments.
 WORDCHARS=${WORDCHARS//\/[&.;]}
