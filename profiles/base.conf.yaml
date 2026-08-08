@@ -59,6 +59,21 @@
     ~/.config/systemd/user/dotfiles-sync.service: systemd/dotfiles-sync.service
     ~/.config/systemd/user/dotfiles-sync.timer: systemd/dotfiles-sync.timer
 
+# Before asdf, not after it. asdf downloads and compiles: its plugins need
+# curl, unzip and a compiler, which packages/manifest.yaml is what declares. On
+# a machine that already has them the order is invisible, which is exactly why
+# it has to be reasoned about rather than observed — the laptop cannot show this
+# step failing.
+#
+# The only step needing root, so it is opt-in: plain ./install prints what it
+# skipped and still verifies. On a genuinely fresh host, ./install --packages is
+# not optional, because nothing below it will succeed without these.
+- shell:
+    - command: ./packages/sync-packages.sh
+      description: Install and verify this host's packages
+      stdout: true
+      stderr: true
+
 - shell:
     - command: ./asdf/install-asdf.sh
       description: Install asdf
@@ -109,15 +124,6 @@
       stderr: true
     - command: ./asdf/npm-globals.sh
       description: Install global npm packages
-      stdout: true
-      stderr: true
-
-    # The only step that needs root, so it is opt-in via ./install --packages
-    # and every other step stays runnable unattended. Without the flag it still
-    # verifies, which needs no privileges — a skipped install should not also
-    # skip reporting that the machine has drifted.
-    - command: ./packages/sync-packages.sh
-      description: Install and verify this host's packages
       stdout: true
       stderr: true
 

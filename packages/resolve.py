@@ -6,6 +6,10 @@
 --verify   both directions: every name the manifest gives this host is
            installed, and every explicitly-installed package is either named
            here or recorded in the host's baseline
+--write-baseline
+           record this host's untriaged explicit installs, once, so --verify's
+           undeclared direction has something to measure against. Refuses to
+           overwrite an existing file.
 --host     print the detected host and exit
 
 An entry that omits this host's column is an error, not a shorter list. A
@@ -124,6 +128,27 @@ def group_members(name):
     return members or None
 
 
+def write_baseline(host):
+    """Record this machine's untriaged explicit installs, once, for a new host.
+
+    Refuses to overwrite. Regenerating on a machine that has drifted would fold
+    the drift into the baseline and call it history, which is the one way this
+    file can quietly stop being a record of anything.
+    """
+    path = ROOT / f"packages/baseline-{host}.txt"
+    if path.exists():
+        raise SystemExit(f"{path.name} already exists — delete it deliberately to redo it")
+    declared = set(names_for(host)) | set(aur_names() if host == "manjaro" else [])
+    untriaged = sorted(explicit(host) - declared)
+    path.write_text(
+        "# Explicitly-installed packages that predate packages/manifest.yaml on\n"
+        f"# this host. Untriaged, not endorsed: recorded so resolve.py --verify\n"
+        "# reports what was installed since, not everything the image shipped.\n"
+        + "\n".join(untriaged) + "\n")
+    print(f"wrote {path.name} — {len(untriaged)} untriaged packages ({host})")
+    return 0
+
+
 def baseline(host):
     """Explicitly-installed packages that predate this manifest.
 
@@ -184,6 +209,8 @@ def main():
     if host not in HOSTS:
         raise SystemExit(f"no package manifest for host '{host}'")
 
+    if "--write-baseline" in argv:
+        return write_baseline(host)
     if "--verify" in argv:
         return verify(host)
     if "--aur" in argv:
