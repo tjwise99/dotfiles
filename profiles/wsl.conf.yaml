@@ -3,8 +3,13 @@
 # ~/.aws and ~/.azure are deliberately absent: they are symlinks into the
 # Windows user profile, so they are neither tracked nor deployed.
 #
-# Each profile is a separate dotbot invocation, so it needs its own defaults —
-# the block in base.conf.yaml does not carry over into this process.
+# This file is nearly empty by design. Everything the WSL box needs lives in
+# base.conf.yaml, because the only thing it genuinely lacks is X — and nothing
+# in base needs it. A line arriving here should have to argue that it does.
+#
+# bash/bashrc is still deployed: zsh is the login shell on both hosts, but an
+# inbound non-interactive bash and Windows-side `wsl -e bash -lc` still read it,
+# and it is what sources shell/common.sh for them.
 - defaults:
     link:
       relink: true
@@ -12,7 +17,4 @@
       create: true
 
 - link:
-    # This is the host whose login shell is bash. Interactive bash is the only
-    # thing that sources bashrc, so on a zsh host the link is dead weight that
-    # makes edits to ~/.bashrc look like they take effect when they do not.
     ~/.bashrc: bash/bashrc

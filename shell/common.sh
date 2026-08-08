@@ -52,7 +52,51 @@ if _vim="$(command -v vim 2>/dev/null)"; then
 fi
 unset _vim
 
-# The sync timer is silent on success; this is how a failure reaches you.
+# --------------------------------------------------------- shell behaviour --
+#
+# Aliases and functions live here rather than in one rc file, so the shell
+# behaves the same on both hosts. Anything needing X is in zsh/zshrc.x, which
+# only the laptop deploys.
+
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias grep='grep --color=auto'
+alias dirsize='sudo du -hc . | sort -rh | head -20'
+
+# Leave the shell in whatever directory ranger quit from. --choosedir writes the
+# final path to a temp file; `command` avoids recursing into this function.
+# Written without `local`, which this file's POSIX constraint does not have.
+ranger() {
+  _rgr_tmp="$(mktemp -t ranger-cd.XXXXXX)" || return 1
+  command ranger --choosedir="${_rgr_tmp}" -- "${@:-${PWD}}"
+  if [ -f "${_rgr_tmp}" ]; then
+    _rgr_dest="$(cat -- "${_rgr_tmp}")"
+    if [ -n "${_rgr_dest}" ] && [ -d "${_rgr_dest}" ] && [ "${_rgr_dest}" != "${PWD}" ]; then
+      cd -- "${_rgr_dest}" || :
+    fi
+  fi
+  rm -f -- "${_rgr_tmp}"
+  unset _rgr_tmp _rgr_dest
+}
+
+# ------------------------------------------------------------ sync health --
+#
+# Two signals, because they fail differently. The marker means a run happened
+# and failed. The stamp means a run happened at all — and its absence is the
+# only thing that can report a host where the timer never fires, which is WSL
+# whenever /etc/wsl.conf has not turned systemd on. That host writes no marker
+# precisely because nothing runs to write one, so a report built on the marker
+# alone describes a healthy machine that has never once backed up.
+
 if [ -f "${HOME}/.dotfiles-sync-failed" ]; then
   printf '\033[33mdotfiles sync failed:\033[0m %s\n' "$(cat "${HOME}/.dotfiles-sync-failed")"
+fi
+
+if [ ! -f "${HOME}/.dotfiles-sync-stamp" ]; then
+  printf '\033[33mdotfiles sync has never run on this host\033[0m (see README, Sync)\n'
+elif [ -n "$(find "${HOME}/.dotfiles-sync-stamp" -mmin +1440 2>/dev/null)" ]; then
+  printf '\033[33mdotfiles sync last ran %s\033[0m\n' \
+    "$(date -r "${HOME}/.dotfiles-sync-stamp" '+%Y-%m-%d %H:%M')"
 fi

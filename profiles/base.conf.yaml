@@ -1,3 +1,4 @@
+# Deployed on every host. A config belongs here unless it needs an X server.
 - defaults:
     link:
       relink: true
@@ -7,12 +8,16 @@
 - clean: ["~", "~/.claude"]
 
 - link:
-    # Shell. bash/bashrc is per-host (see wsl.conf.yaml) because a login shell
-    # that is not bash never sources it. bash/profile stays here: lightdm's
-    # Xsession sources ~/.profile before starting the graphical session, so on
-    # the laptop it is the only file that can put a directory on the session
-    # PATH, independently of which shell that host logs in with.
+    # Shell. lightdm's Xsession sources ~/.profile before starting the graphical
+    # session, so on the laptop it is the only file that can put a directory on
+    # the session PATH, independently of which shell that host logs in with.
     ~/.profile: bash/profile
+
+    # zsh is the login shell on both hosts, and zsh/zshrc sources its plugins
+    # from this repo rather than /usr/share, so it is host-independent. What is
+    # laptop-specific went to zsh/zshrc.x, which only manjaro.conf.yaml deploys.
+    ~/.zshrc: zsh/zshrc
+    ~/.p10k.zsh: zsh/p10k.zsh
 
     # Git
     ~/.gitconfig: git/gitconfig
@@ -35,6 +40,14 @@
     # notes about this file belong here or in the README, not in its header.
     ~/.config/gh/config.yml: gh/config.yml
 
+    # TUI, not GUI: these run identically over ssh and under WSL, so keying them
+    # to the laptop was keying on the host rather than on what they need.
+    # ccstatusline is the case that showed it — asdf/npm-globals.sh installs the
+    # package on both hosts, so the WSL box ran it with default config.
+    ~/.config/ranger: ranger
+    ~/.config/htop: htop
+    ~/.config/ccstatusline: ccstatusline
+
     # Notes
     ~/lessons: notes/lessons
     ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md
@@ -45,6 +58,21 @@
     # Sync timer
     ~/.config/systemd/user/dotfiles-sync.service: systemd/dotfiles-sync.service
     ~/.config/systemd/user/dotfiles-sync.timer: systemd/dotfiles-sync.timer
+
+# Before asdf, not after it. asdf downloads and compiles: its plugins need
+# curl, unzip and a compiler, which packages/manifest.yaml is what declares. On
+# a machine that already has them the order is invisible, which is exactly why
+# it has to be reasoned about rather than observed — the laptop cannot show this
+# step failing.
+#
+# The only step needing root, so it is opt-in: plain ./install prints what it
+# skipped and still verifies. On a genuinely fresh host, ./install --packages is
+# not optional, because nothing below it will succeed without these.
+- shell:
+    - command: ./packages/sync-packages.sh
+      description: Install and verify this host's packages
+      stdout: true
+      stderr: true
 
 - shell:
     - command: ./asdf/install-asdf.sh
@@ -75,6 +103,19 @@
       versions:
         - 1.58.0
 
+    # Moved off the distro package managers rather than newly adopted: both are
+    # already installed here by pacman, at these versions. asdf gives the same
+    # version on both hosts — and for a tool Ubuntu renames, fd as fdfind and
+    # bat as batcat, it is also what keeps the command name the same.
+    - plugin: ripgrep
+      url: https://gitlab.com/wt0f/asdf-ripgrep.git
+      versions:
+        - 15.2.0
+    - plugin: fzf
+      url: https://github.com/kompiro/asdf-fzf.git
+      versions:
+        - 0.74.2
+
 # The asdf directive above reports success even when it installs nothing.
 - shell:
     - command: ./asdf/verify-tools.sh
@@ -85,6 +126,8 @@
       description: Install global npm packages
       stdout: true
       stderr: true
+
     - command: ./systemd/enable-timer.sh
       description: Enable the sync timer
       stdout: true
+      stderr: true

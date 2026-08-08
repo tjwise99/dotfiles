@@ -20,6 +20,25 @@ if [ ! -r "${versions}" ]; then
 fi
 
 status=0
+
+# A plugin named in the profile with no line in ~/.tool-versions installs a shim
+# that shadows the distro's binary and then refuses to run. The loop below reads
+# ~/.tool-versions, so it cannot see that at all: moving ripgrep to asdf left
+# `rg` answering "No version is set" while this script reported every tool ok.
+profile="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/profiles/base.conf.yaml"
+if [ -r "${profile}" ]; then
+    while read -r plugin; do
+        [ -n "${plugin}" ] || continue
+        if ! grep -qE "^${plugin}[[:space:]]" "${versions}"; then
+            echo "UNDECLARED: ${profile##*/} installs plugin '${plugin}' with no ${versions} line" >&2
+            status=1
+        fi
+    done < <(sed -n 's/^[[:space:]]*-[[:space:]]*plugin:[[:space:]]*\([^[:space:]]*\).*/\1/p' "${profile}")
+else
+    echo "cannot read ${profile} — the plugin cross-check did not run" >&2
+    status=1
+fi
+
 while read -r tool version _; do
     case "${tool}" in ''|\#*) continue ;; esac
     if asdf where "${tool}" "${version}" >/dev/null 2>&1; then

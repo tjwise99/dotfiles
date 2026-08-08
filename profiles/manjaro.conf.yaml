@@ -1,4 +1,6 @@
-# Manjaro-only links (terminal emulator, fonts, anything GUI).
+# Manjaro-only links. The test is whether the config is useless without an X
+# server — not whether it reads like a desktop thing. ranger and htop read that
+# way and live in base.conf.yaml, because they work over ssh and under WSL.
 #
 # Each profile is a separate dotbot invocation, so it needs its own defaults —
 # the block in base.conf.yaml does not carry over into this process.
@@ -9,11 +11,6 @@
       create: true
 
 - link:
-    # This laptop's login shell is zsh, so bash/bashrc is not deployed here —
-    # non-interactive bash returns before reading it, and an inbound ssh gets
-    # zsh. What both shells need is in shell/common.sh, which this sources.
-    ~/.zshrc: zsh/zshrc
-
     # Desktop configs are linked as whole directories, not file by file, so a
     # new script dropped into one is picked up without touching this file. The
     # cost is that generated output lands in the repo too — .gitignore carries
@@ -21,12 +18,13 @@
     ~/.config/theme: theme
     ~/.config/i3: i3
     ~/.config/polybar: polybar
-    ~/.config/ranger: ranger
-    ~/.config/htop: htop
-    ~/.config/ccstatusline: ccstatusline
 
     # Not directories: these two live at fixed paths in $HOME. .Xresources is
     # hand-written (Xft DPI) rather than rendered from theme/ — i3 merges it at
     # login, whereas the theme templates render only when theme.sh is run.
     ~/.xprofile: x/xprofile
     ~/.Xresources: x/Xresources
+
+    # The X-dependent part of the shell. zsh/zshrc sources this if the file is
+    # there, so the WSL box gets the same zshrc and simply never finds it.
+    ~/.config/zsh/x.zsh: zsh/zshrc.x
