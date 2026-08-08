@@ -30,17 +30,14 @@ if [ -x "${HOME}/.local/bin/zenity-askpass" ]; then
   export SUDO_ASKPASS="${SSH_ASKPASS}"
 fi
 
-# A dedicated PAT for Claude Code's GitHub access, kept independent of the
-# deployment token. Rotate by overwriting the file; a host without it gets an
-# empty value, which the next block treats as "no gh auth to do".
-export GITHUB_MCP_PAT="$(cat "${HOME}/.claude_github_token" 2>/dev/null)"
-
-# Log gh in with the same PAT, so it is authenticated in every shell without a
-# second copy of the token. Gated on gh existing as well as on the token, or a
-# host without it prints "command not found" once per shell.
-if [ -n "${GITHUB_MCP_PAT}" ] && [ -z "${GH_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
-  export GH_TOKEN="${GITHUB_MCP_PAT}"
-  echo "${GH_TOKEN}" | gh auth login --with-token
+# gh keeps its token in the system keyring, so nothing on disk holds it. Lift it
+# into the environment for scripts that read GH_TOKEN directly rather than
+# shelling out to gh — WiseKiosk's check-branch gate calls the API with curl.
+# An empty result is not exported, or the gate reads a set-but-blank token.
+if [ -z "${GH_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+  gh_token="$(gh auth token 2>/dev/null)"
+  [ -n "${gh_token}" ] && export GH_TOKEN="${gh_token}"
+  unset gh_token
 fi
 
 # Resolved rather than hardcoded to /usr/bin/vim: the path differs per host, and

@@ -109,8 +109,8 @@ bindkey -M vicmd v        # expect: "v" edit-command-line
   deployed by the manjaro profile alone and `zsh/zshrc` tests for it.
 - No theme, i3, polybar or Xresources links. Tier 3 is X-only by design.
 - History starts empty. `~/.zhistory` is per-machine and never synced.
-- `gh` is unauthenticated until `~/.claude_github_token` exists;
-  `shell/common.sh` skips that block silently when it does not.
+- `gh` is unauthenticated until `gh auth login` is run here; `shell/common.sh`
+  exports `GH_TOKEN` from `gh auth token` and skips silently until then.
 - The sync timer backs up to `origin/main`. While `cross-host-packages` is
   checked out it will commit locally and push nothing.
 
