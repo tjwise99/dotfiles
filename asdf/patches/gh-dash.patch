@@ -47,7 +47,7 @@ index ea1cc2e..3e13290 100644
          width: 10
        creatorIcon:
 diff --git a/internal/data/issueapi.go b/internal/data/issueapi.go
-index 9fa1763..7e410d8 100644
+index 9fa1763..2bd9cd5 100644
 --- a/internal/data/issueapi.go
 +++ b/internal/data/issueapi.go
 @@ -3,6 +3,9 @@ package data
@@ -82,8 +82,8 @@ index 9fa1763..7e410d8 100644
 +}
 +
 +// milestoneLess is the single ordering rule for milestones: due date first where they carry one,
-+// then number, with the absent milestone last. Both the column's grouping and the milestone:@N
-+// ordinal resolve through it, so the Nth tab and the Nth group can never disagree.
++// then number, with the absent milestone last. Both the column's grouping and milestone:@current
++// resolve through it, so the milestone a section calls current is the one that groups first.
 +func milestoneLess(a, b MilestoneRef) bool {
 +	if (a.Number == 0) != (b.Number == 0) {
 +		return b.Number == 0
@@ -111,7 +111,7 @@ index 9fa1763..7e410d8 100644
  }
  
  type IssueComments struct {
-@@ -99,6 +146,203 @@ func makeIssuesQuery(query string) string {
+@@ -99,6 +146,255 @@ func makeIssuesQuery(query string) string {
  	return fmt.Sprintf("is:issue archived:false %s sort:updated", query)
  }
  
@@ -130,9 +130,32 @@ index 9fa1763..7e410d8 100644
 +
 +// GitHub's milestone: qualifier matches only a milestone's exact full title — milestone:2 and
 +// milestone:Architecture both return nothing. That makes a section filter unusable across repos,
-+// so milestone:@N names the Nth open milestone in the order milestoneLess defines, and is resolved
-+// to that repo's literal title before the search runs. @current is @1.
-+const milestoneOrdinalPrefix = "milestone:@"
++// so milestone:@N names milestone number N, milestone:@current the first open milestone in the
++// order milestoneLess defines, and both are resolved to that repo's literal title before the
++// search runs. @N reads closed milestones too: the number is the identity typed, and resolving it
++// only while the milestone happens to be open would answer a different question every few weeks.
++const milestoneRefPrefix = "milestone:@"
++
++// The GraphQL page maximum, and enough pages to exhaust any real repo. Milestones are read to
++// exhaustion rather than one page deep because @current is the first of the whole ordered set —
++// answering it from a truncated list names the wrong milestone with nothing to show for it.
++const (
++	milestonePageSize = 100
++	milestonePageCap  = 10
++)
++
++// State is needed only to pick @current, and an issue row's Milestone cannot carry it without
++// widening the issue query, so the two do not share a type.
++type milestoneNode struct {
++	Number int
++	Title  string
++	DueOn  *time.Time
++	State  string
++}
++
++func (node milestoneNode) ref() MilestoneRef {
++	return MilestoneRef{Number: node.Number, Title: node.Title, DueOn: node.DueOn}
++}
 +
 +func repoFromQuery(query string) (string, string, bool) {
 +	for _, field := range strings.Fields(query) {
@@ -147,7 +170,8 @@ index 9fa1763..7e410d8 100644
 +	return "", "", false
 +}
 +
-+func fetchOpenMilestones(owner, name string) ([]MilestoneRef, error) {
++// fetchMilestones returns every milestone the repo has, open and closed, in milestoneLess order.
++func fetchMilestones(owner, name string) ([]milestoneNode, error) {
 +	// Self-contained rather than relying on FetchIssues having run first: reaching the API
 +	// through a nil client panics, and a panic here would take the whole dash down.
 +	if client == nil {
@@ -157,50 +181,69 @@ index 9fa1763..7e410d8 100644
 +		}
 +	}
 +
-+	var queryResult struct {
-+		Repository struct {
-+			Milestones struct {
-+				Nodes []MilestoneRef
-+			} `graphql:"milestones(first: 100, states: OPEN)"`
-+		} `graphql:"repository(owner: $owner, name: $name)"`
++	milestones := make([]milestoneNode, 0)
++	var endCursor *string
++
++	for page := 0; page < milestonePageCap; page++ {
++		var queryResult struct {
++			Repository struct {
++				Milestones struct {
++					Nodes    []milestoneNode
++					PageInfo PageInfo
++					// Paged in number order so a milestone cannot be skipped or read twice
++					// across pages; the set is reordered by milestoneLess once complete.
++				} `graphql:"milestones(first: $limit, after: $endCursor, states: [OPEN, CLOSED], orderBy: {field: NUMBER, direction: ASC})"`
++			} `graphql:"repository(owner: $owner, name: $name)"`
++		}
++		variables := map[string]any{
++			"owner":     graphql.String(owner),
++			"name":      graphql.String(name),
++			"limit":     graphql.Int(milestonePageSize),
++			"endCursor": (*graphql.String)(endCursor),
++		}
++		if err := client.Query("RepoMilestones", &queryResult, variables); err != nil {
++			return nil, err
++		}
++		milestones = append(milestones, queryResult.Repository.Milestones.Nodes...)
++		if !queryResult.Repository.Milestones.PageInfo.HasNextPage {
++			sort.SliceStable(milestones, func(i, j int) bool {
++				return milestoneLess(milestones[i].ref(), milestones[j].ref())
++			})
++			return milestones, nil
++		}
++		cursor := queryResult.Repository.Milestones.PageInfo.EndCursor
++		endCursor = &cursor
 +	}
-+	variables := map[string]any{
-+		"owner": graphql.String(owner),
-+		"name":  graphql.String(name),
-+	}
-+	if err := client.Query("OpenMilestones", &queryResult, variables); err != nil {
-+		return nil, err
-+	}
-+	milestones := queryResult.Repository.Milestones.Nodes
-+	sort.SliceStable(milestones, func(i, j int) bool { return milestoneLess(milestones[i], milestones[j]) })
-+	return milestones, nil
++
++	return nil, fmt.Errorf(
++		"%s cannot be resolved: %s/%s has more than %d milestones",
++		milestoneRefPrefix, owner, name, milestonePageCap*milestonePageSize,
++	)
 +}
 +
-+// resolveMilestoneOrdinal replaces a milestone:@N token with that milestone's title. ok is false
-+// when the ordinal names no milestone — a repo with two milestones asked for the third. That is
-+// not an error: no issue can be in a milestone that does not exist, so the honest answer is an
-+// empty section rather than a failure the user has to dismiss on every repo.
-+func resolveMilestoneOrdinal(query string) (string, bool, error) {
++// resolveMilestoneRef replaces a milestone:@… token with that milestone's title. ok is false when
++// the reference names no milestone — a number never created, or @current in a repo with nothing
++// open. That is not an error: no issue can be in a milestone that does not exist, so the honest
++// answer is an empty section rather than a failure the user has to dismiss on every repo.
++func resolveMilestoneRef(query string) (string, bool, error) {
 +	fields := strings.Fields(query)
 +	index := -1
-+	var ordinal int
++	number := 0 // 0 is @current, which names a milestone by position rather than by number
 +	for position, field := range fields {
-+		if !strings.HasPrefix(field, milestoneOrdinalPrefix) {
++		if !strings.HasPrefix(field, milestoneRefPrefix) {
 +			continue
 +		}
-+		suffix := strings.TrimPrefix(field, milestoneOrdinalPrefix)
-+		if suffix == "current" {
-+			ordinal = 1
-+		} else {
++		suffix := strings.TrimPrefix(field, milestoneRefPrefix)
++		if suffix != "current" {
 +			parsed, err := strconv.Atoi(suffix)
 +			if err != nil || parsed < 1 {
 +				return "", false, fmt.Errorf(
-+					"%s%s is not a milestone ordinal — use %s1, %s2, … or %scurrent",
-+					milestoneOrdinalPrefix, suffix,
-+					milestoneOrdinalPrefix, milestoneOrdinalPrefix, milestoneOrdinalPrefix,
++					"%s%s is not a milestone reference — use %scurrent, or %sN for milestone number N",
++					milestoneRefPrefix, suffix,
++					milestoneRefPrefix, milestoneRefPrefix,
 +				)
 +			}
-+			ordinal = parsed
++			number = parsed
 +		}
 +		index = position
 +		break
@@ -213,20 +256,29 @@ index 9fa1763..7e410d8 100644
 +	if !found {
 +		return "", false, fmt.Errorf(
 +			"%s needs a repo: to resolve against — open gh-dash inside a clone, or name one in the filter",
-+			milestoneOrdinalPrefix,
++			milestoneRefPrefix,
 +		)
 +	}
-+	milestones, err := fetchOpenMilestones(owner, name)
++	milestones, err := fetchMilestones(owner, name)
 +	if err != nil {
 +		return "", false, err
 +	}
-+	if ordinal > len(milestones) {
-+		log.Info("milestone ordinal names no open milestone",
-+			"repo", owner+"/"+name, "ordinal", ordinal, "open", len(milestones))
++
++	title, matched := "", false
++	for _, milestone := range milestones {
++		// milestones is in milestoneLess order, so the first open one is @current.
++		if (number == 0 && milestone.State == "OPEN") || (number != 0 && milestone.Number == number) {
++			title, matched = milestone.Title, true
++			break
++		}
++	}
++	if !matched {
++		log.Info("milestone reference names no milestone",
++			"repo", owner+"/"+name, "ref", fields[index], "milestones", len(milestones))
 +		return "", false, nil
 +	}
 +
-+	fields[index] = fmt.Sprintf("milestone:%q", milestones[ordinal-1].Title)
++	fields[index] = fmt.Sprintf("milestone:%q", title)
 +	return strings.Join(fields, " "), true, nil
 +}
 +
@@ -315,13 +367,13 @@ index 9fa1763..7e410d8 100644
  func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, error) {
  	var err error
  	if client == nil {
-@@ -109,6 +353,20 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
+@@ -109,6 +405,20 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
  		return IssuesResponse{}, err
  	}
  
 +	// Before the dependency filter, so the two compose: the resolved milestone: narrows the
 +	// search server-side and the dependency filter then walks a smaller result set.
-+	query, ok, err := resolveMilestoneOrdinal(query)
++	query, ok, err := resolveMilestoneRef(query)
 +	if err != nil {
 +		return IssuesResponse{}, err
 +	}
