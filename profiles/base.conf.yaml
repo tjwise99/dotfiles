@@ -126,6 +126,13 @@
       versions:
         - 1.97.1
 
+    # Registered as "golang", not "go" — ~/.tool-versions names golang while the
+    # command stays go.
+    - plugin: golang
+      url: https://github.com/asdf-community/asdf-golang.git
+      versions:
+        - 1.26.5
+
 # The asdf directive above reports success even when it installs nothing.
 - shell:
     - command: ./asdf/verify-tools.sh
@@ -139,6 +146,11 @@
 
     - command: ./asdf/gh-review-build.sh
       description: Build gh-review from pinned upstream plus our patch
+      stdout: true
+      stderr: true
+
+    - command: ./asdf/gh-dash-build.sh
+      description: Build gh-dash from pinned upstream plus our patch
       stdout: true
       stderr: true
 

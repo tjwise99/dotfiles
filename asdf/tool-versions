@@ -7,3 +7,4 @@ ripgrep 15.2.0
 fzf 0.74.2
 delta 0.19.2
 rust 1.97.1
+golang 1.26.5

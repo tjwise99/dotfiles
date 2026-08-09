@@ -1,0 +1,178 @@
+diff --git a/internal/data/issueapi.go b/internal/data/issueapi.go
+index 9fa1763..3e2daf7 100644
+--- a/internal/data/issueapi.go
++++ b/internal/data/issueapi.go
+@@ -3,6 +3,7 @@ package data
+ import (
+ 	"fmt"
+ 	"net/url"
++	"strings"
+ 	"time"
+ 
+ 	"charm.land/log/v2"
+@@ -30,6 +31,11 @@ type IssueData struct {
+ 	Comments          IssueComments  `graphql:"comments(last: 15)"`
+ 	Reactions         IssueReactions `graphql:"reactions(first: 1)"`
+ 	Labels            IssueLabels    `graphql:"labels(first: 20)"`
++
++	// BlockedBy counts *open* blockers, so an issue whose every blocker has closed reports zero.
++	IssueDependenciesSummary struct {
++		BlockedBy int
++	}
+ }
+ 
+ type IssueComments struct {
+@@ -99,6 +105,90 @@ func makeIssuesQuery(query string) string {
+ 	return fmt.Sprintf("is:issue archived:false %s sort:updated", query)
+ }
+ 
++// GitHub's search index does not carry issue dependencies. Repository-scoped, `is:blocked` matches
++// nothing; unscoped it degrades to a text match on the word, so `-is:blocked` sent to the API
++// returns every open issue whether or not any is blocked. The token is stripped from the query and
++// applied to the fetched rows instead, which is the only place it can be applied at all.
++const blockedFilterToken = "is:blocked"
++
++// The GraphQL maximum. A filtered section pages to exhaustion, so this sizes round trips, not rows.
++const blockedFilterPageSize = 100
++
++// Bounds that exhaustion. Reaching it means the result is short, which is logged rather than
++// quietly presented as complete.
++const blockedFilterPageCap = 20
++
++// extractBlockedFilter returns the query stripped of the dependency token, and what the token
++// asked for: true for blocked issues, false for unblocked, nil when the query did not mention it.
++func extractBlockedFilter(query string) (string, *bool) {
++	var want *bool
++	kept := make([]string, 0)
++	for _, field := range strings.Fields(query) {
++		switch field {
++		case blockedFilterToken:
++			blocked := true
++			want = &blocked
++		case "-" + blockedFilterToken:
++			blocked := false
++			want = &blocked
++		default:
++			kept = append(kept, field)
++		}
++	}
++	return strings.Join(kept, " "), want
++}
++
++// fetchIssuesByDependency pages the search to exhaustion before filtering, because the count and
++// the rows have to agree. Filtering one page in isolation reports a total that counts issues the
++// section does not list, and applying the section's limit before the filter would hide ready
++// issues behind blocked ones that merely sorted earlier.
++//
++// The section's limit is deliberately not applied: with the filter running here, the honest
++// choices were to ignore it or to report a count that disagrees with the rows on screen.
++func fetchIssuesByDependency(query string, wantBlocked bool) (IssuesResponse, error) {
++	matched := make([]IssueData, 0)
++	var endCursor *string
++
++	for page := 0; page < blockedFilterPageCap; page++ {
++		var queryResult struct {
++			Search struct {
++				Nodes []struct {
++					Issue IssueData `graphql:"... on Issue"`
++				}
++				IssueCount int
++				PageInfo   PageInfo
++			} `graphql:"search(type: ISSUE, first: $limit, after: $endCursor, query: $query)"`
++		}
++		variables := map[string]any{
++			"query":     graphql.String(makeIssuesQuery(query)),
++			"limit":     graphql.Int(blockedFilterPageSize),
++			"endCursor": (*graphql.String)(endCursor),
++		}
++		if err := client.Query("SearchIssues", &queryResult, variables); err != nil {
++			return IssuesResponse{}, err
++		}
++		for _, node := range queryResult.Search.Nodes {
++			if (node.Issue.IssueDependenciesSummary.BlockedBy > 0) == wantBlocked {
++				matched = append(matched, node.Issue)
++			}
++		}
++		if !queryResult.Search.PageInfo.HasNextPage {
++			log.Info("Successfully fetched issues", "query", query, "count", len(matched))
++			// HasNextPage stays false: the pages walked here are the search's, and the section
++			// cannot resume from a cursor whose rows it never saw.
++			return IssuesResponse{Issues: matched, TotalCount: len(matched)}, nil
++		}
++		cursor := queryResult.Search.PageInfo.EndCursor
++		endCursor = &cursor
++	}
++
++	log.Warn(
++		"Dependency-filtered search hit its page cap; this result is incomplete",
++		"query", query, "pages", blockedFilterPageCap, "matched", len(matched),
++	)
++	return IssuesResponse{Issues: matched, TotalCount: len(matched)}, nil
++}
++
+ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, error) {
+ 	var err error
+ 	if client == nil {
+@@ -109,6 +199,10 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
+ 		return IssuesResponse{}, err
+ 	}
+ 
++	if searchQuery, wantBlocked := extractBlockedFilter(query); wantBlocked != nil {
++		return fetchIssuesByDependency(searchQuery, *wantBlocked)
++	}
++
+ 	var queryResult struct {
+ 		Search struct {
+ 			Nodes []struct {
+diff --git a/internal/tui/components/footer/footer.go b/internal/tui/components/footer/footer.go
+index f8ca6a0..62ef497 100644
+--- a/internal/tui/components/footer/footer.go
++++ b/internal/tui/components/footer/footer.go
+@@ -179,9 +179,7 @@ func (m *Model) renderViewSwitcher(ctx *context.ProgramContext) string {
+ 	view := lipgloss.JoinHorizontal(
+ 		lipgloss.Top,
+ 		ctx.Styles.ViewSwitcher.ViewsSeparator.PaddingLeft(1).
+-			Render(m.renderViewButton(config.NotificationsView)),
+-		ctx.Styles.ViewSwitcher.ViewsSeparator.Render(viewSeparator),
+-		m.renderViewButton(config.PRsView),
++			Render(m.renderViewButton(config.PRsView)),
+ 		ctx.Styles.ViewSwitcher.ViewsSeparator.Render(viewSeparator),
+ 		m.renderViewButton(config.IssuesView),
+ 		lipgloss.NewStyle().Background(ctx.Styles.Common.FooterStyle.GetBackground()).Foreground(
+diff --git a/internal/tui/ui.go b/internal/tui/ui.go
+index eb3c714..abfdf8d 100644
+--- a/internal/tui/ui.go
++++ b/internal/tui/ui.go
+@@ -1635,26 +1635,24 @@ func (m *Model) switchSelectedView() tea.Cmd {
+ 		m.notificationView.ClearSubject()
+ 	}
+ 
+-	// View cycle: Notifications → PRs → Issues (→ Repo if enabled) → Notifications
++	// View cycle: PRs → Issues (→ Repo if enabled) → PRs. Notifications is dropped from the cycle
++	// and from the footer switcher together; leaving it in either advertises a view the other one
++	// cannot reach. `defaults.view: notifications` still parses, and the default lands on PRs.
+ 	if repoFF {
+ 		switch m.ctx.View {
+-		case config.NotificationsView:
+-			m.ctx.View = config.PRsView
+ 		case config.PRsView:
+ 			m.ctx.View = config.IssuesView
+ 		case config.IssuesView:
+ 			m.ctx.View = config.RepoView
+-		case config.RepoView:
+-			m.ctx.View = config.NotificationsView
++		default:
++			m.ctx.View = config.PRsView
+ 		}
+ 	} else {
+ 		switch m.ctx.View {
+-		case config.NotificationsView:
+-			m.ctx.View = config.PRsView
+ 		case config.PRsView:
+ 			m.ctx.View = config.IssuesView
+ 		default:
+-			m.ctx.View = config.NotificationsView
++			m.ctx.View = config.PRsView
+ 		}
+ 	}
+ 
