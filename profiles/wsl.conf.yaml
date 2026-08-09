@@ -1,20 +1,20 @@
-# WSL-only links.
+# WSL-only links — currently none.
 #
 # ~/.aws and ~/.azure are deliberately absent: they are symlinks into the
 # Windows user profile, so they are neither tracked nor deployed.
 #
-# This file is nearly empty by design. Everything the WSL box needs lives in
-# base.conf.yaml, because the only thing it genuinely lacks is X — and nothing
-# in base needs it. A line arriving here should have to argue that it does.
+# Empty by design, and kept rather than deleted so `install` does not warn that
+# this host has no profile — it has one, and it says nothing. Everything the WSL
+# box needs lives in base.conf.yaml, because the only thing it genuinely lacks
+# is X, and nothing in base needs it. A line arriving here should have to argue
+# that it does.
 #
-# bash/bashrc is still deployed: zsh is the login shell on both hosts, but an
-# inbound non-interactive bash and Windows-side `wsl -e bash -lc` still read it,
-# and it is what sources shell/common.sh for them.
+# ~/.bashrc used to be the exception. It went when bash stopped being a shell
+# this repo configures: zsh is the login shell everywhere, ~/.zshenv reaches the
+# non-interactive callers that bashrc was kept for, and the scripts in this repo
+# that run under bash do so as a language and read no rc file at all.
 - defaults:
     link:
       relink: true
       force: true
       create: true
-
-- link:
-    ~/.bashrc: bash/bashrc

@@ -11,11 +11,16 @@
     # Shell. lightdm's Xsession sources ~/.profile before starting the graphical
     # session, so on the laptop it is the only file that can put a directory on
     # the session PATH, independently of which shell that host logs in with.
-    ~/.profile: bash/profile
+    ~/.profile: shell/profile
 
-    # zsh is the login shell on both hosts, and zsh/zshrc sources its plugins
-    # from this repo rather than /usr/share, so it is host-independent. What is
+    # zsh is the only login shell, and zsh/zshrc sources its plugins from this
+    # repo rather than /usr/share, so it is host-independent. What is
     # laptop-specific went to zsh/zshrc.x, which only manjaro.conf.yaml deploys.
+    #
+    # ~/.zshenv carries the environment because it is the only one of these zsh
+    # reads for a non-interactive shell — `ssh host <command>` and a zsh script
+    # never open ~/.zshrc, and without it they run with no asdf shims on PATH.
+    ~/.zshenv: zsh/zshenv
     ~/.zshrc: zsh/zshrc
     ~/.p10k.zsh: zsh/p10k.zsh
 

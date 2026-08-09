@@ -144,9 +144,11 @@ setopt appendhistory inc_append_history histignorealldups histignorespace
 # rather than scrolling off the top.
 command -v fastfetch >/dev/null 2>&1 && fastfetch
 
-# PATH, askpass, gh auth, EDITOR, aliases, the ranger wrapper, sync health.
-# bash/bashrc reads the same file.
-[ -r "${HOME}/dotfiles/shell/common.sh" ] && source "${HOME}/dotfiles/shell/common.sh"
+# Aliases, the ranger wrapper and the sync health report. The environment —
+# PATH, askpass, gh auth, EDITOR — is not here: ~/.zshenv has already sourced
+# shell/env.sh, for this shell and for the non-interactive ones that never read
+# this file.
+[ -r "${HOME}/dotfiles/shell/interactive.sh" ] && source "${HOME}/dotfiles/shell/interactive.sh"
 
 # X-only settings. profiles/manjaro.conf.yaml deploys this; on WSL it is absent
 # and the test is what makes this file identical on both hosts.
