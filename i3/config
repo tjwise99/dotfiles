@@ -68,6 +68,9 @@ bindsym $mod+Shift+q kill
 bindsym $mod+space exec --no-startup-id rofi -show drun
 bindsym $mod+Tab exec --no-startup-id rofi -show window
 
+# keybinding cheatsheet, parsed from this file
+bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/shortcuts.sh
+
 # change focus
 bindsym $mod+j focus left
 bindsym $mod+k focus down
