@@ -2,11 +2,12 @@
 # Global cargo crates, installed against asdf's rust.
 #
 # The counterpart to npm-globals.sh: asdf declares the runtime, not what is
-# installed into it. These land in ~/.cargo/bin, which shell/common.sh puts on
-# PATH — asdf reshim does not reach them.
+# installed into it. asdf-rust points CARGO_HOME at its own install directory,
+# so `cargo install` writes to ~/.asdf/installs/rust/<version>/bin and the
+# binary is unreachable until the reshim below.
 set -uo pipefail
 
-export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${HOME}/.cargo/bin:${PATH}"
+export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
 
 CRATES=(
     prr
@@ -32,4 +33,5 @@ for crate in "${CRATES[@]}"; do
     fi
 done
 
+asdf reshim rust >/dev/null 2>&1
 exit "${status}"
