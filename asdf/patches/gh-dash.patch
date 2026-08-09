@@ -1,5 +1,5 @@
 diff --git a/internal/data/issueapi.go b/internal/data/issueapi.go
-index 9fa1763..3e2daf7 100644
+index 9fa1763..a7ebf6a 100644
 --- a/internal/data/issueapi.go
 +++ b/internal/data/issueapi.go
 @@ -3,6 +3,7 @@ package data
@@ -22,7 +22,7 @@ index 9fa1763..3e2daf7 100644
  }
  
  type IssueComments struct {
-@@ -99,6 +105,90 @@ func makeIssuesQuery(query string) string {
+@@ -99,6 +105,101 @@ func makeIssuesQuery(query string) string {
  	return fmt.Sprintf("is:issue archived:false %s sort:updated", query)
  }
  
@@ -88,6 +88,17 @@ index 9fa1763..3e2daf7 100644
 +		if err := client.Query("SearchIssues", &queryResult, variables); err != nil {
 +			return IssuesResponse{}, err
 +		}
++		// Filtering client-side means every match has to be walked, so a search this wide cannot
++		// be answered correctly at all — an unscoped section outside a clone reaches here. Saying
++		// so costs one request; the alternative is twenty requests and a plausible wrong list.
++		if page == 0 && queryResult.Search.IssueCount > blockedFilterPageCap*blockedFilterPageSize {
++			return IssuesResponse{}, fmt.Errorf(
++				"%s needs a narrower filter: it matches %d issues and dependencies are filtered "+
++					"locally, so at most %d can be read",
++				blockedFilterToken, queryResult.Search.IssueCount,
++				blockedFilterPageCap*blockedFilterPageSize,
++			)
++		}
 +		for _, node := range queryResult.Search.Nodes {
 +			if (node.Issue.IssueDependenciesSummary.BlockedBy > 0) == wantBlocked {
 +				matched = append(matched, node.Issue)
@@ -113,7 +124,7 @@ index 9fa1763..3e2daf7 100644
  func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, error) {
  	var err error
  	if client == nil {
-@@ -109,6 +199,10 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
+@@ -109,6 +210,10 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
  		return IssuesResponse{}, err
  	}
  
