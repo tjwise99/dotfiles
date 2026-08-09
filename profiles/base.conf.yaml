@@ -88,6 +88,15 @@
       stdout: true
       stderr: true
 
+    # After the packages, because zsh is one of them. Guarded rather than
+    # trusted: it refuses unless zsh is installed, listed in /etc/shells, and
+    # actually runs, and a refusal leaves the shell alone instead of failing the
+    # install. Recovering from a login shell that will not start means a TTY.
+    - command: ./shell/set-login-shell.sh
+      description: Make zsh the login shell
+      stdout: true
+      stderr: true
+
 - shell:
     - command: ./asdf/install-asdf.sh
       description: Install asdf
