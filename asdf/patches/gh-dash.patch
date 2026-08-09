@@ -1,0 +1,511 @@
+diff --git a/internal/config/parser.go b/internal/config/parser.go
+index 96a2283..8fcd35d 100644
+--- a/internal/config/parser.go
++++ b/internal/config/parser.go
+@@ -170,6 +170,7 @@ type IssuesLayoutConfig struct {
+ 	CreatedAt   ColumnConfig `yaml:"createdAt,omitempty"`
+ 	State       ColumnConfig `yaml:"state,omitempty"`
+ 	Repo        ColumnConfig `yaml:"repo,omitempty"`
++	Milestone   ColumnConfig `yaml:"milestone,omitempty"`
+ 	Title       ColumnConfig `yaml:"title,omitempty"`
+ 	Creator     ColumnConfig `yaml:"creator,omitempty"`
+ 	CreatorIcon ColumnConfig `yaml:"creatorIcon,omitempty"`
+@@ -401,6 +402,9 @@ func (parser ConfigParser) getDefaultConfig() Config {
+ 					Repo: ColumnConfig{
+ 						Width: utils.IntPtr(15),
+ 					},
++					Milestone: ColumnConfig{
++						Width: utils.IntPtr(20),
++					},
+ 					Creator: ColumnConfig{
+ 						Width: utils.IntPtr(10),
+ 					},
+diff --git a/internal/config/testdata/global-config.golden.yml b/internal/config/testdata/global-config.golden.yml
+index 5c5f2ee..0527348 100644
+--- a/internal/config/testdata/global-config.golden.yml
++++ b/internal/config/testdata/global-config.golden.yml
+@@ -80,6 +80,8 @@ defaults:
+         width: 5
+       repo:
+         width: 15
++      milestone:
++        width: 20
+       creator:
+         width: 10
+       creatorIcon:
+diff --git a/internal/config/testdata/merged-config.golden.yml b/internal/config/testdata/merged-config.golden.yml
+index ea1cc2e..3e13290 100644
+--- a/internal/config/testdata/merged-config.golden.yml
++++ b/internal/config/testdata/merged-config.golden.yml
+@@ -71,6 +71,8 @@ defaults:
+         width: 5
+       repo:
+         width: 15
++      milestone:
++        width: 20
+       creator:
+         width: 10
+       creatorIcon:
+diff --git a/internal/data/issueapi.go b/internal/data/issueapi.go
+index 9fa1763..2bd9cd5 100644
+--- a/internal/data/issueapi.go
++++ b/internal/data/issueapi.go
+@@ -3,6 +3,9 @@ package data
+ import (
+ 	"fmt"
+ 	"net/url"
++	"sort"
++	"strconv"
++	"strings"
+ 	"time"
+ 
+ 	"charm.land/log/v2"
+@@ -30,6 +33,50 @@ type IssueData struct {
+ 	Comments          IssueComments  `graphql:"comments(last: 15)"`
+ 	Reactions         IssueReactions `graphql:"reactions(first: 1)"`
+ 	Labels            IssueLabels    `graphql:"labels(first: 20)"`
++
++	// BlockedBy counts *open* blockers, so an issue whose every blocker has closed reports zero.
++	IssueDependenciesSummary struct {
++		BlockedBy int
++	}
++
++	// Null for an unmilestoned issue, which decodes to the zero value: Number 0 and an empty
++	// Title. Ordering keys on that rather than on Title being empty.
++	Milestone MilestoneRef
++}
++
++type MilestoneRef struct {
++	Number int
++	Title  string
++	DueOn  *time.Time
++}
++
++// milestoneLess is the single ordering rule for milestones: due date first where they carry one,
++// then number, with the absent milestone last. Both the column's grouping and milestone:@current
++// resolve through it, so the milestone a section calls current is the one that groups first.
++func milestoneLess(a, b MilestoneRef) bool {
++	if (a.Number == 0) != (b.Number == 0) {
++		return b.Number == 0
++	}
++	if a.Number == b.Number {
++		return false
++	}
++	switch {
++	case a.DueOn != nil && b.DueOn != nil:
++		if !a.DueOn.Equal(*b.DueOn) {
++			return a.DueOn.Before(*b.DueOn)
++		}
++	case a.DueOn != nil:
++		return true
++	case b.DueOn != nil:
++		return false
++	}
++	return a.Number < b.Number
++}
++
++// MilestoneOrder groups issues by milestone. Ties return false so a stable sort leaves the
++// search's own `sort:updated` order intact inside each group.
++func MilestoneOrder(a, b IssueData) bool {
++	return milestoneLess(a.Milestone, b.Milestone)
+ }
+ 
+ type IssueComments struct {
+@@ -99,6 +146,255 @@ func makeIssuesQuery(query string) string {
+ 	return fmt.Sprintf("is:issue archived:false %s sort:updated", query)
+ }
+ 
++// GitHub's search index does not carry issue dependencies. Repository-scoped, `is:blocked` matches
++// nothing; unscoped it degrades to a text match on the word, so `-is:blocked` sent to the API
++// returns every open issue whether or not any is blocked. The token is stripped from the query and
++// applied to the fetched rows instead, which is the only place it can be applied at all.
++const blockedFilterToken = "is:blocked"
++
++// The GraphQL maximum. A filtered section pages to exhaustion, so this sizes round trips, not rows.
++const blockedFilterPageSize = 100
++
++// Bounds that exhaustion. Reaching it means the result is short, which is logged rather than
++// quietly presented as complete.
++const blockedFilterPageCap = 20
++
++// GitHub's milestone: qualifier matches only a milestone's exact full title — milestone:2 and
++// milestone:Architecture both return nothing. That makes a section filter unusable across repos,
++// so milestone:@N names milestone number N, milestone:@current the first open milestone in the
++// order milestoneLess defines, and both are resolved to that repo's literal title before the
++// search runs. @N reads closed milestones too: the number is the identity typed, and resolving it
++// only while the milestone happens to be open would answer a different question every few weeks.
++const milestoneRefPrefix = "milestone:@"
++
++// The GraphQL page maximum, and enough pages to exhaust any real repo. Milestones are read to
++// exhaustion rather than one page deep because @current is the first of the whole ordered set —
++// answering it from a truncated list names the wrong milestone with nothing to show for it.
++const (
++	milestonePageSize = 100
++	milestonePageCap  = 10
++)
++
++// State is needed only to pick @current, and an issue row's Milestone cannot carry it without
++// widening the issue query, so the two do not share a type.
++type milestoneNode struct {
++	Number int
++	Title  string
++	DueOn  *time.Time
++	State  string
++}
++
++func (node milestoneNode) ref() MilestoneRef {
++	return MilestoneRef{Number: node.Number, Title: node.Title, DueOn: node.DueOn}
++}
++
++func repoFromQuery(query string) (string, string, bool) {
++	for _, field := range strings.Fields(query) {
++		if !strings.HasPrefix(field, "repo:") {
++			continue
++		}
++		owner, name, found := strings.Cut(strings.TrimPrefix(field, "repo:"), "/")
++		if found && owner != "" && name != "" {
++			return owner, name, true
++		}
++	}
++	return "", "", false
++}
++
++// fetchMilestones returns every milestone the repo has, open and closed, in milestoneLess order.
++func fetchMilestones(owner, name string) ([]milestoneNode, error) {
++	// Self-contained rather than relying on FetchIssues having run first: reaching the API
++	// through a nil client panics, and a panic here would take the whole dash down.
++	if client == nil {
++		var err error
++		if client, err = gh.DefaultGraphQLClient(); err != nil {
++			return nil, err
++		}
++	}
++
++	milestones := make([]milestoneNode, 0)
++	var endCursor *string
++
++	for page := 0; page < milestonePageCap; page++ {
++		var queryResult struct {
++			Repository struct {
++				Milestones struct {
++					Nodes    []milestoneNode
++					PageInfo PageInfo
++					// Paged in number order so a milestone cannot be skipped or read twice
++					// across pages; the set is reordered by milestoneLess once complete.
++				} `graphql:"milestones(first: $limit, after: $endCursor, states: [OPEN, CLOSED], orderBy: {field: NUMBER, direction: ASC})"`
++			} `graphql:"repository(owner: $owner, name: $name)"`
++		}
++		variables := map[string]any{
++			"owner":     graphql.String(owner),
++			"name":      graphql.String(name),
++			"limit":     graphql.Int(milestonePageSize),
++			"endCursor": (*graphql.String)(endCursor),
++		}
++		if err := client.Query("RepoMilestones", &queryResult, variables); err != nil {
++			return nil, err
++		}
++		milestones = append(milestones, queryResult.Repository.Milestones.Nodes...)
++		if !queryResult.Repository.Milestones.PageInfo.HasNextPage {
++			sort.SliceStable(milestones, func(i, j int) bool {
++				return milestoneLess(milestones[i].ref(), milestones[j].ref())
++			})
++			return milestones, nil
++		}
++		cursor := queryResult.Repository.Milestones.PageInfo.EndCursor
++		endCursor = &cursor
++	}
++
++	return nil, fmt.Errorf(
++		"%s cannot be resolved: %s/%s has more than %d milestones",
++		milestoneRefPrefix, owner, name, milestonePageCap*milestonePageSize,
++	)
++}
++
++// resolveMilestoneRef replaces a milestone:@… token with that milestone's title. ok is false when
++// the reference names no milestone — a number never created, or @current in a repo with nothing
++// open. That is not an error: no issue can be in a milestone that does not exist, so the honest
++// answer is an empty section rather than a failure the user has to dismiss on every repo.
++func resolveMilestoneRef(query string) (string, bool, error) {
++	fields := strings.Fields(query)
++	index := -1
++	number := 0 // 0 is @current, which names a milestone by position rather than by number
++	for position, field := range fields {
++		if !strings.HasPrefix(field, milestoneRefPrefix) {
++			continue
++		}
++		suffix := strings.TrimPrefix(field, milestoneRefPrefix)
++		if suffix != "current" {
++			parsed, err := strconv.Atoi(suffix)
++			if err != nil || parsed < 1 {
++				return "", false, fmt.Errorf(
++					"%s%s is not a milestone reference — use %scurrent, or %sN for milestone number N",
++					milestoneRefPrefix, suffix,
++					milestoneRefPrefix, milestoneRefPrefix,
++				)
++			}
++			number = parsed
++		}
++		index = position
++		break
++	}
++	if index < 0 {
++		return query, true, nil
++	}
++
++	owner, name, found := repoFromQuery(query)
++	if !found {
++		return "", false, fmt.Errorf(
++			"%s needs a repo: to resolve against — open gh-dash inside a clone, or name one in the filter",
++			milestoneRefPrefix,
++		)
++	}
++	milestones, err := fetchMilestones(owner, name)
++	if err != nil {
++		return "", false, err
++	}
++
++	title, matched := "", false
++	for _, milestone := range milestones {
++		// milestones is in milestoneLess order, so the first open one is @current.
++		if (number == 0 && milestone.State == "OPEN") || (number != 0 && milestone.Number == number) {
++			title, matched = milestone.Title, true
++			break
++		}
++	}
++	if !matched {
++		log.Info("milestone reference names no milestone",
++			"repo", owner+"/"+name, "ref", fields[index], "milestones", len(milestones))
++		return "", false, nil
++	}
++
++	fields[index] = fmt.Sprintf("milestone:%q", title)
++	return strings.Join(fields, " "), true, nil
++}
++
++// extractBlockedFilter returns the query stripped of the dependency token, and what the token
++// asked for: true for blocked issues, false for unblocked, nil when the query did not mention it.
++func extractBlockedFilter(query string) (string, *bool) {
++	var want *bool
++	kept := make([]string, 0)
++	for _, field := range strings.Fields(query) {
++		switch field {
++		case blockedFilterToken:
++			blocked := true
++			want = &blocked
++		case "-" + blockedFilterToken:
++			blocked := false
++			want = &blocked
++		default:
++			kept = append(kept, field)
++		}
++	}
++	return strings.Join(kept, " "), want
++}
++
++// fetchIssuesByDependency pages the search to exhaustion before filtering, because the count and
++// the rows have to agree. Filtering one page in isolation reports a total that counts issues the
++// section does not list, and applying the section's limit before the filter would hide ready
++// issues behind blocked ones that merely sorted earlier.
++//
++// The section's limit is deliberately not applied: with the filter running here, the honest
++// choices were to ignore it or to report a count that disagrees with the rows on screen.
++func fetchIssuesByDependency(query string, wantBlocked bool) (IssuesResponse, error) {
++	matched := make([]IssueData, 0)
++	var endCursor *string
++
++	for page := 0; page < blockedFilterPageCap; page++ {
++		var queryResult struct {
++			Search struct {
++				Nodes []struct {
++					Issue IssueData `graphql:"... on Issue"`
++				}
++				IssueCount int
++				PageInfo   PageInfo
++			} `graphql:"search(type: ISSUE, first: $limit, after: $endCursor, query: $query)"`
++		}
++		variables := map[string]any{
++			"query":     graphql.String(makeIssuesQuery(query)),
++			"limit":     graphql.Int(blockedFilterPageSize),
++			"endCursor": (*graphql.String)(endCursor),
++		}
++		if err := client.Query("SearchIssues", &queryResult, variables); err != nil {
++			return IssuesResponse{}, err
++		}
++		// Filtering client-side means every match has to be walked, so a search this wide cannot
++		// be answered correctly at all — an unscoped section outside a clone reaches here. Saying
++		// so costs one request; the alternative is twenty requests and a plausible wrong list.
++		if page == 0 && queryResult.Search.IssueCount > blockedFilterPageCap*blockedFilterPageSize {
++			return IssuesResponse{}, fmt.Errorf(
++				"%s needs a narrower filter: it matches %d issues and dependencies are filtered "+
++					"locally, so at most %d can be read",
++				blockedFilterToken, queryResult.Search.IssueCount,
++				blockedFilterPageCap*blockedFilterPageSize,
++			)
++		}
++		for _, node := range queryResult.Search.Nodes {
++			if (node.Issue.IssueDependenciesSummary.BlockedBy > 0) == wantBlocked {
++				matched = append(matched, node.Issue)
++			}
++		}
++		if !queryResult.Search.PageInfo.HasNextPage {
++			log.Info("Successfully fetched issues", "query", query, "count", len(matched))
++			// HasNextPage stays false: the pages walked here are the search's, and the section
++			// cannot resume from a cursor whose rows it never saw.
++			return IssuesResponse{Issues: matched, TotalCount: len(matched)}, nil
++		}
++		cursor := queryResult.Search.PageInfo.EndCursor
++		endCursor = &cursor
++	}
++
++	log.Warn(
++		"Dependency-filtered search hit its page cap; this result is incomplete",
++		"query", query, "pages", blockedFilterPageCap, "matched", len(matched),
++	)
++	return IssuesResponse{Issues: matched, TotalCount: len(matched)}, nil
++}
++
+ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, error) {
+ 	var err error
+ 	if client == nil {
+@@ -109,6 +405,20 @@ func FetchIssues(query string, limit int, pageInfo *PageInfo) (IssuesResponse, e
+ 		return IssuesResponse{}, err
+ 	}
+ 
++	// Before the dependency filter, so the two compose: the resolved milestone: narrows the
++	// search server-side and the dependency filter then walks a smaller result set.
++	query, ok, err := resolveMilestoneRef(query)
++	if err != nil {
++		return IssuesResponse{}, err
++	}
++	if !ok {
++		return IssuesResponse{Issues: []IssueData{}}, nil
++	}
++
++	if searchQuery, wantBlocked := extractBlockedFilter(query); wantBlocked != nil {
++		return fetchIssuesByDependency(searchQuery, *wantBlocked)
++	}
++
+ 	var queryResult struct {
+ 		Search struct {
+ 			Nodes []struct {
+diff --git a/internal/tui/components/footer/footer.go b/internal/tui/components/footer/footer.go
+index f8ca6a0..62ef497 100644
+--- a/internal/tui/components/footer/footer.go
++++ b/internal/tui/components/footer/footer.go
+@@ -179,9 +179,7 @@ func (m *Model) renderViewSwitcher(ctx *context.ProgramContext) string {
+ 	view := lipgloss.JoinHorizontal(
+ 		lipgloss.Top,
+ 		ctx.Styles.ViewSwitcher.ViewsSeparator.PaddingLeft(1).
+-			Render(m.renderViewButton(config.NotificationsView)),
+-		ctx.Styles.ViewSwitcher.ViewsSeparator.Render(viewSeparator),
+-		m.renderViewButton(config.PRsView),
++			Render(m.renderViewButton(config.PRsView)),
+ 		ctx.Styles.ViewSwitcher.ViewsSeparator.Render(viewSeparator),
+ 		m.renderViewButton(config.IssuesView),
+ 		lipgloss.NewStyle().Background(ctx.Styles.Common.FooterStyle.GetBackground()).Foreground(
+diff --git a/internal/tui/components/issuerow/issuerow.go b/internal/tui/components/issuerow/issuerow.go
+index e7cf4ec..711b587 100644
+--- a/internal/tui/components/issuerow/issuerow.go
++++ b/internal/tui/components/issuerow/issuerow.go
+@@ -23,6 +23,7 @@ func (issue *Issue) ToTableRow() table.Row {
+ 	return table.Row{
+ 		issue.renderStatus(),
+ 		issue.renderRepoName(),
++		issue.renderMilestone(),
+ 		issue.renderTitle(),
+ 		issue.renderOpenedBy(),
+ 		issue.renderAssignees(),
+@@ -33,6 +34,10 @@ func (issue *Issue) ToTableRow() table.Row {
+ 	}
+ }
+ 
++func (issue *Issue) renderMilestone() string {
++	return issue.getTextStyle().Render(issue.Data.Milestone.Title)
++}
++
+ func (issue *Issue) getTextStyle() lipgloss.Style {
+ 	return components.GetIssueTextStyle(issue.Ctx)
+ }
+diff --git a/internal/tui/components/issuessection/issuessection.go b/internal/tui/components/issuessection/issuessection.go
+index f421664..16cf1f3 100644
+--- a/internal/tui/components/issuessection/issuessection.go
++++ b/internal/tui/components/issuessection/issuessection.go
+@@ -3,6 +3,7 @@ package issuessection
+ import (
+ 	"fmt"
+ 	"slices"
++	"sort"
+ 	"time"
+ 
+ 	"charm.land/bubbles/v2/key"
+@@ -159,6 +160,12 @@ func (m *Model) Update(msg tea.Msg) (section.Section, tea.Cmd) {
+ 			} else {
+ 				m.Issues = msg.Issues
+ 			}
++			// Sorted here rather than in BuildRows: GetCurrRow indexes m.Issues by the table's
++			// row index, so ordering only the rendered rows would open a different issue than
++			// the one under the cursor. Stable, so `sort:updated` survives inside each group.
++			sort.SliceStable(m.Issues, func(i, j int) bool {
++				return data.MilestoneOrder(m.Issues[i], m.Issues[j])
++			})
+ 			m.TotalCount = msg.TotalCount
+ 			m.SetIsLoading(false)
+ 			m.PageInfo = &msg.PageInfo
+@@ -197,6 +204,7 @@ func GetSectionColumns(
+ 	)
+ 	stateLayout := config.MergeColumnConfigs(dLayout.State, sLayout.State)
+ 	repoLayout := config.MergeColumnConfigs(dLayout.Repo, sLayout.Repo)
++	milestoneLayout := config.MergeColumnConfigs(dLayout.Milestone, sLayout.Milestone)
+ 	titleLayout := config.MergeColumnConfigs(dLayout.Title, sLayout.Title)
+ 	creatorLayout := config.MergeColumnConfigs(dLayout.Creator, sLayout.Creator)
+ 	assigneesLayout := config.MergeColumnConfigs(
+@@ -223,6 +231,12 @@ func GetSectionColumns(
+ 			Width:  repoLayout.Width,
+ 			Hidden: repoLayout.Hidden,
+ 		},
++		// Position must match ToTableRow's cell order.
++		{
++			Title:  "Milestone",
++			Width:  milestoneLayout.Width,
++			Hidden: milestoneLayout.Hidden,
++		},
+ 		{
+ 			Title:  "Title",
+ 			Grow:   utils.BoolPtr(true),
+diff --git a/internal/tui/ui.go b/internal/tui/ui.go
+index eb3c714..abfdf8d 100644
+--- a/internal/tui/ui.go
++++ b/internal/tui/ui.go
+@@ -1635,26 +1635,24 @@ func (m *Model) switchSelectedView() tea.Cmd {
+ 		m.notificationView.ClearSubject()
+ 	}
+ 
+-	// View cycle: Notifications → PRs → Issues (→ Repo if enabled) → Notifications
++	// View cycle: PRs → Issues (→ Repo if enabled) → PRs. Notifications is dropped from the cycle
++	// and from the footer switcher together; leaving it in either advertises a view the other one
++	// cannot reach. `defaults.view: notifications` still parses, and the default lands on PRs.
+ 	if repoFF {
+ 		switch m.ctx.View {
+-		case config.NotificationsView:
+-			m.ctx.View = config.PRsView
+ 		case config.PRsView:
+ 			m.ctx.View = config.IssuesView
+ 		case config.IssuesView:
+ 			m.ctx.View = config.RepoView
+-		case config.RepoView:
+-			m.ctx.View = config.NotificationsView
++		default:
++			m.ctx.View = config.PRsView
+ 		}
+ 	} else {
+ 		switch m.ctx.View {
+-		case config.NotificationsView:
+-			m.ctx.View = config.PRsView
+ 		case config.PRsView:
+ 			m.ctx.View = config.IssuesView
+ 		default:
+-			m.ctx.View = config.NotificationsView
++			m.ctx.View = config.PRsView
+ 		}
+ 	}
+ 

@@ -3,6 +3,12 @@
 [core]
 	editor = vim
 	hooksPath = ~/.config/git/hooks
+	pager = delta
+# core.pager covers diff, show and log; git add -p reads interactive.diffFilter.
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
 [user]
 	name = Wise
 	email = 47094117+tjwise99@users.noreply.github.com

@@ -309,9 +309,12 @@ handle_mime() {
                 local pygmentize_format='terminal'
                 local highlight_format='ansi'
             fi
-            env HIGHLIGHT_OPTIONS="${HIGHLIGHT_OPTIONS}" highlight \
+            ## fold pre-wraps so the pager never has to, which avoids its
+            ## blank-row artifact on ANSI-coloured lines
+            env HIGHLIGHT_OPTIONS="${HIGHLIGHT_OPTIONS}" \
+                fold -s -w "${PV_WIDTH}" -- "${FILE_PATH}" | highlight \
                 --out-format="${highlight_format}" \
-                --force -- "${FILE_PATH}" && exit 5
+                --syntax-by-name="${FILE_PATH}" --force && exit 5
             env COLORTERM=8bit bat --color=always --style="plain" \
                 -- "${FILE_PATH}" && exit 5
             pygmentize -f "${pygmentize_format}" -O "style=${PYGMENTIZE_STYLE}"\

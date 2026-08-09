@@ -1,57 +1,156 @@
-# ~/.zshrc — interactive zsh config for the Manjaro laptop.
+# ~/.zshrc — interactive zsh. Deployed on every host.
 #
-# The WSL box runs bash; this laptop's login shell is zsh, and bash/bashrc is
-# not deployed here at all. What both shells need lives in shell/common.sh,
-# sourced below; what is zsh- or laptop-specific stays in this file.
+# Plugins and prompt come from this repo, not /usr/share. Manjaro packages them
+# and Ubuntu names them differently and puts them elsewhere, so sourcing by
+# distro path would make this file behave according to which box it landed on.
+# Pinned submodules under zsh/plugins/ give both hosts the same versions.
+#
+# Paths below are written out rather than built from a variable: tools/
+# check-manifest.py vouches for a tracked file by finding its path as a literal
+# string in a deployed one, and an interpolated prefix is never contiguous with
+# the rest of the path in this file's text.
 
-# Manjaro's stock zsh setup (completion, keybindings, syntax highlighting) and
-# its powerline prompt. Guarded: the repo also has to make sense on a host that
-# does not ship these.
-USE_POWERLINE="true"
-[[ -e /usr/share/zsh/manjaro-zsh-config ]] && source /usr/share/zsh/manjaro-zsh-config
-[[ -e /usr/share/zsh/manjaro-zsh-prompt ]] && source /usr/share/zsh/manjaro-zsh-prompt
+# vi keymap. zsh would also reach it on its own, since it picks from EDITOR and
+# shell/common.sh sets that to vim — choosing it here is what makes the rest of
+# this file's bindings deliberate rather than a side effect. The vi_mode segment
+# in ~/.p10k.zsh reports which mode the line is in.
+#
+# Before every bindkey below, which it would otherwise reset.
+bindkey -v
 
-# Deliberately does NOT emit ~/.cache/wal/sequences. Those are OSC-4 codes that
-# reprogram the palette at runtime, overriding whatever the terminal loaded from
-# its own config -- which made every shell gold regardless of the active theme.
-# The terminal is themed by ~/.config/theme instead; see its README.
+# Delay zsh waits for the rest of a multi-key sequence, in hundredths of a
+# second. The default 0.4s is the lag between pressing Escape and normal mode
+# arriving. Arrow and function keys survive it because their sequences are bound
+# explicitly below rather than resolved by timing.
+KEYTIMEOUT=1
 
-# Login banner. Runs ahead of the sync-failure report below so that report lands
-# underneath it rather than scrolling off the top.
+# Completion. Manjaro's stock config set this up; nothing on Ubuntu does.
+mkdir -p "${HOME}/.cache/zsh"
+autoload -U compinit colors zcalc
+fpath+=("${HOME}/dotfiles/zsh/plugins/zsh-completions/src")
+compinit -d "${HOME}/.cache/zsh/zcompdump"
+colors
+zstyle ':completion:*' cache-path "${HOME}/.cache/zsh/compcache"
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' menu select
+zstyle ':completion:*' rehash true
+zstyle ':completion:*' accept-exact '*(N)'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
+
+# ~/.p10k.zsh is Manjaro's own generated config, tracked as zsh/p10k.zsh so the
+# prompt survives the move off /usr/share looking exactly as it did.
+source "${HOME}/dotfiles/zsh/plugins/powerlevel10k/powerlevel10k.zsh-theme"
+[[ -r "${HOME}/.p10k.zsh" ]] && source "${HOME}/.p10k.zsh"
+
+source "${HOME}/dotfiles/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+source "${HOME}/dotfiles/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh"
+# Last, per its README: it wraps widgets the plugins above define.
+source "${HOME}/dotfiles/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+# Keys whose escape sequence zsh leaves unbound. terminfo is consulted where the
+# terminal reports one, because the literal sequences differ between terminals
+# and the literals below are only the common case.
+#
+# Bound in both keymaps. A key that works while typing and stops working after
+# Escape is what makes a modal editor feel broken rather than modal.
+zmodload zsh/terminfo
+for _km in viins vicmd; do
+  [[ -n "${terminfo[khome]}" ]] && bindkey -M "${_km}" "${terminfo[khome]}" beginning-of-line
+  [[ -n "${terminfo[kend]}"  ]] && bindkey -M "${_km}" "${terminfo[kend]}"  end-of-line
+  bindkey -M "${_km}" '^[[H'    beginning-of-line
+  bindkey -M "${_km}" '^[[7~'   beginning-of-line
+  bindkey -M "${_km}" '^[[F'    end-of-line
+  bindkey -M "${_km}" '^[[8~'   end-of-line
+  bindkey -M "${_km}" '^[[3~'   delete-char
+  bindkey -M "${_km}" '^[[5~'   history-beginning-search-backward
+  bindkey -M "${_km}" '^[[6~'   history-beginning-search-forward
+  bindkey -M "${_km}" '^[[1;5D' backward-word
+  bindkey -M "${_km}" '^[[1;5C' forward-word
+  bindkey -M "${_km}" '^[[Z'    undo
+  bindkey -M "${_km}" '^[[A'    history-substring-search-up
+  bindkey -M "${_km}" '^[[B'    history-substring-search-down
+done
+unset _km
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+# Kept working in insert mode, so nothing already in the fingers has to be
+# unlearned before normal mode is worth reaching for. '^?' is not decoration:
+# zsh's vi insert mode otherwise refuses to backspace past where insert began.
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^H' backward-kill-word
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^Y' yank
+bindkey -M viins '^R' history-incremental-search-backward
+
+# `v` in normal mode opens the line being edited in $EDITOR and runs whatever
+# comes back, which is the reason to be in this keymap at all.
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd 'v' edit-command-line
+
+# Text objects and surround, so ci" ci( da{ cs'" ds( behave as they do in vim.
+autoload -Uz select-bracketed select-quoted surround
+zle -N select-bracketed
+zle -N select-quoted
+zle -N delete-surround surround
+zle -N add-surround surround
+zle -N change-surround surround
+for _km in visual viopp; do
+  for _c in {a,i}${(s..)^:-'()[]{}<>bB'}; do bindkey -M "${_km}" "${_c}" select-bracketed; done
+  for _c in {a,i}{\',\",\`};            do bindkey -M "${_km}" "${_c}" select-quoted; done
+done
+unset _km _c
+bindkey -M vicmd 'cs' change-surround
+bindkey -M vicmd 'ds' delete-surround
+bindkey -M vicmd 'ys' add-surround
+bindkey -M visual 'S' add-surround
+
+# Block cursor in normal mode, beam in insert. Added as hooks rather than by
+# defining zle-line-init directly, which powerlevel10k also installs.
+autoload -Uz add-zle-hook-widget
+_cursor_for_keymap() {
+  case ${KEYMAP} in
+    vicmd) printf '\e[2 q' ;;
+    *)     printf '\e[6 q' ;;
+  esac
+}
+_cursor_beam() { printf '\e[6 q'; }
+zle -N _cursor_for_keymap
+zle -N _cursor_beam
+add-zle-hook-widget keymap-select _cursor_for_keymap
+add-zle-hook-widget line-init _cursor_beam
+
+# Drops / & . ; from the set, so word-wise motion stops at path segments. The
+# brackets hold the whole set: `//\/[&.;]` matches a slash *followed by* one of
+# them, which removes `/&` alone and leaves `.` and `;` behaving as word
+# characters while reading as though it had not.
+WORDCHARS=${WORDCHARS//[\/&.;]}
+
+# ~/.zhistory rather than zsh's default: it is where this machine's history
+# already is, and pointing elsewhere strands it rather than losing it, which is
+# the harder failure to notice.
+HISTFILE="${HOME}/.zhistory"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory inc_append_history histignorealldups histignorespace
+
+# Ahead of the shared block so the sync health report lands underneath it
+# rather than scrolling off the top.
 command -v fastfetch >/dev/null 2>&1 && fastfetch
 
-# --------------------------------------------------------- shared with bash --
-
-# PATH, askpass, gh auth, EDITOR and the sync-failure report. bash/bashrc reads
-# the same file, so these no longer have to be kept in step by hand.
+# PATH, askpass, gh auth, EDITOR, aliases, the ranger wrapper, sync health.
+# bash/bashrc reads the same file.
 [ -r "${HOME}/dotfiles/shell/common.sh" ] && source "${HOME}/dotfiles/shell/common.sh"
 
-# ------------------------------------------------------------------ generic --
-
-alias ls='ls --color=auto'
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias dirsize='sudo du -hc . | sort -rh | head -20'
-
-# Leave the shell in whatever directory ranger quit from. --choosedir writes the
-# final path to a temp file; `command` avoids recursing into this function.
-ranger() {
-  local tempfile
-  tempfile="$(mktemp -t ranger-cd.XXXXXX)" || return
-  command ranger --choosedir="${tempfile}" -- "${@:-${PWD}}"
-  if [ -f "${tempfile}" ]; then
-    local dest
-    dest="$(cat -- "${tempfile}")"
-    [ -n "${dest}" ] && [ -d "${dest}" ] && [ "${dest}" != "${PWD}" ] && cd -- "${dest}"
-  fi
-  rm -f -- "${tempfile}"
-}
-
-# Java apps that render blank under a reparenting WM (i3).
-alias fixWindows='export _JAVA_AWT_WM_NONREPARENTING=0'
-
-# -------------------------------------------------------------------- local --
+# X-only settings. profiles/manjaro.conf.yaml deploys this; on WSL it is absent
+# and the test is what makes this file identical on both hosts.
+[[ -r "${HOME}/.config/zsh/x.zsh" ]] && source "${HOME}/.config/zsh/x.zsh"
 
 # Host-specific aliases — university logins, NAS addresses, partition layouts.
 # This repo is public and pushes itself every 20 minutes, so anything naming a

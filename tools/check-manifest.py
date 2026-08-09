@@ -28,8 +28,19 @@ except ModuleNotFoundError:
     sys.exit("PyYAML unavailable — run: git submodule update --init --recursive")
 
 # Repo infrastructure: present in the tree, deliberately never deployed.
-EXEMPT_FILES = {".gitignore", ".gitmodules", "install", "README.md"}
+EXEMPT_FILES = {".gitignore", ".gitmodules", "install"}
 EXEMPT_DIRS = {"dotbot", "dotbot-plugins", "local", "profiles", "tools"}
+
+
+def exempt(path):
+    if path in EXEMPT_FILES or path.split("/")[0] in EXEMPT_DIRS:
+        return True
+    # Markdown at the repo root is documentation, read here or on GitHub. Stated
+    # as a rule rather than listed by name: a named list puts the next root doc
+    # someone adds into the tracked-but-never-deployed report, where the repair
+    # reads as granting an exemption instead of completing a list. Only the root
+    # — notes/ and claude/ Markdown is deployed and stays gated.
+    return "/" not in path and path.endswith(".md")
 
 ALL_PROFILES = sorted((ROOT / "profiles").glob("*.conf.yaml"))
 

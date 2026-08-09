@@ -80,8 +80,8 @@ and comment on PRs freely — the merge button is the human's.
 
 ## `gh` on this host
 
-- Auth is automatic (`GH_TOKEN` from the environment) — plain `gh …` works, no prefix. If it ever
-  reads logged-out, `export GH_TOKEN=$(cat ~/.claude_github_token)`.
+- Auth is automatic (`gh` reads the system keyring) — plain `gh …` works, no prefix. If it ever
+  reads logged-out, re-auth with `gh auth login`; there is no token file to source.
 - Shape output at the source: `--jq`, `--json`, `-L`/`--limit`, `head`. Never dump a raw list.
 - `gh` reads can lag or mislead — check-runs can report `pending` for finished jobs. When state
   matters, poll the API (`gh api repos/<owner>/<repo>/actions/runs/<id> --jq .status`) rather than

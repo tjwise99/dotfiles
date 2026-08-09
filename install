@@ -19,13 +19,25 @@ detect_host() {
     echo unknown
 }
 
+# Installing packages is the only step that needs root, so it is opt-in and
+# every other step stays runnable unattended. packages/sync-packages.sh reads
+# this and says what it skipped rather than skipping quietly.
+export DOTFILES_PACKAGES=0
+DOTBOT_ARGS=()
+for arg in "${@}"; do
+    case "${arg}" in
+        --packages) DOTFILES_PACKAGES=1 ;;
+        *) DOTBOT_ARGS+=("${arg}") ;;
+    esac
+done
+
 HOST="${DOTFILES_HOST:-$(detect_host)}"
 
 # asdf installs to ~/.local/bin with shims in ~/.asdf/shims. Dotbot's asdf
 # directive needs both before ~/.bashrc has ever been sourced.
 export PATH="${HOME}/.local/bin:${HOME}/.asdf/shims:${PATH}"
 
-git submodule update --init --recursive dotbot dotbot-plugins/dotbot-asdf
+git submodule update --init --recursive
 
 CONFIGS=(profiles/base.conf.yaml)
 if [ -f "profiles/${HOST}.conf.yaml" ]; then
@@ -34,8 +46,15 @@ else
     echo "warning: host '${HOST}' has no profile; applying base only" >&2
 fi
 
+# Every profile runs even when an earlier one fails, and the failure is carried
+# to the exit status rather than to the loop. The profiles are independent link
+# sets: a package or asdf step failing in base says nothing about whether this
+# host's links should be made, and under `set -e` it silently skipped them.
+status=0
 for config in "${CONFIGS[@]}"; do
     echo "==> ${config}"
     ./dotbot/bin/dotbot -d "${BASEDIR}" \
-        --plugin-dir dotbot-plugins/dotbot-asdf -c "${config}" "${@}"
+        --plugin-dir dotbot-plugins/dotbot-asdf -c "${config}" \
+        ${DOTBOT_ARGS[@]+"${DOTBOT_ARGS[@]}"} || status=1
 done
+exit "${status}"

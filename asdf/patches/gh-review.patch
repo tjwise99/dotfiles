@@ -1,0 +1,757 @@
+diff --git a/src/app/command_handlers.rs b/src/app/command_handlers.rs
+index c960e36..dbad6d7 100644
+--- a/src/app/command_handlers.rs
++++ b/src/app/command_handlers.rs
+@@ -154,13 +154,16 @@ fn step_match_or_file(app: &mut App, forward: bool) {
+             app.diff_view.cursor = c;
+         }
+         app.update_search_status();
+-    } else if forward {
+-        app.diff_view.next_file();
+-    } else {
+-        app.diff_view.prev_file();
++        if let Some(fi) = app.diff_view.current_file_idx() {
++            app.file_picker.selected = fi;
++        }
++        return;
+     }
+-    if let Some(fi) = app.diff_view.current_file_idx() {
+-        app.file_picker.selected = fi;
++    let current = app.diff_view.focused_file().unwrap_or(0);
++    if forward {
++        app.focus_file(current + 1);
++    } else {
++        app.focus_file(current.saturating_sub(1));
+     }
+ }
+ 
+@@ -428,12 +431,12 @@ pub fn visual(app: &mut App) {
+ 
+ pub fn picker_down(app: &mut App) {
+     app.file_picker.next();
+-    app.diff_view.goto_file(app.file_picker.selected);
++    app.focus_file(app.file_picker.selected);
+ }
+ 
+ pub fn picker_up(app: &mut App) {
+     app.file_picker.prev();
+-    app.diff_view.goto_file(app.file_picker.selected);
++    app.focus_file(app.file_picker.selected);
+ }
+ 
+ pub fn description(app: &mut App) {
+diff --git a/src/app/handlers.rs b/src/app/handlers.rs
+index 144319a..a4ad1c6 100644
+--- a/src/app/handlers.rs
++++ b/src/app/handlers.rs
+@@ -211,25 +211,25 @@ impl App {
+         match code {
+             KeyCode::Enter => {
+                 self.file_picker.confirm_filter();
+-                self.diff_view.goto_file(self.file_picker.selected);
++                self.focus_file(self.file_picker.selected);
+             }
+             KeyCode::Esc => self.file_picker.cancel_filter(),
+             KeyCode::Char('j') | KeyCode::Down => {
+                 self.file_picker.filter_next();
+-                self.diff_view.goto_file(self.file_picker.selected);
++                self.focus_file(self.file_picker.selected);
+             }
+             KeyCode::Char('k') | KeyCode::Up => {
+                 self.file_picker.filter_prev();
+-                self.diff_view.goto_file(self.file_picker.selected);
++                self.focus_file(self.file_picker.selected);
+             }
+             KeyCode::Backspace => {
+                 self.file_picker.filter_pop();
+-                self.diff_view.goto_file(self.file_picker.selected);
++                self.focus_file(self.file_picker.selected);
+             }
+             KeyCode::Char(c) => {
+                 self.file_picker.filter_push(c);
+                 if !self.file_picker.files.is_empty() {
+-                    self.diff_view.goto_file(self.file_picker.selected);
++                    self.focus_file(self.file_picker.selected);
+                 }
+             }
+             _ => {}
+diff --git a/src/app/keymap.rs b/src/app/keymap.rs
+index 8f3aeda..852efd6 100644
+--- a/src/app/keymap.rs
++++ b/src/app/keymap.rs
+@@ -669,7 +669,7 @@ impl Keymap {
+ 
+         // ── View / UI ─────────────────────────────────────────────────
+         defs.extend([
+-            B::diff(&command::toggle_view, vec![Single('t'.into())]),
++            B::global(&command::toggle_view, vec![Single('t'.into())]),
+             B::global(&command::open_command_mode, vec![Single(':'.into())]),
+         ]);
+ 
+@@ -1022,3 +1022,50 @@ impl Default for Keymap {
+         )
+     }
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::app::custom_action::resolve_custom_actions;
++    use crate::config::UserConfig;
++
++    fn keymap() -> Keymap {
++        Keymap::from_config(&UserConfig::default(), resolve_custom_actions(&[]))
++    }
++
++    fn press(km: &Keymap, c: char, focus: Focus) -> Option<&'static str> {
++        match km.lookup(
++            &KeyEvent::new(KeyCode::Char(c), KeyModifiers::NONE),
++            focus,
++            RowContext::Code,
++        ) {
++            LookupResult::Command(cmd) => Some(cmd.name),
++            _ => None,
++        }
++    }
++
++    #[test]
++    fn toggle_view_resolves_in_every_panel() {
++        let km = keymap();
++        for focus in [Focus::DiffView, Focus::FilePicker, Focus::Description] {
++            assert_eq!(
++                press(&km, 't', focus),
++                Some("toggle_view"),
++                "t must toggle side-by-side regardless of which panel has focus"
++            );
++        }
++    }
++
++    #[test]
++    fn panel_scoped_keys_stay_panel_scoped() {
++        // The counterpart direction: making one binding global must not make
++        // every binding global.
++        let km = keymap();
++        assert_eq!(press(&km, 'c', Focus::DiffView), Some("comment_on_line"));
++        assert_ne!(
++            press(&km, 'c', Focus::FilePicker),
++            Some("comment_on_line"),
++            "commenting is still meaningless from the file picker"
++        );
++    }
++}
+diff --git a/src/app/mod.rs b/src/app/mod.rs
+index 49873e3..646d1ec 100644
+--- a/src/app/mod.rs
++++ b/src/app/mod.rs
+@@ -131,7 +131,7 @@ impl App {
+             review_confirm: ReviewConfirm::new(),
+             search_bar: SearchBar::new(),
+             command_bar: CommandBar::new(),
+-            focus: Focus::DiffView,
++            focus: Focus::FilePicker,
+             show_help: false,
+             status,
+             loading: true,
+@@ -248,6 +248,7 @@ impl App {
+                 self.file_picker.set_files(&files);
+                 self.files = files;
+                 self.rebuild_display();
++                self.focus_file(0);
+                 self.loading = false;
+             }
+             AppEvent::CommentsLoaded { pr, data: comments } if pr == self.pr_number => {
+@@ -325,6 +326,21 @@ impl App {
+         self.pending_action.take().unwrap_or(Action::None)
+     }
+ 
++    /// Restrict the diff to one file, clamped to the files that exist. The
++    /// rebuilt rows start at that file's header, so the cursor returns to 0.
++    pub(crate) fn focus_file(&mut self, file_idx: usize) {
++        let Some(last) = self.files.len().checked_sub(1) else {
++            return;
++        };
++        let idx = file_idx.min(last);
++        if self.diff_view.focus_file(idx) {
++            self.rebuild_display();
++            self.diff_view.cursor = 0;
++            self.diff_view.scroll_offset = 0;
++        }
++        self.file_picker.selected = idx;
++    }
++
+     pub(crate) fn rebuild_display(&mut self) {
+         self.diff_view.rebuild_rows(
+             &self.files,
+@@ -420,6 +436,7 @@ impl App {
+             self.file_picker.set_files(&self.files);
+             self.diff_view = crate::components::diff_view::DiffView::new();
+             self.rebuild_display();
++            self.focus_file(0);
+             self.stack.current_pr = pr_number;
+             self.loading = false;
+             true
+diff --git a/src/components/diff_view/mod.rs b/src/components/diff_view/mod.rs
+index 25d04b9..2d2b388 100644
+--- a/src/components/diff_view/mod.rs
++++ b/src/components/diff_view/mod.rs
+@@ -26,6 +26,7 @@ pub struct DiffView {
+     pub visual_anchor: Option<usize>,
+     pub(crate) scroll_animation: Option<ScrollAnimation>,
+     pub(crate) collapsed_files: HashSet<usize>,
++    pub(crate) focused_file: Option<usize>,
+ }
+ 
+ impl DiffView {
+@@ -43,6 +44,7 @@ impl DiffView {
+             visual_anchor: None,
+             scroll_animation: None,
+             collapsed_files: HashSet::new(),
++            focused_file: None,
+         }
+     }
+ 
+@@ -55,6 +57,14 @@ impl DiffView {
+         thread_map: &HashMap<u64, ThreadInfo>,
+     ) {
+         self.files = files.to_vec();
++        // A focused file must render: collapsing it would leave no row for the
++        // cursor, and fold_open reads the file index off the cursor's row.
++        let none_collapsed = HashSet::new();
++        let collapsed = if self.focused_file.is_some() {
++            &none_collapsed
++        } else {
++            &self.collapsed_files
++        };
+         self.display_rows = build_display_rows(
+             files,
+             existing_comments,
+@@ -64,8 +74,15 @@ impl DiffView {
+             &self.expanded_pending,
+             thread_map,
+             self.wrap_width,
+-            &self.collapsed_files,
++            collapsed,
++            self.diff_content_width(),
+         );
++        if let Some(fi) = self.focused_file
++            && let Some((start, end)) = Self::file_span(&self.display_rows, fi)
++        {
++            // start is the file's header row; the picker already names the file.
++            self.display_rows = self.display_rows[start + 1..end].to_vec();
++        }
+         self.search.recompute(&self.display_rows);
+     }
+ 
+@@ -269,6 +286,42 @@ impl DiffView {
+         false
+     }
+ 
++    /// Content columns left for a diff line after its mode's gutter.
++    fn diff_content_width(&self) -> usize {
++        let gutter = match self.mode {
++            DiffMode::SideBySide => crate::diff::layout::SBS_GUTTER_WIDTH,
++            DiffMode::Unified => crate::diff::layout::UNIFIED_GUTTER_WIDTH,
++        };
++        self.wrap_width.saturating_sub(gutter)
++    }
++
++    /// Restrict the diff to one file's rows. Returns whether the focus moved.
++    pub fn focus_file(&mut self, file_idx: usize) -> bool {
++        if self.focused_file == Some(file_idx) {
++            return false;
++        }
++        self.focused_file = Some(file_idx);
++        true
++    }
++
++    pub fn focused_file(&self) -> Option<usize> {
++        self.focused_file
++    }
++
++    /// Row span of `file_idx`: its header up to the next file's header. Comment
++    /// rows carry no file index, so the span is positional rather than filtered.
++    fn file_span(rows: &[DisplayRow], file_idx: usize) -> Option<(usize, usize)> {
++        let start = rows
++            .iter()
++            .position(|r| matches!(r, DisplayRow::FileHeader { file_idx: fi, .. } if *fi == file_idx))?;
++        let end = rows[start + 1..]
++            .iter()
++            .position(|r| matches!(r, DisplayRow::FileHeader { .. }))
++            .map(|offset| start + 1 + offset)
++            .unwrap_or(rows.len());
++        Some((start, end))
++    }
++
+     pub fn current_context(&self) -> crate::types::RowContext {
+         use crate::types::{CommentState, RowContext};
+         match self.display_rows.get(self.cursor) {
+@@ -504,3 +557,139 @@ pub struct SuggestionTarget {
+     pub file_idx: usize,
+     pub line: usize,
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::diff::parser::parse_patch;
++    use crate::types::FileStatus;
++
++    fn file(path: &str) -> DiffFile {
++        DiffFile {
++            path: path.to_string(),
++            status: FileStatus::Modified,
++            additions: 1,
++            deletions: 1,
++            hunks: parse_patch("@@ -1,2 +1,2 @@\n context\n-removed\n+added"),
++        }
++    }
++
++    fn rebuild(view: &mut DiffView, files: &[DiffFile]) {
++        view.rebuild_rows(files, &[], &[], &[], &HashMap::new());
++    }
++
++    fn diff_line_files(view: &DiffView) -> Vec<usize> {
++        view.display_rows
++            .iter()
++            .filter_map(|r| match r {
++                DisplayRow::DiffLine { file_idx, .. } => Some(*file_idx),
++                _ => None,
++            })
++            .collect()
++    }
++
++    fn header_files(view: &DiffView) -> Vec<usize> {
++        view.display_rows
++            .iter()
++            .filter_map(|r| match r {
++                DisplayRow::FileHeader { file_idx, .. } => Some(*file_idx),
++                _ => None,
++            })
++            .collect()
++    }
++
++    #[test]
++    fn unfocused_shows_every_file() {
++        let files = vec![file("a.rs"), file("b.rs"), file("c.rs")];
++        let mut view = DiffView::new();
++        rebuild(&mut view, &files);
++
++        let mut seen = diff_line_files(&view);
++        seen.dedup();
++        assert_eq!(seen, vec![0, 1, 2], "baseline: all three files render lines");
++    }
++
++    #[test]
++    fn focus_file_renders_only_that_file() {
++        let files = vec![file("a.rs"), file("b.rs"), file("c.rs")];
++        let mut view = DiffView::new();
++        rebuild(&mut view, &files);
++
++        assert!(view.focus_file(1), "focusing changes the collapsed set");
++        rebuild(&mut view, &files);
++
++        let seen = diff_line_files(&view);
++        assert!(!seen.is_empty(), "the focused file still renders its lines");
++        assert!(
++            seen.iter().all(|fi| *fi == 1),
++            "only file 1 renders lines, got {seen:?}"
++        );
++        assert!(
++            header_files(&view).is_empty(),
++            "no file header at all — the picker names the file"
++        );
++    }
++
++    #[test]
++    fn focus_file_is_idempotent() {
++        let files = vec![file("a.rs"), file("b.rs")];
++        let mut view = DiffView::new();
++        rebuild(&mut view, &files);
++
++        assert!(view.focus_file(0));
++        assert!(
++            !view.focus_file(0),
++            "refocusing the same file reports no change, so no rebuild is triggered"
++        );
++    }
++
++    #[test]
++    fn focus_file_switches_between_files() {
++        let files = vec![file("a.rs"), file("b.rs")];
++        let mut view = DiffView::new();
++        rebuild(&mut view, &files);
++
++        view.focus_file(0);
++        rebuild(&mut view, &files);
++        assert!(header_files(&view).is_empty());
++        assert!(diff_line_files(&view).iter().all(|fi| *fi == 0));
++
++        assert!(view.focus_file(1), "switching focus changes the set");
++        rebuild(&mut view, &files);
++        assert!(header_files(&view).is_empty());
++        let seen = diff_line_files(&view);
++        assert!(!seen.is_empty() && seen.iter().all(|fi| *fi == 1));
++    }
++
++    #[test]
++    fn focusing_the_last_file_keeps_its_rows() {
++        let files = vec![file("a.rs"), file("b.rs"), file("c.rs")];
++        let mut view = DiffView::new();
++        rebuild(&mut view, &files);
++
++        view.focus_file(2);
++        rebuild(&mut view, &files);
++        assert!(header_files(&view).is_empty());
++        let seen = diff_line_files(&view);
++        assert!(
++            !seen.is_empty() && seen.iter().all(|fi| *fi == 2),
++            "the last file has no following header to bound its span, got {seen:?}"
++        );
++    }
++
++    #[test]
++    fn collapsing_cannot_empty_a_focused_file() {
++        let files = vec![file("a.rs"), file("b.rs")];
++        let mut view = DiffView::new();
++        view.focus_file(1);
++        view.collapsed_files.insert(1);
++        rebuild(&mut view, &files);
++
++        let seen = diff_line_files(&view);
++        assert!(
++            !seen.is_empty() && seen.iter().all(|fi| *fi == 1),
++            "a collapsed set is ignored while focused, so the pane cannot go blank \
++             and strand the cursor, got {seen:?}"
++        );
++    }
++}
+diff --git a/src/components/diff_view/navigation.rs b/src/components/diff_view/navigation.rs
+index 1fb7e00..ed67444 100644
+--- a/src/components/diff_view/navigation.rs
++++ b/src/components/diff_view/navigation.rs
+@@ -98,42 +98,6 @@ impl DiffView {
+         self.cursor = self.display_rows.len().saturating_sub(1);
+     }
+ 
+-    /// Jump to the first row of the given file index.
+-    pub fn goto_file(&mut self, file_idx: usize) {
+-        for (i, row) in self.display_rows.iter().enumerate() {
+-            if let DisplayRow::FileHeader { file_idx: fi, .. } = row
+-                && *fi == file_idx
+-            {
+-                self.cursor = i;
+-                return;
+-            }
+-        }
+-    }
+-
+-    /// Jump to next file header.
+-    pub fn next_file(&mut self) {
+-        let start = self.cursor + 1;
+-        for i in start..self.display_rows.len() {
+-            if matches!(self.display_rows[i], DisplayRow::FileHeader { .. }) {
+-                self.cursor = i;
+-                return;
+-            }
+-        }
+-    }
+-
+-    /// Jump to previous file header.
+-    pub fn prev_file(&mut self) {
+-        if self.cursor == 0 {
+-            return;
+-        }
+-        for i in (0..self.cursor).rev() {
+-            if matches!(self.display_rows[i], DisplayRow::FileHeader { .. }) {
+-                self.cursor = i;
+-                return;
+-            }
+-        }
+-    }
+-
+     /// Jump to next hunk header.
+     pub fn next_hunk(&mut self) {
+         let start = self.cursor + 1;
+diff --git a/src/diff/layout.rs b/src/diff/layout.rs
+index 639ef07..311721c 100644
+--- a/src/diff/layout.rs
++++ b/src/diff/layout.rs
+@@ -4,6 +4,14 @@ pub const LINE_NUM_WIDTH: usize = 5;
+ /// Total gutter width: two line-number columns plus separators (`old  new `).
+ pub const GUTTER_WIDTH: usize = LINE_NUM_WIDTH * 2 + 3;
+ 
++/// Width `render_unified_diff_line` spends before content: two line-number
++/// columns, the gap between them, and the ` ± ` marker. Wider than
++/// GUTTER_WIDTH, which omits the gap and is kept for comment-block sizing.
++pub const UNIFIED_GUTTER_WIDTH: usize = LINE_NUM_WIDTH * 2 + 2 + 3;
++
++/// Width each pane of `render_sbs_diff_line` spends before content.
++pub const SBS_GUTTER_WIDTH: usize = LINE_NUM_WIDTH + 3;
++
+ /// Maximum outer width for a comment block (excluding gutter).
+ pub const COMMENT_BLOCK_MAX_WIDTH: u16 = 120;
+ 
+diff --git a/src/diff/model.rs b/src/diff/model.rs
+index 37b0537..3f6060e 100644
+--- a/src/diff/model.rs
++++ b/src/diff/model.rs
+@@ -27,6 +27,10 @@ pub enum DisplayRow {
+         file_idx: usize,
+         hunk_idx: usize,
+         line_idx: usize,
++        /// A continuation fragment of a wrapped line. Carries the same indices
++        /// and line numbers as its first fragment, so anchoring a comment works
++        /// from any fragment; the renderer blanks the repeated line numbers.
++        wrapped: bool,
+     },
+     ExpandHint {
+         file_idx: usize,
+@@ -224,6 +228,32 @@ fn wrap_body_lines(
+     rows
+ }
+ 
++/// Split one diff line into display fragments no wider than `content_width`.
++/// Every fragment keeps the original's line numbers so a comment anchors from
++/// any of them; `wrap_spans` never splits mid-word, so a single word longer
++/// than the width still overflows rather than being cut.
++fn wrap_diff_line(line: &DiffLine, content_width: usize) -> Vec<DiffLine> {
++    if content_width == 0 || line.content.width() <= content_width {
++        return vec![line.clone()];
++    }
++
++    let spans: Vec<Span<'static>> = match &line.highlighted_content {
++        Some(highlighted) => highlighted.spans.clone(),
++        None => vec![Span::raw(line.content.clone())],
++    };
++
++    wrap_spans(&spans, content_width)
++        .into_iter()
++        .map(|fragment| DiffLine {
++            kind: line.kind.clone(),
++            old_lineno: line.old_lineno,
++            new_lineno: line.new_lineno,
++            content: fragment.spans.iter().map(|s| s.content.as_ref()).collect(),
++            highlighted_content: Some(fragment),
++        })
++        .collect()
++}
++
+ #[allow(clippy::too_many_arguments)]
+ pub fn build_display_rows(
+     files: &[DiffFile],
+@@ -235,6 +265,7 @@ pub fn build_display_rows(
+     thread_map: &HashMap<u64, ThreadInfo>,
+     wrap_width: usize,
+     collapsed_files: &std::collections::HashSet<usize>,
++    content_width: usize,
+ ) -> Vec<DisplayRow> {
+     let mut rows = Vec::new();
+     let body_max_width = layout::comment_body_width(wrap_width);
+@@ -258,12 +289,17 @@ pub fn build_display_rows(
+             });
+ 
+             for (line_idx, line) in hunk.lines.iter().enumerate() {
+-                rows.push(DisplayRow::DiffLine {
+-                    line: line.clone(),
+-                    file_idx,
+-                    hunk_idx,
+-                    line_idx,
+-                });
++                for (frag_idx, frag) in
++                    wrap_diff_line(line, content_width).into_iter().enumerate()
++                {
++                    rows.push(DisplayRow::DiffLine {
++                        line: frag,
++                        file_idx,
++                        hunk_idx,
++                        line_idx,
++                        wrapped: frag_idx > 0,
++                    });
++                }
+ 
+                 let (target_line, target_side) = match line.kind {
+                     LineKind::Added | LineKind::Context => (line.new_lineno, Side::Right),
+@@ -450,3 +486,114 @@ pub fn build_display_rows(
+ 
+     rows
+ }
++
++#[cfg(test)]
++mod wrap_tests {
++    use super::*;
++    use crate::types::LineKind;
++
++    fn line(content: &str) -> DiffLine {
++        DiffLine {
++            kind: LineKind::Added,
++            old_lineno: None,
++            new_lineno: Some(7),
++            content: content.to_string(),
++            highlighted_content: None,
++        }
++    }
++
++    #[test]
++    fn short_line_is_one_fragment() {
++        let l = line("fits easily");
++        let out = wrap_diff_line(&l, 40);
++        assert_eq!(out.len(), 1);
++        assert_eq!(out[0].content, "fits easily");
++    }
++
++    #[test]
++    fn zero_width_does_not_wrap() {
++        // Guards the startup path, where wrap_width can be smaller than the
++        // gutter and the subtraction saturates to 0.
++        let l = line("a rather long line that would otherwise be split up");
++        assert_eq!(wrap_diff_line(&l, 0).len(), 1);
++    }
++
++    #[test]
++    fn long_line_splits_and_every_fragment_fits() {
++        let l = line("the quick brown fox jumps over the lazy dog and keeps running");
++        let out = wrap_diff_line(&l, 20);
++        assert!(out.len() > 1, "expected a split, got {} fragment(s)", out.len());
++        for frag in &out {
++            assert!(
++                frag.content.width() <= 20,
++                "fragment {:?} is {} wide, over the 20 limit",
++                frag.content,
++                frag.content.width()
++            );
++        }
++    }
++
++    #[test]
++    fn fragments_keep_the_origins_line_numbers() {
++        let l = line("the quick brown fox jumps over the lazy dog and keeps running");
++        let out = wrap_diff_line(&l, 20);
++        assert!(out.len() > 1);
++        for frag in &out {
++            assert_eq!(
++                frag.new_lineno,
++                Some(7),
++                "a comment must anchor from any fragment"
++            );
++            assert_eq!(frag.kind, LineKind::Added);
++        }
++    }
++
++    #[test]
++    fn wrapping_loses_no_text() {
++        let text = "the quick brown fox jumps over the lazy dog and keeps running";
++        let joined: String = wrap_diff_line(&line(text), 20)
++            .iter()
++            .map(|f| f.content.trim_end().to_string())
++            .collect::<Vec<_>>()
++            .join(" ");
++        assert_eq!(joined, text, "every word survives the split");
++    }
++
++    #[test]
++    fn only_continuations_are_marked_wrapped() {
++        let files = vec![DiffFile {
++            path: "a.rs".into(),
++            status: crate::types::FileStatus::Modified,
++            additions: 1,
++            deletions: 0,
++            hunks: super::super::parser::parse_patch(
++                "@@ -1,1 +1,1 @@\n+the quick brown fox jumps over the lazy dog and keeps running",
++            ),
++        }];
++        let rows = build_display_rows(
++            &files,
++            &[],
++            &[],
++            &[],
++            &std::collections::HashSet::new(),
++            &std::collections::HashSet::new(),
++            &HashMap::new(),
++            120,
++            &std::collections::HashSet::new(),
++            20,
++        );
++        let flags: Vec<bool> = rows
++            .iter()
++            .filter_map(|r| match r {
++                DisplayRow::DiffLine { wrapped, .. } => Some(*wrapped),
++                _ => None,
++            })
++            .collect();
++        assert!(flags.len() > 1, "the line should have wrapped");
++        assert_eq!(flags[0], false, "the first fragment owns the line numbers");
++        assert!(
++            flags[1..].iter().all(|w| *w),
++            "every later fragment is a continuation, got {flags:?}"
++        );
++    }
++}
+diff --git a/src/diff/renderer.rs b/src/diff/renderer.rs
+index 087c5cd..0cc6f73 100644
+--- a/src/diff/renderer.rs
++++ b/src/diff/renderer.rs
+@@ -45,7 +45,7 @@ pub fn render_unified_row(
+         DisplayRow::HunkHeader { text, .. } => {
+             Line::from(vec![Span::styled(text.clone(), Theme::hunk_header())])
+         }
+-        DisplayRow::DiffLine { line, .. } => render_unified_diff_line(line),
++        DisplayRow::DiffLine { line, wrapped, .. } => render_unified_diff_line(line, *wrapped),
+         DisplayRow::ExpandHint {
+             available_lines, ..
+         } => Line::from(vec![Span::styled(
+@@ -178,15 +178,22 @@ fn apply_selection(line: Line<'static>) -> Line<'static> {
+ 
+ // ── Unified diff line ──────────────────────────────────────────────────
+ 
+-fn render_unified_diff_line(line: &DiffLine) -> Line<'static> {
+-    let old_num = line
+-        .old_lineno
+-        .map(|n| format!("{n:>LINE_NUM_WIDTH$}"))
+-        .unwrap_or(" ".repeat(LINE_NUM_WIDTH));
+-    let new_num = line
+-        .new_lineno
+-        .map(|n| format!("{n:>LINE_NUM_WIDTH$}"))
+-        .unwrap_or(" ".repeat(LINE_NUM_WIDTH));
++fn render_unified_diff_line(line: &DiffLine, wrapped: bool) -> Line<'static> {
++    let blank = || " ".repeat(LINE_NUM_WIDTH);
++    // A continuation fragment carries its origin's numbers so comments anchor
++    // from it; repeating them on screen would read as a separate line.
++    let (old_num, new_num) = if wrapped {
++        (blank(), blank())
++    } else {
++        (
++            line.old_lineno
++                .map(|n| format!("{n:>LINE_NUM_WIDTH$}"))
++                .unwrap_or_else(blank),
++            line.new_lineno
++                .map(|n| format!("{n:>LINE_NUM_WIDTH$}"))
++                .unwrap_or_else(blank),
++        )
++    };
+ 
+     let (marker, style, bg_color) = match line.kind {
+         LineKind::Added => ("+", Theme::added_line_bg(), Theme::added_line_bg_color()),
+@@ -207,7 +214,10 @@ fn render_unified_diff_line(line: &DiffLine) -> Line<'static> {
+         Span::styled(old_num, Theme::line_number()),
+         Span::styled("  ", Theme::line_number()),
+         Span::styled(new_num, Theme::line_number()),
+-        Span::styled(format!(" {marker} "), style),
++        Span::styled(
++            format!(" {} ", if wrapped { " " } else { marker }),
++            style,
++        ),
+     ];
+     spans.extend(highlighted.iter().map(|span| span.clone().bg(bg_color)));
+ 
+diff --git a/src/search/tests.rs b/src/search/tests.rs
+index 51ed321..8eb9ee1 100644
+--- a/src/search/tests.rs
++++ b/src/search/tests.rs
+@@ -14,6 +14,7 @@ fn diff_row(content: &str) -> DisplayRow {
+         file_idx: 0,
+         hunk_idx: 0,
+         line_idx: 0,
++        wrapped: false,
+     }
+ }
+ 

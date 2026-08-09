@@ -10,8 +10,8 @@ chrome. Treats AI tooling as a first-class repo reader: source files stay byte-i
 GFM/YAML, no frontmatter or generator dialects.
 
 ## Shell environment
-- Bash tool runs **non-interactive** shells that **don't source `~/.bashrc`** — env from the login
-  profile isn't guaranteed. `node` is normally on `PATH` regardless, inherited from the shell that
+- Bash tool runs **non-interactive** shells that **don't source the interactive rc** (`~/.zshrc`, and
+  so not `dotfiles/shell/common.sh` behind it) — env from the login profile isn't guaranteed. `node` is normally on `PATH` regardless, inherited from the shell that
   launched Claude Code. If it is missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
   managed by asdf and declared in `~/.tool-versions` (from the dotfiles repo) — install a new one by
   adding it there and re-running `~/dotfiles/install`, not by hand.
@@ -39,18 +39,28 @@ GFM/YAML, no frontmatter or generator dialects.
 - **The general form of both: if "it passed" would look identical when the thing failed, nothing was
   measured.** Applies past the shell — a test with no assertion, a mock that always succeeds, a
   health check grepping for a string absent from healthy *and* unhealthy output.
-- **Password prompts are answerable — run them, don't hand them back.** No tty but `DISPLAY` is set,
-  so `SSH_ASKPASS`/`SUDO_ASKPASS` (→ `~/.local/bin/zenity-askpass`, set in `claude/settings.json`)
-  put the prompt on the desktop. ssh uses it automatically; **sudo only under `sudo -A`**. Needs a
-  graphical session, so headless/cron skips it; sudo then caches ~15 min.
+- **Password prompts are answerable — run them, don't hand them back.** No tty but a display is
+  set, so `SSH_ASKPASS`/`SUDO_ASKPASS` (→ `bin/zenity-askpass`, exported by `shell/common.sh` when
+  `zenity` is installed and `DISPLAY`/`WAYLAND_DISPLAY` is non-empty) put the prompt on the desktop.
+  ssh uses it automatically; **sudo only under `sudo -A`**. Headless and cron have no display, so
+  the block is a no-op there.
+  **The credential does not cache between Bash tool calls.** With no tty sudo keys the timestamp to
+  the parent process, and every tool call has a different one — so `sudo -v` in one call leaves the
+  next still unauthenticated. Put `sudo -A` in the *same* call as the command that needs it; each
+  one costs its own dialog. A `! sudo -v` typed by the user does not help either: that shell has no
+  tty and sudo refuses outright.
 
 ## GitHub: `gh` CLI for the API, git + SSH for pushes
 GitHub account: **`tjwise99`**. No GitHub MCP — use the `gh` CLI for all API work (token-friendly:
 built-in `--jq`, purpose-built subcommands).
-- **Auth is automatic — no prefix.** `gh` picks up `GH_TOKEN` from the env (`gh auth status` → "Logged
-  in … (GH_TOKEN)"), so plain `gh …` works. `GH_TOKEN` is inherited from the launching shell, which
-  `~/.bashrc` exports from `~/.claude_github_token`. If `gh` ever looks logged-out, `export
-  GH_TOKEN=$(cat ~/.claude_github_token)`.
+- **Auth is automatic — no prefix.** `gh` reads its token from the **system keyring** (`gh auth status`
+  → "Logged in … (keyring)"), so plain `gh …` works even where the environment is bare. Re-auth with
+  `gh auth login`; there is no token file to source, and nothing on disk holds the token.
+- **`GH_TOKEN` is for scripts that bypass `gh`.** `shell/common.sh` exports it from `gh auth token`,
+  so it reaches the Bash tool only by inheritance from the launching shell — a session started before
+  that shell ran sees it unset. WiseKiosk's `check-branch` gate needs it: it calls the GraphQL API
+  with `curl`, not `gh`, and hard-fails rather than skipping. While it is set, `gh auth
+  login`/`logout`/`refresh` refuse to run until it is unset; ordinary API calls are unaffected.
 - **Reads:** `gh pr checks <n>`, `gh api <endpoint> --jq '.field'`, PR/issue reads via `--json … --jq`.
 - **Writes:** `gh pr create`, `gh pr merge --squash [--admin]`, `gh pr edit <n> --body-file <f>`,
   `gh pr ready <n>`, `gh pr comment`, `gh issue create/comment`. If `gh pr edit --body-file` errors on
@@ -89,7 +99,7 @@ anyone meant it to be.
 | `~/.claude/agents/`, `~/.claude/skills/` | `~/dotfiles/claude/agents/`, `~/dotfiles/claude/skills/` |
 | `~/lessons/` | `~/dotfiles/notes/lessons/` |
 | `~/PROJECT_PLAYBOOK.md` | `~/dotfiles/notes/PROJECT_PLAYBOOK.md` |
-| `~/.bashrc` | `~/dotfiles/bash/bashrc` |
+| `~/.zshrc` | `~/dotfiles/zsh/zshrc` |
 | `~/.gitconfig` | `~/dotfiles/git/gitconfig` |
 
 **Write to the right column.** The Edit tool refuses to write through a symlink, so the left column
@@ -113,7 +123,8 @@ work elsewhere unless publication is intended.
 ## MCP servers
 **None configured** (`claude mcp list` → "No MCP servers configured"). Both were removed at the user's
 request; GitHub work goes through `gh`, browser automation through the Playwright CLI. To restore:
-- **github** (removed 2026-07-18): `claude mcp add --transport http github https://api.githubcopilot.com/mcp --header "Authorization: Bearer ${GITHUB_MCP_PAT}"`
+- **github** (removed 2026-07-18): `claude mcp add --transport http github https://api.githubcopilot.com/mcp --header "Authorization: Bearer <PAT>"` — needs a PAT minted for it; the keyring token
+  belongs to `gh` and no environment variable carries one for this.
 - **playwright** (removed 2026-07-15): MCP spawns without a shell, so `command` must be an absolute
   npx path and there's no system node — get the current one with `asdf which npx`, then
   `claude mcp add-json playwright '{"type":"stdio","command":"<npx-path>","args":["-y","@playwright/mcp@latest"],"env":{}}'`
