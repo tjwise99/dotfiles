@@ -65,6 +65,15 @@ shared:
     apt: fastfetch
     why: zsh/zshrc runs it as the login banner
 
+  # Shared rather than tier 3, despite drawing a window: WSLg gives the WSL box
+  # a display, and SUDO_ASKPASS is how a session with no tty answers a password
+  # prompt at all. A headless host has no prompt to answer either, so the tier-3
+  # test — useless without a display — does not select against it here.
+  - name: zenity
+    pacman: zenity
+    apt: zenity
+    why: backs SUDO_ASKPASS/SSH_ASKPASS for sessions with no tty
+
 # Needs an X server. The test is not whether it looks like a desktop thing:
 # ranger and htop read that way and are shared, because they run over ssh.
 manjaro:
