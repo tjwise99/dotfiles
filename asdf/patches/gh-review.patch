@@ -3,7 +3,7 @@ index c960e36..dbad6d7 100644
 --- a/src/app/command_handlers.rs
 +++ b/src/app/command_handlers.rs
 @@ -154,13 +154,16 @@ fn step_match_or_file(app: &mut App, forward: bool) {
- THIS_CONTEXT_LINE_DOES_NOT_EXIST_UPSTREAM
+             app.diff_view.cursor = c;
          }
          app.update_search_status();
 -    } else if forward {
