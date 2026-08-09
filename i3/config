@@ -11,6 +11,12 @@
 
 set $mod Mod4
 
+# direction keys for focus, movement and resize — change these four to remap
+set $left  h
+set $down  j
+set $up    k
+set $right l
+
 focus_follows_mouse no
 
 # Font for window titles. Will also be used by the bar unless a different font
@@ -72,10 +78,10 @@ bindsym $mod+Tab exec --no-startup-id rofi -show window
 bindsym $mod+Shift+question exec --no-startup-id ~/.config/i3/shortcuts.sh
 
 # change focus
-bindsym $mod+j focus left
-bindsym $mod+k focus down
-bindsym $mod+l focus up
-bindsym $mod+semicolon focus right
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
 
 # cursor-key equivalents, disabled in favour of the home row
 #bindsym $mod+Left focus left
@@ -84,10 +90,10 @@ bindsym $mod+semicolon focus right
 #bindsym $mod+Right focus right
 
 # move focused window
-bindsym $mod+Shift+j move left
-bindsym $mod+Shift+k move down
-bindsym $mod+Shift+l move up
-bindsym $mod+Shift+semicolon move right
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
 
 # cursor-key equivalents, disabled in favour of the home row
 #bindsym $mod+Shift+Left move left
@@ -95,11 +101,8 @@ bindsym $mod+Shift+semicolon move right
 #bindsym $mod+Shift+Up move up
 #bindsym $mod+Shift+Right move right
 
-# split in horizontal orientation
-bindsym $mod+h split h
-
-# split in vertical orientation
-bindsym $mod+v split v
+# flips whether the next window opens beside or below the focused one
+bindsym $mod+v split toggle
 
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
@@ -173,10 +176,10 @@ mode "resize" {
         # Pressing right will grow the window’s width.
         # Pressing up will shrink the window’s height.
         # Pressing down will grow the window’s height.
-        bindsym j resize shrink width 10 px or 10 ppt
-        bindsym k resize grow height 10 px or 10 ppt
-        bindsym l resize shrink height 10 px or 10 ppt
-        bindsym semicolon resize grow width 10 px or 10 ppt
+        bindsym $left resize shrink width 10 px or 10 ppt
+        bindsym $down resize grow height 10 px or 10 ppt
+        bindsym $up resize shrink height 10 px or 10 ppt
+        bindsym $right resize grow width 10 px or 10 ppt
 
         # cursor-key equivalents, disabled in favour of the home row
         #bindsym Left resize shrink width 10 px or 10 ppt
