@@ -1,9 +1,7 @@
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "teammateMode": "auto",
-    "SSH_ASKPASS": "/home/wise/.local/bin/zenity-askpass",
-    "SUDO_ASKPASS": "/home/wise/.local/bin/zenity-askpass"
+    "teammateMode": "auto"
   },
   "permissions": {
     "allow": [

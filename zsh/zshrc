@@ -126,8 +126,11 @@ zle -N _cursor_beam
 add-zle-hook-widget keymap-select _cursor_for_keymap
 add-zle-hook-widget line-init _cursor_beam
 
-# Drops / & . ; from the set, so word-wise motion stops at path segments.
-WORDCHARS=${WORDCHARS//\/[&.;]}
+# Drops / & . ; from the set, so word-wise motion stops at path segments. The
+# brackets hold the whole set: `//\/[&.;]` matches a slash *followed by* one of
+# them, which removes `/&` alone and leaves `.` and `;` behaving as word
+# characters while reading as though it had not.
+WORDCHARS=${WORDCHARS//[\/&.;]}
 
 # ~/.zhistory rather than zsh's default: it is where this machine's history
 # already is, and pointing elsewhere strands it rather than losing it, which is

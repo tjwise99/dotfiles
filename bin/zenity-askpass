@@ -1,0 +1,5 @@
+#!/bin/sh
+# Answers a password prompt for a session with no tty. sudo (under -A) and ssh
+# pass the prompt text as $1 and read the reply from stdout, so this must put
+# nothing on stdout but the password. GTK chatter goes to stderr and is dropped.
+exec zenity --password --title="${1:-Password}" 2>/dev/null

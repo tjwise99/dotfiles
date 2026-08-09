@@ -1,9 +1,10 @@
 # Sourced by both bash/bashrc and zsh/zshrc, so it must stay POSIX sh.
 #
 # Every block here is guarded on the capability it needs, never on the host
-# name. The two machines genuinely differ — the laptop has a graphical askpass
-# and gh, the WSL box has neither — and testing for the thing rather than the
-# box is what lets this file be byte-identical on both.
+# name, which is what lets this file be byte-identical on both machines. The
+# guard must test the capability itself and not an artefact that usually
+# accompanies it: see the askpass block, where "the helper has been installed"
+# stood in for "there is a display" until a host had one and not the other.
 
 # Guarded, because nested shells (tmux, subshells, editors, Claude Code) re-run
 # this over an already-populated PATH and would stack duplicates. Same idiom as
@@ -22,11 +23,16 @@ esac
 # ssh consults this only when no tty is attached, so interactive shells keep
 # prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
 # (Claude Code, .desktop launchers) that otherwise hit the absent
-# /usr/lib/ssh/ssh-askpass. The script is deliberately not tracked in this repo,
-# so the -x test is also what makes the whole block a no-op on a host with no
-# graphical session to put a prompt on.
-if [ -x "${HOME}/.local/bin/zenity-askpass" ]; then
-  export SSH_ASKPASS="${HOME}/.local/bin/zenity-askpass"
+# /usr/lib/ssh/ssh-askpass.
+#
+# Guarded on the capability, not on the helper's presence. Testing whether the
+# script had been installed measured "did someone put it here by hand", which is
+# a proxy for having a display and stands in for it only until it doesn't: this
+# is what left the WSL box exporting a path that did not exist. A display is
+# also ssh's own condition for consulting SSH_ASKPASS, and its absence is what
+# correctly disarms this under cron, a systemd unit, or ssh without forwarding.
+if command -v zenity >/dev/null 2>&1 && [ -n "${DISPLAY}${WAYLAND_DISPLAY}" ]; then
+  export SSH_ASKPASS="${HOME}/dotfiles/bin/zenity-askpass"
   export SUDO_ASKPASS="${SSH_ASKPASS}"
 fi
 

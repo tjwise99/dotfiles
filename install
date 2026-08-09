@@ -46,9 +46,15 @@ else
     echo "warning: host '${HOST}' has no profile; applying base only" >&2
 fi
 
+# Every profile runs even when an earlier one fails, and the failure is carried
+# to the exit status rather than to the loop. The profiles are independent link
+# sets: a package or asdf step failing in base says nothing about whether this
+# host's links should be made, and under `set -e` it silently skipped them.
+status=0
 for config in "${CONFIGS[@]}"; do
     echo "==> ${config}"
     ./dotbot/bin/dotbot -d "${BASEDIR}" \
         --plugin-dir dotbot-plugins/dotbot-asdf -c "${config}" \
-        ${DOTBOT_ARGS[@]+"${DOTBOT_ARGS[@]}"}
+        ${DOTBOT_ARGS[@]+"${DOTBOT_ARGS[@]}"} || status=1
 done
+exit "${status}"
