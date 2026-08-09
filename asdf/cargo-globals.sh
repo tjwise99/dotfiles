@@ -10,7 +10,6 @@ set -uo pipefail
 export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
 
 CRATES=(
-    prr
     gh-review
 )
 
