@@ -1,5 +1,18 @@
 #!/bin/sh
-# Answers a password prompt for a session with no tty. sudo (under -A) and ssh
-# pass the prompt text as $1 and read the reply from stdout, so this must put
-# nothing on stdout but the password. GTK chatter goes to stderr and is dropped.
-exec zenity --password --title="${1:-Password}" 2>/dev/null
+# SSH_ASKPASS / SUDO_ASKPASS helper. Both pass the prompt as $1 and read the
+# answer from stdout; ssh host-key prompts want a yes/no line, everything else
+# a secret. sudo only consults SUDO_ASKPASS when invoked with -A.
+prompt="${1:-Password:}"
+
+case "$prompt" in
+  *yes/no*)
+    if zenity --question --title="SSH host key" --text="$prompt" 2>/dev/null; then
+      echo yes
+    else
+      echo no
+    fi
+    ;;
+  *)
+    zenity --entry --hide-text --title="Authentication" --text="$prompt" 2>/dev/null
+    ;;
+esac
