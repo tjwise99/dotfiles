@@ -121,6 +121,11 @@
       versions:
         - 0.19.2
 
+    - plugin: rust
+      url: https://github.com/code-lever/asdf-rust.git
+      versions:
+        - 1.97.1
+
 # The asdf directive above reports success even when it installs nothing.
 - shell:
     - command: ./asdf/verify-tools.sh
@@ -129,6 +134,11 @@
       stderr: true
     - command: ./asdf/npm-globals.sh
       description: Install global npm packages
+      stdout: true
+      stderr: true
+
+    - command: ./asdf/cargo-globals.sh
+      description: Install global cargo crates
       stdout: true
       stderr: true
 

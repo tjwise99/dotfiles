@@ -19,6 +19,13 @@ case ":${PATH}:" in
   *) export PATH="${HOME}/.asdf/shims:${PATH}" ;;
 esac
 
+# asdf shims cover the toolchain, not what cargo installs into it: `cargo
+# install` writes to ~/.cargo/bin and asdf reshim does not reach there.
+case ":${PATH}:" in
+  *":${HOME}/.cargo/bin:"*) ;;
+  *) export PATH="${HOME}/.cargo/bin:${PATH}" ;;
+esac
+
 # ssh consults this only when no tty is attached, so interactive shells keep
 # prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
 # (Claude Code, .desktop launchers) that otherwise hit the absent
