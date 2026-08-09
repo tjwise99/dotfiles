@@ -24,9 +24,14 @@ issuesSections:
   - title: Blocked
     filters: is:open is:blocked
 
+# `~` rather than the home directory written out: gh-dash expands a leading
+# tilde itself, and the two hosts do not share a username, so an absolute path
+# here resolves on one machine and silently misses on the other. The checkout
+# action reports only "local path to repo not specified", which names the config
+# key rather than the path, so the wrong-host case reads as an unset one.
 repoPaths:
-  tjwise99/WiseKiosk: /home/wise/code/WiseKiosk
-  tjwise99/*: /home/wise/code/*
+  tjwise99/WiseKiosk: ~/code/WiseKiosk
+  tjwise99/*: ~/code/*
 
 defaults:
   view: prs
