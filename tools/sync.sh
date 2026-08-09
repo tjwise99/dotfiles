@@ -24,7 +24,7 @@ if ! flock -n 9; then
     exit 0
 fi
 
-# Written on every run, before anything can fail. shell/common.sh reports its
+# Written on every run, before anything can fail. shell/interactive.sh reports its
 # age, which is the only signal that reaches a host where the timer never fires
 # at all — that host writes no failure marker precisely because nothing runs to
 # write one.

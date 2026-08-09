@@ -49,7 +49,7 @@ shared:
   - name: vim
     pacman: vim
     apt: vim
-    why: shell/common.sh resolves EDITOR to it
+    why: shell/env.sh resolves EDITOR to it
 
   - name: ranger
     pacman: ranger

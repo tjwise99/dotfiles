@@ -6,7 +6,7 @@
 # boots without systemd unless /etc/wsl.conf sets systemd=true, and a host with
 # no timer never runs tools/sync.sh, so it never writes the failure marker
 # either. Silence then means both "backed up fine" and "has never backed up".
-# shell/common.sh reports the stamp's age for the same reason; this is the half
+# shell/interactive.sh reports the stamp's age for the same reason; this is the half
 # that can name the cause while the installer is still running.
 set -uo pipefail
 

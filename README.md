@@ -30,7 +30,7 @@ matters: [`BOOTSTRAP-WSL.md`](BOOTSTRAP-WSL.md).
 | --- | --- |
 | `profiles/` | The manifest — what gets linked where, per host |
 | `packages/` | What each host installs from its own package manager |
-| `bash/`, `zsh/`, `git/`, `gh/` | Shell and tool config |
+| `shell/`, `zsh/`, `git/`, `gh/` | Shell and tool config |
 | `zsh/plugins/` | Submodules. Prompt and zsh plugins, pinned so both hosts match |
 | `claude/` | `CLAUDE.md`, agents, skills, commands |
 | `notes/` | `lessons/`, `PROJECT_PLAYBOOK.md` |
@@ -134,15 +134,31 @@ immediately; the escape sequences that would otherwise be lost to it are bound e
 than resolved by timing. The mode itself is reported by the `vi_mode` segment in `~/.p10k.zsh` and
 by the cursor, which is a block in normal mode and a beam in insert.
 
-`shell/common.sh` holds what both shells need — the asdf PATH, askpass, `gh` auth, `EDITOR`, the
-aliases, the `ranger` wrapper and the sync health report — and both rc files source it, so there is
-one copy. It must stay POSIX sh. Every block in it is guarded on the capability it needs rather than
-on the host name, which is what lets it be byte-identical on both machines.
+The shell config is split by *when zsh reads it*, not by what it configures, because zsh reads two
+different files for two different kinds of shell:
+
+| File | Read by | Holds |
+| --- | --- | --- |
+| `shell/env.sh` | `~/.zshenv` — **every** zsh — and `~/.profile` | asdf PATH, askpass, `gh` auth, `EDITOR` |
+| `shell/interactive.sh` | `~/.zshrc` — interactive only | aliases, the `ranger` wrapper, sync health |
+
+`~/.zshrc` is not read by `ssh host <command>` or by a zsh script, so environment placed there
+reaches neither: before `~/.zshenv` existed, `env -i zsh -c 'command -v rg'` found nothing, because
+the asdf shims were set up in a file those callers never open. The split is what fixes that, and it
+has to be a split rather than a move — a non-interactive shell's stdout **is** the command's output,
+so the sync-health banner printed from `~/.zshenv` prepends itself to the data every `ssh host cat
+…` returns. Both halves stay POSIX sh, because `~/.profile` is read by lightdm's Xsession and that
+is `/bin/sh`.
+
+Every block in `env.sh` is guarded on the capability it needs rather than on the host name, which is
+what lets both files be byte-identical on the two machines.
 
 `zsh/zshrc.x` is the part that needs X. Only `profiles/manjaro.conf.yaml` deploys it, and `zsh/zshrc`
 sources it if it is there, so the WSL box runs the same zshrc and simply never finds it.
-`bash/bashrc` is still deployed on WSL: an inbound non-interactive bash and a Windows-side
-`wsl -e bash -lc` both read it, and it is what sources `shell/common.sh` for them.
+
+Bash is not configured by this repo. zsh is the login shell everywhere, `~/.zshenv` covers the
+non-interactive callers `~/.bashrc` was once kept for, and the scripts here with a `bash` shebang
+use it as a language — a non-interactive bash reads no rc file, so they never wanted one.
 
 Host-specific aliases — anything naming a real host, account or disk — go in `local/zshrc.local`,
 which `zsh/zshrc` sources if present. This repo is public and pushes itself every 20 minutes.
@@ -167,7 +183,7 @@ session finishes.
 It never resolves a conflict. Tracked files are symlinked into `$HOME`, so a bad merge would rewrite
 live shell config rather than a repo copy; on conflict it aborts and leaves the tree untouched.
 
-Two signals reach the next shell through `shell/common.sh`, because they fail differently. Failures
+Two signals reach the next shell through `shell/interactive.sh`, because they fail differently. Failures
 write `~/.dotfiles-sync-failed`. Every run, successful or not, touches `~/.dotfiles-sync-stamp`, and
 its absence or age is the only thing that can describe a host where the timer never fires at all —
 that host writes no failure marker precisely because nothing runs to write one, so a report built on

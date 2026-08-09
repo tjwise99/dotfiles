@@ -11,7 +11,7 @@
 # the rest of the path in this file's text.
 
 # vi keymap. zsh would also reach it on its own, since it picks from EDITOR and
-# shell/common.sh sets that to vim — choosing it here is what makes the rest of
+# shell/env.sh sets that to vim — choosing it here is what makes the rest of
 # this file's bindings deliberate rather than a side effect. The vi_mode segment
 # in ~/.p10k.zsh reports which mode the line is in.
 #
