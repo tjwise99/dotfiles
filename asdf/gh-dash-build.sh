@@ -18,7 +18,11 @@ export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
 
 UPSTREAM="https://github.com/dlvhdr/gh-dash"
 COMMIT="a613ef744c99ef8d8ead33467813c6ee6086af52"
-PATCH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/patches/gh-dash.patch"
+# Resolved from the repo root so the repo-relative path appears below as one
+# contiguous literal, which is how tools/check-manifest.py vouches for a tracked
+# file. A prefix that exists only after dirname has run never joins the rest,
+# and the patch then reports as tracked but never deployed.
+PATCH="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/asdf/patches/gh-dash.patch"
 SRC="${HOME}/.cache/gh-dash-src"
 STAMP="${SRC}/.built"
 EXT="${HOME}/.local/share/gh/extensions/gh-dash"
