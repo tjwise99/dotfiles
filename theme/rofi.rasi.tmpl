@@ -38,6 +38,7 @@ mainbox {
 
 inputbar {
     background-color: @rofi_bg_alt@;
+    text-color:       @fg@;
     border-radius:    @corner_radius@px;
     padding:          10px @hpadding@px;
     spacing:          10px;
@@ -51,8 +52,13 @@ prompt {
 entry {
     placeholder:       "Search";
     placeholder-color: @muted@;
+    text-color:        @fg@;
     cursor:            text;
 }
+
+/* textbox backs the message box; case-indicator sits inside the input bar. */
+textbox        { text-color: @fg@;    }
+case-indicator { text-color: @muted@; }
 
 listview {
     lines:        8;
@@ -69,9 +75,10 @@ element {
     cursor:        pointer;
 }
 
-/* Every state needs an explicit background-color: rofi merges this theme over
-   its built-in default, and a state left unset keeps the default's light row
-   background rather than falling back to the transparent global above. */
+/* rofi merges this theme over its built-in default, whose widget-specific rules
+   outrank the global * block above — so any colour left unset here resolves to a
+   Solarized default rather than to @fg@/@rofi_bg@. Set every colour explicitly,
+   per widget and per state; `rofi -dump-theme` shows what actually resolved. */
 element normal.normal    { background-color: transparent; text-color: @fg@;     }
 element normal.urgent    { background-color: transparent; text-color: @urgent@; }
 element normal.active    { background-color: transparent; text-color: @accent@; }
