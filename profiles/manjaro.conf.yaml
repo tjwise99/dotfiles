@@ -25,6 +25,12 @@
     ~/.xprofile: x/xprofile
     ~/.Xresources: x/Xresources
 
+    # Same fixed-path case: i3/picom-launch.sh names ~/.config/picom.conf
+    # explicitly, so this lands beside the X files rather than inside the
+    # whole-directory i3 link. Static, unlike its neighbours in ~/.config —
+    # rofi, dunst and alacritty are rendered by theme.sh and stay untracked.
+    ~/.config/picom.conf: x/picom.conf
+
     # The X-dependent part of the shell. zsh/zshrc sources this if the file is
     # there, so the WSL box gets the same zshrc and simply never finds it.
     ~/.config/zsh/x.zsh: zsh/zshrc.x

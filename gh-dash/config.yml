@@ -1,0 +1,49 @@
+# No section names a repo: smartFilteringAtLaunch prepends the current clone's
+# repo: to any filter that does not already carry one, so naming one here is
+# what suppresses per-repo scoping.
+prSections:
+  - title: Open
+    filters: is:open
+  - title: Mine
+    filters: is:open author:@me
+  - title: Needs review
+    filters: is:open review-requested:@me
+  - title: Merged
+    filters: is:merged author:@me
+    limit: 10
+
+issuesSections:
+  - title: Open
+    filters: is:open
+  # is:blocked is resolved by the local patch, not by GitHub search, which
+  # carries no issue dependencies. Sections using it ignore issuesLimit, and
+  # outside a clone they have no repo: to inherit — see the Ready section note
+  # in the gh-dash patch.
+  - title: Ready
+    filters: is:open -is:blocked
+  - title: Blocked
+    filters: is:open is:blocked
+
+repoPaths:
+  tjwise99/WiseKiosk: /home/wise/code/WiseKiosk
+  tjwise99/*: /home/wise/code/*
+
+defaults:
+  view: prs
+  prsLimit: 20
+  issuesLimit: 20
+  refetchIntervalMinutes: 30
+  dateFormat: "2006-01-02"
+  preview:
+    open: true
+    width: 60
+
+# A user-defined binding is the first arm of gh-dash's key dispatch, so this
+# shadows the built-in diff on the same key.
+keybindings:
+  prs:
+    - key: d
+      name: review
+      command: gh-review {{.RepoName}} {{.PrNumber}}
+
+confirmQuit: false

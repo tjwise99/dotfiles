@@ -19,8 +19,10 @@
     ~/.zshrc: zsh/zshrc
     ~/.p10k.zsh: zsh/p10k.zsh
 
-    # Git
+    # Git. git reads the ignore file from this path on its own — gitconfig sets
+    # no core.excludesFile, so moving it would need a setting to follow.
     ~/.gitconfig: git/gitconfig
+    ~/.config/git/ignore: git/ignore
     ~/.config/git/hooks/pre-commit: git/hooks/pre-commit
 
     # Claude Code — individual children only. ~/.claude also holds
@@ -39,6 +41,13 @@
     # comments attached to a key but discards anything above the first one, so
     # notes about this file belong here or in the README, not in its header.
     ~/.config/gh/config.yml: gh/config.yml
+
+    # gh-dash is a TUI over the API, so it belongs here rather than with the
+    # desktop configs, same as ranger and htop. Its sections lean on the local
+    # patch (is:blocked, milestone ordering), so config and patch have to travel
+    # together — a host with one and not the other silently renders empty
+    # sections rather than failing.
+    ~/.config/gh-dash/config.yml: gh-dash/config.yml
 
     # TUI, not GUI: these run identically over ssh and under WSL, so keying them
     # to the laptop was keying on the host rather than on what they need.
