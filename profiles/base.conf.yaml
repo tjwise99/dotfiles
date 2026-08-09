@@ -116,6 +116,11 @@
       versions:
         - 0.74.2
 
+    - plugin: delta
+      url: https://github.com/andweeb/asdf-delta.git
+      versions:
+        - 0.19.2
+
 # The asdf directive above reports success even when it installs nothing.
 - shell:
     - command: ./asdf/verify-tools.sh
