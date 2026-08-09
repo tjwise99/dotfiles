@@ -1,0 +1,46 @@
+# Explicitly-installed packages that predate packages/manifest.yaml on
+# this host. Untriaged, not endorsed: recorded so resolve.py --verify
+# reports what was installed since, not everything the image shipped.
+bash
+coreutils
+coreutils-from-uutils
+dash
+diffutils
+dpkg
+findutils
+gnu-coreutils
+golang-go
+grep
+gzip
+hostname
+init
+jq
+just
+libasound2t64
+libatk-bridge2.0-0t64
+libatk1.0-0t64
+libattr1
+libcairo2
+libcups2t64
+libdrm2
+libgbm1
+libnspr4
+libnss3
+libpango-1.0-0
+libxcomposite1
+libxdamage1
+libxfixes3
+libxkbcommon0
+libxrandr2
+ncurses-base
+ncurses-bin
+python3-pip
+python3.14-venv
+rust-coreutils
+tar
+tmux
+tree
+ubuntu-minimal
+ubuntu-wsl
+util-linux
+zip
