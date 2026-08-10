@@ -25,8 +25,14 @@ if [ -z "${target}" ]; then
     exit 0
 fi
 
-if [ "${current}" = "${target}" ]; then
-    echo "login shell already ${target}"
+# Resolved before comparing, not string-matched. /bin is a symlink to usr/bin on
+# both distros, so passwd holding /bin/zsh and `command -v` giving /usr/bin/zsh
+# name one file by two paths — and a string compare then reads "already correct"
+# as "needs changing" and runs chsh on every install. Invisible on the machine
+# this was written on, because there the script had itself written the resolved
+# form into passwd.
+if [ "$(readlink -f "${current}")" = "$(readlink -f "${target}")" ]; then
+    echo "login shell already ${current}"
     exit 0
 fi
 
