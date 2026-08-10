@@ -60,10 +60,15 @@ shared:
     pacman: htop
     apt: htop
 
+  # No longer wired to anything — zsh/zshrc ran it as a login banner and does
+  # not any more. Kept as a declaration rather than dropped, because dropping it
+  # while the package stays installed turns it into an undeclared package and
+  # fails packages/resolve.py --verify. Uninstalling it is the other way to
+  # close this, and is a separate decision.
   - name: fastfetch
     pacman: fastfetch
     apt: fastfetch
-    why: zsh/zshrc runs it as the login banner
+    why: run by hand; nothing sources it
 
   # Shared rather than tier 3, despite drawing a window: WSLg gives the WSL box
   # a display, and SUDO_ASKPASS is how a session with no tty answers a password
