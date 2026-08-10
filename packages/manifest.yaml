@@ -100,11 +100,17 @@ manjaro:
   - {name: ttf-jetbrains-mono-nerd, why: ranger/devicons.py and the polybar glyphs}
   - {name: xclip, why: clipboard; the WSL equivalent is clip.exe, not a package}
   - {name: opencloud-desktop, why: file sync client; a Qt tray app, so it needs a session}
-  # Pulls in iwd, which this host does not use — NetworkManager owns the radio
-  # and talks to wpa_supplicant. Declared anyway: iwd installed is inert until
-  # something enables it, and impala is wanted here whether or not that backend
-  # switch ever happens. Nothing in this repo enables iwd, deliberately.
   - {name: impala, why: TUI wifi manager; needs a radio, which the WSL host has none of}
+  # Declared in its own right, not left as impala's dependency, because it is no
+  # longer only impala's: iwd owns wlan0 on this host now, so removing impala
+  # would take the network stack with it as an orphan. impala needs iwd running
+  # and nothing else holding the device — NetworkManager and wpa_supplicant are
+  # installed but disabled here for exactly that reason.
+  #
+  # The service state that makes this true — iwd enabled, the other two disabled,
+  # /etc/iwd/main.conf, systemd-resolved — is applied by hand and lives nowhere
+  # in this repo. Naming the package is not the same as declaring the stack.
+  - {name: iwd, why: owns wlan0; the wifi backend impala drives}
   - {name: yay, why: builds the manjaro-aur tier below; pacman cannot install from the AUR}
 
 # Built from the AUR, which pacman does not do. Separate because the command
