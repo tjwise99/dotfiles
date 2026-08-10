@@ -169,5 +169,5 @@ Launched from `~/.config/i3/config` via `exec_always`, each with its own
 |---|---|
 | `~/.config/i3/picom-launch.sh` | the compositor |
 | `~/.config/polybar/launch.sh` | the bar |
-| `~/.config/i3/network-notify.sh` | `nmcli monitor` → `notify-send` |
+| `~/.config/i3/network-notify.sh` | `ip monitor` → `notify-send` |
 | `~/.config/i3/battery-notify.sh` | `batsignal`, 20%/10%, no danger command |
