@@ -88,6 +88,7 @@ manjaro:
   - {name: feh}
   - {name: ttf-jetbrains-mono-nerd, why: ranger/devicons.py and the polybar glyphs}
   - {name: xclip, why: clipboard; the WSL equivalent is clip.exe, not a package}
+  - {name: yay, why: builds the manjaro-aur tier below; pacman cannot install from the AUR}
 
 # Built from the AUR, which pacman does not do. Separate because the command
 # differs, not because the tier does.

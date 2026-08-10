@@ -47,8 +47,24 @@ case "${HOST}" in
         sudo_ pacman -S --needed --noconfirm ${native} || exit 1
         aur="$("${RESOLVE[@]}" --host "${HOST}" --aur)" || exit 1
         if [ -n "${aur}" ]; then
+            # yay, not pamac. pamac asks for privilege through polkit, which no
+            # agent answers when there is no session — so the AUR step failed
+            # outright under every tty-less caller while SUDO_ASKPASS sat there
+            # unread, because that is a sudo mechanism. yay uses sudo, which is
+            # what the rest of this file already solves.
+            #
+            # Not wrapped in sudo_: makepkg refuses to run as root, so yay
+            # elevates only the install step itself. The -A decision is passed
+            # down on the same two conditions sudo_ tests rather than made here.
+            #
+            # --needed for the reason the pacman call above has it. pamac had no
+            # equivalent and rebuilt both packages on every run.
+            aurflags=""
+            if [ ! -t 0 ] && [ -x "${SUDO_ASKPASS:-}" ]; then
+                aurflags="--sudoflags -A"
+            fi
             # shellcheck disable=SC2086
-            pamac build --no-confirm ${aur} || exit 1
+            yay -S --needed --noconfirm ${aurflags} ${aur} || exit 1
         fi
         ;;
     wsl)
