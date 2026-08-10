@@ -16,6 +16,13 @@ alias l='ls -CF'
 alias grep='grep --color=auto'
 alias dirsize='sudo du -hc . | sort -rh | head -20'
 
+# Guarded for the same reason shell/env.sh guards EDITOR: nvim arrives from asdf,
+# so on a host that has not finished ./install it is absent, and an unguarded
+# alias would take `vim` down with it rather than falling back to the vim that is
+# there. EDITOR stays on vim deliberately — an alias reaches this shell only, so
+# pointing git, ranger and sudoedit at nvim is a separate decision from this one.
+command -v nvim >/dev/null 2>&1 && alias vim='nvim'
+
 # Leave the shell in whatever directory ranger quit from. --choosedir writes the
 # final path to a temp file; `command` avoids recursing into this function.
 ranger() {
