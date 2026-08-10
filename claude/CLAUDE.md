@@ -10,9 +10,12 @@ chrome. Treats AI tooling as a first-class repo reader: source files stay byte-i
 GFM/YAML, no frontmatter or generator dialects.
 
 ## Shell environment
-- Bash tool runs **non-interactive** shells that **don't source the interactive rc** (`~/.zshrc`, and
-  so not `dotfiles/shell/common.sh` behind it) — env from the login profile isn't guaranteed. `node` is normally on `PATH` regardless, inherited from the shell that
-  launched Claude Code. If it is missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
+- Bash tool runs **non-interactive bash**, which sources **no startup file at all** — not `~/.zshenv`
+  (that is zsh's, and this is bash) and not `~/.zshrc` (interactive only), so neither
+  `dotfiles/shell/env.sh` nor `interactive.sh` runs. Everything in the environment arrived by
+  inheritance from the shell that launched Claude Code, so a session started before a config change
+  does not see it. `node` is normally on `PATH` regardless, inherited the same way. If it is
+  missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
   managed by asdf and declared in `~/.tool-versions` (from the dotfiles repo) — install a new one by
   adding it there and re-running `~/dotfiles/install`, not by hand.
 - `python3` and Docker are available. `jq` is asdf-managed at `~/.asdf/shims/jq` — there is no
@@ -40,7 +43,7 @@ GFM/YAML, no frontmatter or generator dialects.
   measured.** Applies past the shell — a test with no assertion, a mock that always succeeds, a
   health check grepping for a string absent from healthy *and* unhealthy output.
 - **Password prompts are answerable — run them, don't hand them back.** No tty but a display is
-  set, so `SSH_ASKPASS`/`SUDO_ASKPASS` (→ `bin/zenity-askpass`, exported by `shell/common.sh` when
+  set, so `SSH_ASKPASS`/`SUDO_ASKPASS` (→ `bin/zenity-askpass`, exported by `shell/env.sh` when
   `zenity` is installed and `DISPLAY`/`WAYLAND_DISPLAY` is non-empty) put the prompt on the desktop.
   ssh uses it automatically; **sudo only under `sudo -A`**. Headless and cron have no display, so
   the block is a no-op there.
@@ -56,7 +59,7 @@ built-in `--jq`, purpose-built subcommands).
 - **Auth is automatic — no prefix.** `gh` reads its token from the **system keyring** (`gh auth status`
   → "Logged in … (keyring)"), so plain `gh …` works even where the environment is bare. Re-auth with
   `gh auth login`; there is no token file to source, and nothing on disk holds the token.
-- **`GH_TOKEN` is for scripts that bypass `gh`.** `shell/common.sh` exports it from `gh auth token`,
+- **`GH_TOKEN` is for scripts that bypass `gh`.** `shell/env.sh` exports it from `gh auth token`,
   so it reaches the Bash tool only by inheritance from the launching shell — a session started before
   that shell ran sees it unset. WiseKiosk's `check-branch` gate needs it: it calls the GraphQL API
   with `curl`, not `gh`, and hard-fails rather than skipping. While it is set, `gh auth

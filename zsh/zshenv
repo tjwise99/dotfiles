@@ -1,0 +1,8 @@
+# Read by every zsh: interactive, non-interactive, login, script. This is the
+# only startup file that `ssh host <command>` and a #!/usr/bin/env zsh script
+# reach — ~/.zshrc is interactive-only — so the environment has to be set here
+# or those callers run without the asdf shims on PATH.
+#
+# Sources the file rather than holding the settings, because ~/.profile needs
+# the same block for the graphical session and lightdm's Xsession is not zsh.
+[ -r "${HOME}/dotfiles/shell/env.sh" ] && . "${HOME}/dotfiles/shell/env.sh"

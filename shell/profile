@@ -1,0 +1,7 @@
+# ~/.profile: read by login shells and, on the laptop, by lightdm's Xsession
+# before the graphical session starts. That makes it the only file that can put
+# a directory on the session PATH independently of which shell logs in, which is
+# why it exists at all now that zsh is the only login shell.
+#
+# POSIX sh: the Xsession runner is /bin/sh, not zsh.
+[ -r "${HOME}/dotfiles/shell/env.sh" ] && . "${HOME}/dotfiles/shell/env.sh"

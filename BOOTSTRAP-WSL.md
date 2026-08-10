@@ -1,10 +1,8 @@
-# Bootstrapping the WSL box
+# Bringing up a WSL box
 
-Written for a session that has never seen this machine. The Manjaro side of
-`cross-host-packages` is installed and working; **the WSL side has never been
-run**, and this is the run that tests it. Treat every apt package name below as
-a claim, not a fact — they were authored from the Manjaro host and never
-resolved against a real Ubuntu.
+The prerequisites that live on the Windows side, and the first-run order that
+matters. Everything here was walked on Ubuntu 26.04; where a step exists because
+something went wrong, the reason is written down rather than the fix alone.
 
 ## 1. Windows side, before anything in Linux
 
@@ -22,7 +20,10 @@ printf '[boot]\nsystemd=true\n' | sudo tee /etc/wsl.conf
 ```
 
 then from **Windows**: `wsl --shutdown`, and reopen the distro. This is a real
-reboot of the VM, not a shell restart.
+reboot of the VM, not a shell restart. `systemd/enable-timer.sh` prints this
+same hint if it finds no user systemd instance, rather than exiting quietly — a
+host with no timer writes no failure marker either, so silence there would mean
+both "backed up fine" and "has never backed up".
 
 **A Nerd Font.** The prompt is powerlevel10k and draws with glyphs outside
 normal Unicode. Without one the prompt renders as boxes. The font is installed
@@ -32,19 +33,17 @@ Terminal → Settings → your Ubuntu profile → Appearance → Font face.
 
 ## 2. Pre-flight the package names
 
-This is the step most likely to find a defect, so do it before anything is
-installed:
+The apt column of `packages/manifest.yaml` is the only part of this repo that
+can be wrong in a way no other host would show, so check it before installing:
 
 ```sh
-apt-cache policy build-essential git curl unzip zsh vim ranger htop fastfetch
+apt-cache policy $(python3 packages/resolve.py --native)
 ```
 
-Any entry showing `Candidate: (none)` is a wrong name in
-`packages/manifest.yaml`. `fastfetch` is the most likely — it reached Ubuntu's
-archive late, so an older LTS may not carry it. Fix the `apt:` value there, or
+Any entry showing `Candidate: (none)` is a wrong name. Fix the `apt:` value, or
 mark it `unavailable` with the reason; do not delete the entry, because
 `resolve.py` treats a missing column as an error precisely so a package cannot
-vanish silently from one host.
+vanish silently from one host. All current names resolve on 26.04.
 
 ## 3. Clone
 
@@ -52,19 +51,17 @@ There is no SSH key on a fresh machine, so clone over HTTPS:
 
 ```sh
 git clone --recursive https://github.com/tjwise99/dotfiles.git ~/dotfiles
-cd ~/dotfiles && git switch cross-host-packages
 ```
 
-`--recursive` matters more than it used to: the prompt and the four zsh plugins
-are submodules now. If it was missed, `git submodule update --init --recursive`.
+`--recursive` matters: the prompt and the five zsh plugins are submodules. If it
+was missed, `git submodule update --init --recursive`.
 
 ## 4. Baseline first, then install
 
 `resolve.py --verify` refuses to run with no baseline for this host rather than
-running half of what it claims to. `sync-packages.sh` is the *first* step of the
-install, so without a baseline the whole run stops there. Write it first — on a
-fresh image that is exactly the right moment, since everything explicitly
-installed is genuinely pre-existing:
+running half of what it claims to, and `sync-packages.sh` is the first step of
+the install. Write the baseline first — on a fresh image that is exactly the
+right moment, since everything explicitly installed is genuinely pre-existing:
 
 ```sh
 python3 packages/resolve.py --write-baseline
@@ -75,17 +72,32 @@ python3 packages/resolve.py --write-baseline
 compiles and downloads, so nothing after it succeeds without `build-essential`,
 `curl` and `unzip`.
 
+Expect this to take a while on a fresh box: it installs Rust and Go toolchains
+and builds `gh-dash` and `gh-review` from pinned upstreams plus local patches.
+
 ## 5. Make zsh the login shell
 
-Nothing in this repo does this, deliberately — it needs a password and it is
-not idempotent in a way an installer should own:
+**Do this in the same sitting as step 4, not later.** Bash is not configured by
+this repo — there is no `~/.bashrc` — so between installing and switching, a
+login shell gets only what `~/.profile` sets. That is enough to keep `PATH`
+working and nothing else.
 
 ```sh
 chsh -s "$(command -v zsh)"
 ```
 
-Then close the terminal and reopen it. Until this is done the install completes
-and deploys a `~/.zshrc` that nothing reads.
+Still manual, and still deliberately so: it needs a password, and switching to a
+shell that will not start costs a trip to a TTY. Before running it, confirm all
+three of the things that make it safe — that zsh runs, that it is a legal login
+shell, and that you are not already on it:
+
+```sh
+zsh -c 'exit' && echo "zsh runs"
+grep -qxF "$(command -v zsh)" /etc/shells && echo "listed in /etc/shells"
+getent passwd "$USER" | cut -d: -f7
+```
+
+Then close the terminal and reopen it.
 
 ## 6. Verify
 
@@ -103,20 +115,27 @@ echo $HISTFILE            # expect: ~/.zhistory
 bindkey -M vicmd v        # expect: "v" edit-command-line
 ```
 
+And the check that the login shell alone cannot make — that a *non-interactive*
+zsh has the toolchain, which is what `~/.zshenv` exists for:
+
+```sh
+env -i HOME="$HOME" zsh -c 'command -v rg'     # expect: ~/.asdf/shims/rg
+env -i HOME="$HOME" zsh -c 'printf DATA'       # expect: DATA, and nothing else
+```
+
+The second matters as much as the first. `ssh host <command>` runs a
+non-interactive shell whose stdout *is* the command's output, so anything
+printed from `~/.zshenv` ends up prepended to the caller's data.
+
 ## 7. Expected to differ from the laptop, correctly
 
 - No `~/.config/zsh/x.zsh`, so no `fixWindows` or `clip` alias. That file is
   deployed by the manjaro profile alone and `zsh/zshrc` tests for it.
 - No theme, i3, polybar or Xresources links. Tier 3 is X-only by design.
 - History starts empty. `~/.zhistory` is per-machine and never synced.
-- `gh` is unauthenticated until `gh auth login` is run here; `shell/common.sh`
-  exports `GH_TOKEN` from `gh auth token` and skips silently until then.
-- The sync timer backs up to `origin/main`. While `cross-host-packages` is
-  checked out it will commit locally and push nothing.
-
-## 8. Worth reporting back
-
-- Which apt names had no candidate.
-- Whether systemd was already on.
-- Whether the prompt rendered, or showed boxes.
-- Whether `resolve.py --verify` found anything beyond the baseline.
+- `gh` is unauthenticated until `gh auth login` is run here; `shell/env.sh`
+  lifts the token out of the keyring and skips the block silently when there is
+  none.
+- `zenity` is installed on both hosts and backs `SUDO_ASKPASS`, but it only
+  engages where a display exists. Under WSL that is WSLg, so it works; over ssh
+  without forwarding it correctly does nothing.

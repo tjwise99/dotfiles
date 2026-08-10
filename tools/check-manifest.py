@@ -107,10 +107,7 @@ def tracked_files():
         ["git", "-C", str(ROOT), "ls-files"],
         capture_output=True, text=True, check=True,
     ).stdout.split()
-    return [
-        Path(p) for p in out
-        if p not in EXEMPT_FILES and p.split("/")[0] not in EXEMPT_DIRS
-    ]
+    return [Path(p) for p in out if not exempt(p)]
 
 
 def check_repo():
@@ -127,7 +124,7 @@ def check_repo():
     deployed = {f for f in tracked if linked(f)}
 
     # A file also reaches $HOME by being read from one that is deployed —
-    # shell/common.sh is sourced by both rc files rather than linked. Only a
+    # shell/env.sh is sourced by ~/.zshenv rather than linked. Only a
     # file already known to be deployed may vouch for another, and the loop
     # runs to a fixed point so a fragment read by a fragment still counts.
     text = "\n".join(read(f) for f in deployed)
