@@ -142,7 +142,18 @@ setopt appendhistory inc_append_history histignorealldups histignorespace
 
 # Ahead of the shared block so the sync health report lands underneath it
 # rather than scrolling off the top.
-command -v fastfetch >/dev/null 2>&1 && fastfetch
+#
+# Once per shell, not once per source: re-reading this file to pick up a change
+# is a routine thing to do, and the banner is a greeting rather than a report.
+# The flag is deliberately not exported — a new terminal is a new process and
+# should still be greeted, so the only thing suppressed is the second reading
+# within one shell. The sync health check below is left to print every time on
+# purpose: it says something about the machine's current state, not about
+# arriving.
+if [[ -z ${_DOTFILES_BANNER_SHOWN:-} ]] && command -v fastfetch >/dev/null 2>&1; then
+  fastfetch
+  _DOTFILES_BANNER_SHOWN=1
+fi
 
 # Aliases, the ranger wrapper and the sync health report. The environment —
 # PATH, askpass, gh auth, EDITOR — is not here: ~/.zshenv has already sourced
