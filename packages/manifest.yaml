@@ -79,8 +79,14 @@ shared:
     apt: zenity
     why: backs SUDO_ASKPASS/SSH_ASKPASS for sessions with no tty
 
-# Needs an X server. The test is not whether it looks like a desktop thing:
-# ranger and htop read that way and are shared, because they run over ssh.
+# Cannot run on the other host. The test is not whether it looks like a desktop
+# thing: ranger and htop read that way and are shared, because they run over ssh.
+#
+# X is the usual reason and was the only one until impala, which is a TUI and
+# would pass an X-shaped test — it is here because WSL has no radio for it to
+# manage. Written as the general test rather than patched per entry, because the
+# next tool that cannot cross hosts for a third reason should land here without
+# an argument about whether it counts.
 manjaro:
   - {name: xorg-server}
   - {name: i3-wm}
@@ -94,6 +100,11 @@ manjaro:
   - {name: ttf-jetbrains-mono-nerd, why: ranger/devicons.py and the polybar glyphs}
   - {name: xclip, why: clipboard; the WSL equivalent is clip.exe, not a package}
   - {name: opencloud-desktop, why: file sync client; a Qt tray app, so it needs a session}
+  # Pulls in iwd, which this host does not use — NetworkManager owns the radio
+  # and talks to wpa_supplicant. Declared anyway: iwd installed is inert until
+  # something enables it, and impala is wanted here whether or not that backend
+  # switch ever happens. Nothing in this repo enables iwd, deliberately.
+  - {name: impala, why: TUI wifi manager; needs a radio, which the WSL host has none of}
   - {name: yay, why: builds the manjaro-aur tier below; pacman cannot install from the AUR}
 
 # Built from the AUR, which pacman does not do. Separate because the command
