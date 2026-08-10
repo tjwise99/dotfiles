@@ -200,6 +200,9 @@ exec_always --no-startup-id ~/.config/polybar/launch.sh
 exec_always --no-startup-id ~/.config/i3/network-notify.sh
 exec_always --no-startup-id ~/.config/i3/battery-notify.sh
 
+# tray client, so it follows polybar's launch above
+exec --no-startup-id opencloud
+
 for_window [class="Gsimplecal"] move position 1682 875
 
 # Set colors from Xresources
