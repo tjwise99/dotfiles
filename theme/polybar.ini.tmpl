@@ -102,8 +102,8 @@ ramp-capacity-4 = %{F@glyph@}%{T2}%{T-}%{F-}
 type = internal/network
 interface-type = wireless
 interval = 5
-format-connected = %{A1:alacritty -e nmtui:}<ramp-signal> <label-connected>%{A}
-format-disconnected = %{A1:alacritty -e nmtui:}%{F@glyph@}%{T2}󰤭%{T-}%{F-}%{A}
+format-connected = %{A1:alacritty -e impala:}<ramp-signal> <label-connected>%{A}
+format-disconnected = %{A1:alacritty -e impala:}%{F@glyph@}%{T2}󰤭%{T-}%{F-}%{A}
 label-connected = %signal%%
 ramp-signal-0 = %{F@glyph@}%{T2}󰤟%{T-}%{F-}
 ramp-signal-1 = %{F@glyph@}%{T2}󰤢%{T-}%{F-}
@@ -114,7 +114,7 @@ ramp-signal-3 = %{F@glyph@}%{T2}󰤨%{T-}%{F-}
 type = internal/network
 interface-type = wired
 interval = 5
-format-connected = %{A1:alacritty -e nmtui:}%{F@glyph@}%{T2}󰈀%{T-}%{F-}%{A}
+format-connected = %{F@glyph@}%{T2}󰈀%{T-}%{F-}
 format-disconnected =
 
 [module/tray]
