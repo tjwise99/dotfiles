@@ -146,6 +146,13 @@
       versions:
         - 0.74.2
 
+    # Newly adopted rather than moved, unlike the two above. Pairs with the fzf
+    # already here: `zi` is a picker over the same database.
+    - plugin: zoxide
+      url: https://github.com/pauloedurezende/asdf-zoxide.git
+      versions:
+        - 0.10.0
+
     - plugin: delta
       url: https://github.com/andweeb/asdf-delta.git
       versions:

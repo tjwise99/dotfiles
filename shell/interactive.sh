@@ -23,6 +23,23 @@ alias dirsize='sudo du -hc . | sort -rh | head -20'
 # pointing git, ranger and sudoedit at nvim is a separate decision from this one.
 command -v nvim >/dev/null 2>&1 && alias vim='nvim'
 
+# zoxide takes over `cd` rather than adding a second `z` command. That is what
+# makes it learn anything: the database is only fed by the command already being
+# typed, and a `z` kept alongside `cd` mostly gets forgotten.
+#
+# The cost is that `cd` stops failing on a bad argument. Given a name that is not
+# an existing path it consults the database instead, so a typo becomes a jump
+# somewhere plausible rather than an error. `cd ./thing` and `cd ../thing` are
+# unchanged — a path-shaped argument is still just a path.
+#
+# Skipped under Claude Code, following upstream. It does not cover the Bash tool,
+# which reads no startup file at all, but it does cover an interactive zsh opened
+# inside a session — where a silent jump lands in an agent's hands rather than in
+# front of someone who can see it happen.
+if command -v zoxide >/dev/null 2>&1 && [ "${CLAUDECODE:-}" != "1" ]; then
+  eval "$(zoxide init --cmd cd zsh)"
+fi
+
 # Leave the shell in whatever directory ranger quit from. --choosedir writes the
 # final path to a temp file; `command` avoids recursing into this function.
 ranger() {
