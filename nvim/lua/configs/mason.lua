@@ -6,6 +6,8 @@ local opts = {
     "cmake-language-server",
     "codelldb",
     "cpptools",
+    -- lspconfig.lua enables cssls; upstream never listed the server it needs
+    "css-lsp",
     "cucumber-language-server",
     "cuelsp",
     "debugpy",
@@ -36,6 +38,8 @@ local opts = {
     "pyright",
     "ruff",
     "rust-analyzer",
+    -- conform.lua formats lua with it, and .stylua.toml configures it
+    "stylua",
     "svelte-language-server",
     "tailwindcss-language-server",
     "templ",

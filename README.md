@@ -31,6 +31,7 @@ matters: [`BOOTSTRAP-WSL.md`](BOOTSTRAP-WSL.md).
 | `profiles/` | The manifest — what gets linked where, per host |
 | `packages/` | What each host installs from its own package manager |
 | `shell/`, `zsh/`, `git/`, `gh/` | Shell and tool config |
+| `nvim/` | NvChad-based Neovim config, vendored from upstream |
 | `zsh/plugins/` | Submodules. Prompt and zsh plugins, pinned so both hosts match |
 | `claude/` | `CLAUDE.md`, agents, skills, commands |
 | `notes/` | `lessons/`, `PROJECT_PLAYBOOK.md` |
@@ -61,8 +62,18 @@ plugin named in the profile alone installs a shim that shadows the distro's bina
 `No version is set`, which is strictly worse than not adopting the tool. Checking `~/.tool-versions`
 alone cannot see it, because the missing entry is the defect.
 
-Adding `python` here needs care: `tools/check-manifest.py` and Dotbot itself run under `python3`,
-and shimming it would put them on an asdf Python without PyYAML.
+Python is owned by uv, not by asdf and not by the distro. `asdf/uv-python.sh` runs `uv python
+install --default`, which is the part that matters: without `--default` uv installs `python3.14`
+only, and the bare `python3` that mason and every shebang look for still resolves to whatever the
+host shipped. The script then creates a venv with the interpreter it resolved rather than reporting
+the install as success — `~/.local/bin` is only ahead of `/usr/bin` if `shell/env.sh` put it there,
+and a `python3` that resolves elsewhere looks identical until mason tries to build something.
+
+Shadowing the distro `python3` is safe here for a reason worth writing down, because it is not
+visible from the shebangs: `packages/resolve.py`, `tools/check-manifest.py` and Dotbot's own
+launcher each prepend `dotbot/lib/pyyaml/lib` to `sys.path`. They need *a* Python 3.7+, never the
+host's, and never PyYAML installed anywhere. A consumer added later that imports a third-party
+module without vendoring it is what would break, and nothing here would catch it.
 
 `install-asdf.sh` resolves the release tag with `sed` rather than `jq`. `jq` is not part of a base
 Manjaro install, and a bootstrap script that needs a package the host may not have is a bootstrap
@@ -105,6 +116,41 @@ running half of what it claims to.
 
 An entry with no name for a supported host must say `unavailable` and why. A missing column is an
 error: a resolver that drops what it does not recognise reports success over whatever survived.
+
+## Neovim
+
+`nvim/` is linked whole to `~/.config/nvim`, on every host — it is a TUI, so it runs the same over
+ssh and under WSL. It is an [NvChad](https://nvchad.com) v2.5 config, vendored from a friend's public
+dotfiles rather than written here, with the AI stack removed: `copilot.lua` and `codecompanion.nvim`
+both need a GitHub Copilot subscription this account does not have, and a plugin that fails auth on
+every startup is worse than an absent one. `nvim/lua/configs/blink.lua` lost its `codecompanion`
+completion source with them.
+
+Pinned to Neovim v0.11.3 rather than current stable. Two separate reasons, and only the first is a
+hard floor: the config drives LSP through `vim.lsp.config` / `vim.lsp.enable`, which do not exist
+before 0.11, and `nvim/lazy-lock.json` is the plugin set this config was actually observed working
+against, locked while upstream was on 0.11. Moving to 0.12 means moving both together.
+
+`lazy-lock.json` is the pin, and it is tracked. `:Lazy restore` puts the tree back on it; `:Lazy
+update` moves it, and the changed lock file is the commit. Plugin code itself lives in
+`~/.local/share/nvim` and is not tracked — nothing lazy.nvim writes lands back in this repo except
+that one file.
+
+Two things do not install themselves on first launch:
+
+| Step | Command | Notes |
+| --- | --- | --- |
+| Plugins | `:Lazy restore` | Bootstraps itself; treesitter compiles its 34 parsers on the first start |
+| LSP, formatters, debuggers | `:MasonToolsInstall` | 40 tools, and the slowest step by a wide margin |
+
+Mason is what pulls in the runtime dependencies the rest of this file already provides: node and go
+and cargo from asdf, a C compiler from `base-devel`, and a `python3` that can build a venv from uv.
+
+The clangd config is upstream's and is left as-is. It only attaches inside a project holding a
+`.clangd-docker` marker, so on a host with no such project it is inert rather than wrong.
+
+Glyphs need a Nerd Font. Manjaro installs `ttf-jetbrains-mono-nerd` from the manifest; under WSL the
+font belongs to the Windows terminal emulator, so it is not a package this repo can declare.
 
 ## Shells
 

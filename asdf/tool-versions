@@ -8,3 +8,5 @@ fzf 0.74.2
 delta 0.19.2
 rust 1.97.1
 golang 1.26.5
+uv 0.12.3
+neovim v0.11.3

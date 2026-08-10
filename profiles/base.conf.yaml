@@ -62,6 +62,13 @@
     ~/.config/htop: htop
     ~/.config/ccstatusline: ccstatusline
 
+    # Neovim. Vendored from a friend's NvChad v2.5 config; nvim/README.md
+    # records what was changed and why. Linked whole because lazy.nvim writes
+    # nothing back into it — plugin state lives in ~/.local/share/nvim, so the
+    # only file that changes here is lazy-lock.json, which is meant to be
+    # committed.
+    ~/.config/nvim: nvim
+
     # Notes
     ~/lessons: notes/lessons
     ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md
@@ -144,6 +151,24 @@
       versions:
         - 0.19.2
 
+    # Owns Python on both hosts: the interpreter as well as the packaging. No
+    # distro python3 is declared in packages/manifest.yaml, and none should be —
+    # asdf/uv-python.sh puts uv's interpreter on PATH ahead of it, which is what
+    # mason finds when it builds the venv for pyright, ruff, black and debugpy.
+    - plugin: uv
+      url: https://github.com/asdf-community/asdf-uv.git
+      versions:
+        - 0.12.3
+
+    # Pinned behind current stable (v0.12.x) on purpose: nvim/lazy-lock.json is
+    # the plugin set this config was actually running against, and that set was
+    # locked on 0.11. The config needs at least 0.11 either way — it configures
+    # LSP through vim.lsp.config/vim.lsp.enable, which does not exist before it.
+    - plugin: neovim
+      url: https://github.com/richin13/asdf-neovim.git
+      versions:
+        - v0.11.3
+
     - plugin: rust
       url: https://github.com/code-lever/asdf-rust.git
       versions:
@@ -164,6 +189,11 @@
       stderr: true
     - command: ./asdf/npm-globals.sh
       description: Install global npm packages
+      stdout: true
+      stderr: true
+
+    - command: ./asdf/uv-python.sh
+      description: Install Python with uv
       stdout: true
       stderr: true
 
