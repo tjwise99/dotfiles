@@ -107,10 +107,7 @@ def tracked_files():
         ["git", "-C", str(ROOT), "ls-files"],
         capture_output=True, text=True, check=True,
     ).stdout.split()
-    return [
-        Path(p) for p in out
-        if p not in EXEMPT_FILES and p.split("/")[0] not in EXEMPT_DIRS
-    ]
+    return [Path(p) for p in out if not exempt(p)]
 
 
 def check_repo():
