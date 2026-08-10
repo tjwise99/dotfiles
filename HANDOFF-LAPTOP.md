@@ -133,11 +133,10 @@ way.
 - Cursor is a block in normal mode, a beam in insert, and switches on Escape.
 - `^W` stops at `.` and `;`. `WORDCHARS` was dropping only `/&` before the fix,
   so this is the change most likely to feel different.
-- `ranger` still leaves the shell in the directory you quit from. The function
-  moved files and now uses `local`.
-- `d` on a PR in gh-dash launches `gh-review`. That binding shadows the built-in
-  diff, and `gh-review` runs from an asdf shim — the one place both custom
-  builds meet.
+
+Glyphs and the cursor are terminal-specific — Windows Terminal there, alacritty
+here — so those two genuinely need looking at on both. The keymap behaviour is
+the same zshrc on both hosts; if it is right on one it is right on the other.
 
 ## Already verified on WSL — do not repeat
 
@@ -147,6 +146,12 @@ way.
 shims and prints nothing to stdout. Interactive startup produces zero bytes of
 stderr. `sudo -A` and the askpass yes/no branch both work. The chsh step is
 idempotent on re-run.
+
+Confirmed by hand on WSL after the migration, and identical code on both hosts,
+so not worth repeating: `ranger` drops the shell into the browsed directory, and
+`d` in gh-dash opens the right review through `gh-review`. The second is the
+better result of the two — it exercises the patched gh-dash, the custom
+keybinding that shadows the built-in diff, and the `gh-review` shim together.
 
 ## Report back
 
