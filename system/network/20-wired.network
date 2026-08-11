@@ -1,0 +1,19 @@
+# The wired link, and only the wired link. iwd does wlan0's IP configuration
+# itself (system/iwd/main.conf), so a match reaching the radio would put two
+# daemons on one interface.
+#
+# Name=en* rather than the literal enp4s0: it covers the predictable wired
+# names without reaching wlan0, docker0 or a veth pair, and it survives a NIC
+# change, whereas a PCI-slot name is a fact about one machine's hardware.
+
+[Match]
+Name=en*
+
+[Network]
+DHCP=yes
+
+[Link]
+# There is usually no cable in this port. systemd-networkd-wait-online is not
+# enabled today, but if anything ever pulls it in, a managed link that never
+# gains carrier blocks boot for the full timeout.
+RequiredForOnline=no
