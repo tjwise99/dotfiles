@@ -58,8 +58,18 @@ def detect_host():
         return "wsl"
     for line in Path("/etc/os-release").read_text().splitlines():
         key, _, value = line.partition("=")
-        if key == "ID" and value.strip().strip("\"'") in {"manjaro", "arch"}:
+        if key != "ID":
+            continue
+        distro = value.strip().strip("\"'")
+        if distro in {"manjaro", "arch"}:
             return "manjaro"
+        # Deliberately has no HOSTS entry: this host declares its packages in
+        # the NixOS system config, so there is no manifest column to resolve and
+        # names_for() would demand one on every entry. sync-packages.sh exits
+        # before anything asks. Detected anyway so that the answer is "Nix owns
+        # this" rather than "unknown host".
+        if distro == "nixos":
+            return "nixos"
     return "unknown"
 
 

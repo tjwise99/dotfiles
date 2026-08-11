@@ -1,43 +1,12 @@
-# Manjaro-only links. The test is whether the config is useless without an X
-# server — not whether it reads like a desktop thing. ranger and htop read that
-# way and live in base.conf.yaml, because they work over ssh and under WSL.
+# Manjaro-only. The desktop links this host used to carry moved to
+# desktop.conf.yaml, which install applies to every graphical host — what is
+# left here is the part that is true of Manjaro and not of NixOS.
 #
-# Each profile is a separate dotbot invocation, so it needs its own defaults —
-# the block in base.conf.yaml does not carry over into this process.
-- defaults:
-    link:
-      relink: true
-      force: true
-      create: true
-
-- link:
-    # Desktop configs are linked as whole directories, not file by file, so a
-    # new script dropped into one is picked up without touching this file. The
-    # cost is that generated output lands in the repo too — .gitignore carries
-    # the exclusions, and theme/README.md says which files are rendered.
-    ~/.config/theme: theme
-    ~/.config/i3: i3
-    ~/.config/polybar: polybar
-
-    # Not directories: these two live at fixed paths in $HOME. .Xresources is
-    # hand-written (Xft DPI) rather than rendered from theme/ — i3 merges it at
-    # login, whereas the theme templates render only when theme.sh is run.
-    ~/.xprofile: x/xprofile
-    ~/.Xresources: x/Xresources
-
-    # Same fixed-path case: i3/picom-launch.sh names ~/.config/picom.conf
-    # explicitly, so this lands beside the X files rather than inside the
-    # whole-directory i3 link. Static, unlike its neighbours in ~/.config —
-    # rofi, dunst and alacritty are rendered by theme.sh and stay untracked.
-    ~/.config/picom.conf: x/picom.conf
-
-    # The X-dependent part of the shell. zsh/zshrc sources this if the file is
-    # there, so the WSL box gets the same zshrc and simply never finds it.
-    ~/.config/zsh/x.zsh: zsh/zshrc.x
-
-# Only this host has a radio and a wired port, so the network stack is here
-# rather than in base. Not a link block: these targets are under /etc, and
-# system/apply.sh says why that makes them copies.
+# Only this host has a radio and a wired port that Manjaro itself does not
+# configure, so the network stack is here rather than in base. Not a link block:
+# these targets are under /etc, and system/apply.sh says why that makes them
+# copies. On NixOS the same configuration is declared in the system config
+# instead, which is why nixos.conf.yaml has no equivalent step.
 - shell:
     - command: ./system/apply.sh
       description: Apply the root-owned network configuration

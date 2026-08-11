@@ -1,0 +1,21 @@
+# NixOS-only links — currently none.
+#
+# Empty by design, and kept rather than deleted so `install` does not warn that
+# this host has no profile — it has one, and it says nothing. The same reasoning
+# as wsl.conf.yaml.
+#
+# Nothing lands here because the two things that would are owned elsewhere on
+# this host. The desktop links come from desktop.conf.yaml, applied to every
+# graphical host. The root-owned network config that manjaro.conf.yaml copies
+# into /etc is declared in the NixOS system configuration instead, which is the
+# whole point of the machine — a file copied into /etc by a shell step is state
+# this host is supposed to be able to rebuild from its own config.
+#
+# Packages are the third: packages/sync-packages.sh exits early here, because
+# environment.systemPackages already declares them and resolve.py deliberately
+# has no manifest column for this host.
+- defaults:
+    link:
+      relink: true
+      force: true
+      create: true

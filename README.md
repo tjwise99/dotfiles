@@ -13,9 +13,13 @@ cd ~/dotfiles && ./install
 ```
 
 `./install` detects the host (`microsoft` in `/proc/version` → wsl; `ID` in `/etc/os-release` →
-manjaro) and applies `profiles/base.conf.yaml` followed by that host's profile. Override with
-`DOTFILES_HOST=manjaro ./install`. Pass `--dry-run` to see every link it would make without
-touching anything.
+manjaro or nixos) and applies `profiles/base.conf.yaml`, then `profiles/desktop.conf.yaml` if the
+host has an X server, then that host's own profile. Override with `DOTFILES_HOST=manjaro ./install`.
+Pass `--dry-run` to see every link it would make without touching anything.
+
+The desktop links are keyed on having a display rather than on the distro, so the laptop keeps one
+declaration of its desktop across a move from Manjaro to NixOS. A copy per host would be two lists
+that can disagree with nothing comparing them.
 
 `./install --packages` additionally installs what [Packages](#packages) declares, and
 `./install --system` applies what [`system/`](#system) holds. Those are the two steps that need
@@ -123,6 +127,8 @@ error: a resolver that drops what it does not recognise reports success over wha
 ## system/
 
 The Manjaro host's network stack, and the only tracked config that is copied rather than symlinked.
+Applied by `profiles/manjaro.conf.yaml` alone: a NixOS host declares the same two daemons in its own
+system configuration, so it neither runs this step nor needs these files.
 `system/apply.sh` writes `system/iwd/main.conf` and `system/network/20-wired.network` into `/etc`,
 then enables `iwd`, `systemd-networkd` and `systemd-resolved`. Copies rather than links because
 `/home` is its own partition — a service starting before it is mounted would read a dangling path —

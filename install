@@ -14,6 +14,7 @@ detect_host() {
         . /etc/os-release
         case "${ID:-}" in
             manjaro | arch) echo manjaro; return ;;
+            nixos) echo nixos; return ;;
         esac
     fi
     echo unknown
@@ -44,6 +45,14 @@ export PATH="${HOME}/.local/bin:${HOME}/.asdf/shims:${PATH}"
 git submodule update --init --recursive
 
 CONFIGS=(profiles/base.conf.yaml)
+
+# Every graphical host applies the same desktop links, so the laptop's desktop
+# is one declaration that survives the move between distros rather than a copy
+# per host that can drift.
+case "${HOST}" in
+    manjaro | nixos) CONFIGS+=(profiles/desktop.conf.yaml) ;;
+esac
+
 if [ -f "profiles/${HOST}.conf.yaml" ]; then
     CONFIGS+=("profiles/${HOST}.conf.yaml")
 else

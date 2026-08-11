@@ -14,6 +14,15 @@ RESOLVE=("python3" "${BASEDIR}/packages/resolve.py")
 
 HOST="${DOTFILES_HOST:-$("${RESOLVE[@]}" --host)}"
 
+# NixOS declares its packages in the system config, so there is nothing here to
+# install and nothing to verify against. Before the skip block below rather than
+# in the case at the bottom: the non---packages path still calls resolve.py
+# --verify, and this host has no manifest column for it to read.
+if [ "${HOST}" = "nixos" ]; then
+    echo "packages: owned by Nix on this host — nothing to install or verify"
+    exit 0
+fi
+
 # Plain `sudo` reads the password from the terminal and fails outright without
 # one — "a terminal is required to authenticate" — so this step worked when run
 # by hand and broke under every tty-less caller: an editor's task runner, a

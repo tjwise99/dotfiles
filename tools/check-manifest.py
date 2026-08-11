@@ -56,16 +56,32 @@ def host():
     try:
         for line in Path("/etc/os-release").read_text().splitlines():
             key, _, value = line.partition("=")
-            if key == "ID" and value.strip().strip("\"'") in {"manjaro", "arch"}:
+            if key != "ID":
+                continue
+            distro = value.strip().strip("\"'")
+            if distro in {"manjaro", "arch"}:
                 return "manjaro"
+            if distro == "nixos":
+                return "nixos"
     except OSError:
         pass
     return "unknown"
 
 
+GRAPHICAL = {"manjaro", "nixos"}
+
+
 def host_profiles():
-    """The profiles install applies on this machine, in the same order."""
+    """The profiles install applies on this machine, in the same order.
+
+    Must agree with the selection in `install`. The two are separate
+    declarations of one thing, and only this one is checked: a host that
+    install gives a profile and this omits is a set of links that stop being
+    verified while the gate still reports ok.
+    """
     paths = [ROOT / "profiles/base.conf.yaml"]
+    if host() in GRAPHICAL:
+        paths.append(ROOT / "profiles/desktop.conf.yaml")
     candidate = ROOT / f"profiles/{host()}.conf.yaml"
     if candidate.exists():
         paths.append(candidate)

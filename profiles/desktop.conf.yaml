@@ -1,0 +1,42 @@
+# Links for a host with an X server. The test is whether the config is useless
+# without one — not whether it reads like a desktop thing. ranger and htop read
+# that way and live in base.conf.yaml, because they work over ssh and under WSL.
+#
+# Applied by every graphical host rather than by one, so the laptop's desktop
+# survives the move from Manjaro to NixOS as one declaration. A per-host copy
+# would be two lists that can silently disagree — the same shape as an asdf
+# plugin declared in a profile with no line in tool-versions, where only one of
+# the two reaches anything and nothing compares them.
+#
+# Each profile is a separate dotbot invocation, so it needs its own defaults —
+# the block in base.conf.yaml does not carry over into this process.
+- defaults:
+    link:
+      relink: true
+      force: true
+      create: true
+
+- link:
+    # Desktop configs are linked as whole directories, not file by file, so a
+    # new script dropped into one is picked up without touching this file. The
+    # cost is that generated output lands in the repo too — .gitignore carries
+    # the exclusions, and theme/README.md says which files are rendered.
+    ~/.config/theme: theme
+    ~/.config/i3: i3
+    ~/.config/polybar: polybar
+
+    # Not directories: these two live at fixed paths in $HOME. .Xresources is
+    # hand-written (Xft DPI) rather than rendered from theme/ — i3 merges it at
+    # login, whereas the theme templates render only when theme.sh is run.
+    ~/.xprofile: x/xprofile
+    ~/.Xresources: x/Xresources
+
+    # Same fixed-path case: i3/picom-launch.sh names ~/.config/picom.conf
+    # explicitly, so this lands beside the X files rather than inside the
+    # whole-directory i3 link. Static, unlike its neighbours in ~/.config —
+    # rofi, dunst and alacritty are rendered by theme.sh and stay untracked.
+    ~/.config/picom.conf: x/picom.conf
+
+    # The X-dependent part of the shell. zsh/zshrc sources this if the file is
+    # there, so the WSL box gets the same zshrc and simply never finds it.
+    ~/.config/zsh/x.zsh: zsh/zshrc.x
