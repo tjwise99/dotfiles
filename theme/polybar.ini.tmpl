@@ -1,7 +1,12 @@
 ; GENERATED from ~/.config/theme/polybar.ini.tmpl by theme.sh
 ; Edit the template, not this file.
 [bar/main]
-monitor = eDP-1
+; Empty resolves to the primary output. A literal name is a fact about one
+; machine's panel — the same reason system/network/20-wired.network matches
+; en* rather than enp4s0 — and polybar does not fall back when it is wrong: it
+; exits with "Monitor not found or disconnected" and leaves no bar at all.
+; MONITOR is honoured so launch.sh can put a bar on each output later.
+monitor = ${env:MONITOR:}
 bottom = true
 width = 100%
 height = 27
