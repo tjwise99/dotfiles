@@ -12,6 +12,15 @@ Name=en*
 [Network]
 DHCP=yes
 
+[DHCPv4]
+# Wired wins while a cable is in, and wifi takes back over on unplug because
+# networkd withdraws this route with the carrier. The number has to beat iwd's,
+# which is RoutePriorityOffset plus the interface index — 300 by default, so
+# anything under it works and 100 leaves room to slot something between them.
+# Left to the two daemons' own defaults this lands the other way round: iwd's
+# ~304 beats networkd's 1024, and the cable sits idle.
+RouteMetric=100
+
 [Link]
 # This port is usually empty, so it must never be a precondition for the machine
 # being online — the real link is wlan0, which networkd does not manage. Not on
