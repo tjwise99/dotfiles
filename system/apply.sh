@@ -25,6 +25,15 @@ FILES=(
 # independent choices.
 UNITS=(iwd systemd-networkd systemd-resolved)
 
+# Enabling systemd-networkd pulls this in through the preset, and it measures
+# the wrong thing here: it sees only networkd's links, and the one it has is a
+# usually-empty wired port, so it reports not-online on a machine whose wifi is
+# fine. Measured, not assumed — with the port cableless it blocks for its full
+# timeout and then fails, and RequiredForOnline=no does not rescue it: nothing
+# is left to satisfy it rather than something failing it. Kept in the checked
+# set because a preset re-run is exactly the thing that would quietly undo it.
+DISABLED_UNITS=(systemd-networkd-wait-online.service)
+
 RESOLV_STUB=/run/systemd/resolve/stub-resolv.conf
 
 problems=0
@@ -47,6 +56,9 @@ check() {
     for unit in "${UNITS[@]}"; do
         [ "$(systemctl is-enabled "${unit}" 2>&1)" = "enabled" ] || note "not enabled: ${unit}"
         [ "$(systemctl is-active "${unit}" 2>&1)" = "active" ] || note "not active: ${unit}"
+    done
+    for unit in "${DISABLED_UNITS[@]}"; do
+        [ "$(systemctl is-enabled "${unit}" 2>&1)" = "enabled" ] && note "enabled, should not be: ${unit}"
     done
     [ "$(readlink -f /etc/resolv.conf)" = "${RESOLV_STUB}" ] \
         || note "/etc/resolv.conf does not resolve to ${RESOLV_STUB}"
@@ -77,6 +89,13 @@ for pair in "${FILES[@]}"; do
 done
 
 sudo_ systemctl enable --now "${UNITS[@]}" || exit 1
+
+# After the enable above, not before it: that is what turns this one back on.
+for unit in "${DISABLED_UNITS[@]}"; do
+    [ "$(systemctl is-enabled "${unit}" 2>&1)" = "enabled" ] || continue
+    echo "system: disabling ${unit}"
+    sudo_ systemctl disable "${unit}" || exit 1
+done
 
 if [ "$(readlink -f /etc/resolv.conf)" != "${RESOLV_STUB}" ]; then
     echo "system: pointing /etc/resolv.conf at ${RESOLV_STUB}"

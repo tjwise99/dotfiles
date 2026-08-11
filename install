@@ -19,14 +19,18 @@ detect_host() {
     echo unknown
 }
 
-# Installing packages is the only step that needs root, so it is opt-in and
-# every other step stays runnable unattended. packages/sync-packages.sh reads
-# this and says what it skipped rather than skipping quietly.
+# The two steps that need root are opt-in, so every other step stays runnable
+# unattended. Separately opt-in rather than one flag, because they are not the
+# same risk: --packages installs what the manifest declares, --system writes
+# files under /etc and enables units. Each script reads its own variable and
+# says what it skipped rather than skipping quietly.
 export DOTFILES_PACKAGES=0
+export DOTFILES_SYSTEM=0
 DOTBOT_ARGS=()
 for arg in "${@}"; do
     case "${arg}" in
         --packages) DOTFILES_PACKAGES=1 ;;
+        --system) DOTFILES_SYSTEM=1 ;;
         *) DOTBOT_ARGS+=("${arg}") ;;
     esac
 done

@@ -106,14 +106,11 @@ manjaro:
   # impala would orphan it. NetworkManager, wpa_supplicant and the applet were
   # removed rather than disabled — impala needs nothing else holding the device.
   #
-  # The state that makes this work — iwd enabled, /etc/iwd/main.conf,
-  # systemd-resolved, the credential under /var/lib/iwd — is applied by hand and
-  # lives nowhere in this repo. Naming the package is not declaring the stack:
-  # a rebuild from this manifest installs iwd and gets a machine with no network
-  # configuration at all.
-  #
-  # Nothing manages wired here any more. enp4s0 has no carrier, so it costs
-  # nothing until a cable goes in, and then it needs systemd-networkd or dhcpcd.
+  # Naming the package is not declaring the stack: the state that makes it work
+  # is units and files under /etc, which system/apply.sh carries — so a rebuild
+  # needs ./install --system as well as --packages. The one piece deliberately
+  # left out is the credential under /var/lib/iwd, which is a PSK and this repo
+  # is public.
   - {name: iwd, why: owns wlan0; the only wifi stack on this host}
   - {name: yay, why: builds the manjaro-aur tier below; pacman cannot install from the AUR}
 

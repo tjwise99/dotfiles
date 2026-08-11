@@ -34,3 +34,12 @@
     # The X-dependent part of the shell. zsh/zshrc sources this if the file is
     # there, so the WSL box gets the same zshrc and simply never finds it.
     ~/.config/zsh/x.zsh: zsh/zshrc.x
+
+# Only this host has a radio and a wired port, so the network stack is here
+# rather than in base. Not a link block: these targets are under /etc, and
+# system/apply.sh says why that makes them copies.
+- shell:
+    - command: ./system/apply.sh
+      description: Apply the root-owned network configuration
+      stdout: true
+      stderr: true

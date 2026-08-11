@@ -13,7 +13,9 @@ Name=en*
 DHCP=yes
 
 [Link]
-# There is usually no cable in this port. systemd-networkd-wait-online is not
-# enabled today, but if anything ever pulls it in, a managed link that never
-# gains carrier blocks boot for the full timeout.
+# This port is usually empty, so it must never be a precondition for the machine
+# being online — the real link is wlan0, which networkd does not manage. Not on
+# its own enough to make systemd-networkd-wait-online usable here: with nothing
+# left required, it waits out its timeout rather than returning, which is why
+# system/apply.sh disables that unit instead of relying on this line.
 RequiredForOnline=no

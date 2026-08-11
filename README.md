@@ -2,7 +2,8 @@
 
 Config, Claude Code setup, and notes for a WSL box and a Manjaro laptop. Deployed with
 [Dotbot](https://github.com/anishathalye/dotbot): everything tracked here is symlinked into place,
-so the deployed file *is* the repo file and the two can never drift.
+so the deployed file *is* the repo file and the two can never drift. The one exception is
+[`system/`](#system), which is copied into `/etc` and so has to check for drift instead.
 
 ## Bootstrap
 
@@ -16,10 +17,11 @@ manjaro) and applies `profiles/base.conf.yaml` followed by that host's profile. 
 `DOTFILES_HOST=manjaro ./install`. Pass `--dry-run` to see every link it would make without
 touching anything.
 
-`./install --packages` additionally installs what [Packages](#packages) declares. It is the only
-step that needs root, so it is opt-in and every other step stays runnable unattended — but on a
-genuinely fresh machine it is not optional, because asdf compiles and the compiler is one of the
-things it installs.
+`./install --packages` additionally installs what [Packages](#packages) declares, and
+`./install --system` applies what [`system/`](#system) holds. Those are the two steps that need
+root, so both are opt-in and every other step stays runnable unattended — but on a genuinely fresh
+machine neither is optional: asdf compiles and the compiler is one of the packages, and without
+`--system` the Manjaro host comes up with no network configuration at all.
 
 Bringing up a WSL box has prerequisites that live on the Windows side and a first-run order that
 matters: [`BOOTSTRAP-WSL.md`](BOOTSTRAP-WSL.md).
@@ -30,6 +32,7 @@ matters: [`BOOTSTRAP-WSL.md`](BOOTSTRAP-WSL.md).
 | --- | --- |
 | `profiles/` | The manifest — what gets linked where, per host |
 | `packages/` | What each host installs from its own package manager |
+| `system/` | Root-owned config under `/etc`, copied rather than linked |
 | `shell/`, `zsh/`, `git/`, `gh/` | Shell and tool config |
 | `nvim/` | NvChad-based Neovim config, vendored from upstream |
 | `zsh/plugins/` | Submodules. Prompt and zsh plugins, pinned so both hosts match |
@@ -116,6 +119,24 @@ running half of what it claims to.
 
 An entry with no name for a supported host must say `unavailable` and why. A missing column is an
 error: a resolver that drops what it does not recognise reports success over whatever survived.
+
+## system/
+
+The Manjaro host's network stack, and the only tracked config that is copied rather than symlinked.
+`system/apply.sh` writes `system/iwd/main.conf` and `system/network/20-wired.network` into `/etc`,
+then enables `iwd`, `systemd-networkd` and `systemd-resolved`. Copies rather than links because
+`/home` is its own partition — a service starting before it is mounted would read a dangling path —
+and because a root daemon's config should not sit somewhere its own unprivileged user can rewrite.
+
+The two daemons split the interfaces rather than sharing them. `iwd` owns `wlan0` including its IP,
+which is what the polybar wifi glyph opens `impala` against; `systemd-networkd` matches `Name=en*`
+and so takes the wired port without ever reaching the radio, `docker0` or a veth pair. Both hand
+DNS to `systemd-resolved`, which is why `/etc/resolv.conf` is the resolved stub.
+
+Copying gives up the guarantee the rest of the repo has, so `system/apply.sh` reports drift when run
+without `--system` instead of reporting nothing — missing files, files that differ, units that are
+not enabled and running. What it deliberately does not carry is the credential under `/var/lib/iwd`:
+that is a PSK and this repo is public. A rebuilt host joins its network once, by hand.
 
 ## Neovim
 
