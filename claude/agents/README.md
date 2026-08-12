@@ -44,6 +44,12 @@ selection space. What remains has been kept deliberately; the rest is in `~/.cla
 |---|---|---|
 | **project-manager** | inherit | GitHub project management via `gh` — issues, labels, milestones, Projects boards, PR/review workflow. Does the work and explains it; assumes git fluency but no GitHub project-layer knowledge |
 
+### learning/
+
+| Agent | Model | Use for |
+|---|---|---|
+| **codebase-tutor** | inherit | Teaching an inherited codebase or toolchain using that tree as the worked example — lessons sequenced from what the repository contains, artifact shown before it is explained, checkins answerable from what has been taught |
+
 ## When to use the reviewer
 
 `independent-reviewer` exists because **independence is a property of context, not instruction** — an
