@@ -23,6 +23,18 @@ case ":${PATH}:" in
   *) export PATH="${HOME}/.local/bin:${PATH}" ;;
 esac
 
+# Home Manager's session variables, which is what puts ~/.nix-profile/bin on
+# PATH at all — by way of the nix.sh it sources. Guarded on the file, so it
+# skips where standalone Home Manager has not run: the WSL box, and NixOS, where
+# the module form installs into /etc/profiles/per-user and the system already
+# carries that. The script guards itself against being sourced twice.
+#
+# Ahead of the asdf block on purpose. Both prepend, so whichever runs last ends
+# up first, and asdf owns the runtime versions this host shares with WSL.
+if [ -f "${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
+  . "${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh"
+fi
+
 case ":${PATH}:" in
   *":${HOME}/.asdf/shims:"*) ;;
   *) export PATH="${HOME}/.asdf/shims:${PATH}" ;;
