@@ -51,34 +51,6 @@ shared:
     apt: vim
     why: shell/env.sh resolves EDITOR to it
 
-  - name: ranger
-    pacman: ranger
-    apt: ranger
-    why: TUI, so not desktop-only
-
-  - name: htop
-    pacman: htop
-    apt: htop
-
-  # No longer wired to anything — zsh/zshrc ran it as a login banner and does
-  # not any more. Kept as a declaration rather than dropped, because dropping it
-  # while the package stays installed turns it into an undeclared package and
-  # fails packages/resolve.py --verify. Uninstalling it is the other way to
-  # close this, and is a separate decision.
-  - name: fastfetch
-    pacman: fastfetch
-    apt: fastfetch
-    why: run by hand; nothing sources it
-
-  # Shared rather than tier 3, despite drawing a window: WSLg gives the WSL box
-  # a display, and SUDO_ASKPASS is how a session with no tty answers a password
-  # prompt at all. A headless host has no prompt to answer either, so the tier-3
-  # test — useless without a display — does not select against it here.
-  - name: zenity
-    pacman: zenity
-    apt: zenity
-    why: backs SUDO_ASKPASS/SSH_ASKPASS for sessions with no tty
-
 # Cannot run on the other host. The test is not whether it looks like a desktop
 # thing: ranger and htop read that way and are shared, because they run over ssh.
 #

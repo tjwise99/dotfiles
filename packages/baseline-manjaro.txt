@@ -1,7 +1,6 @@
 # Explicitly-installed packages that predate packages/manifest.yaml.
 # Untriaged, not endorsed: recorded so the undeclared direction reports
 # what was installed since, rather than everything the ISO shipped.
-7zip
 accountsservice
 acpi
 acpid
@@ -26,7 +25,6 @@ brightnessctl
 btop
 bzip2
 cantarell-fonts
-catdoc
 cbatticon
 clang
 cmake
@@ -55,7 +53,6 @@ ex-vi-compat
 exfat-utils
 expac
 fakeroot
-ffmpegthumbnailer
 file
 file-roller
 filesystem
@@ -102,7 +99,6 @@ gvfs-mtp
 gvfs-smb
 gzip
 haveged
-highlight
 hunspell-en_us
 hyphen-en
 i3status
@@ -138,7 +134,6 @@ manjaro-release
 manjaro-system
 manjaro-zsh-config
 mdadm
-mediainfo
 memtest86+
 meson
 mhwd
@@ -158,7 +153,6 @@ noto-fonts-emoji
 nss-mdns
 ntfs-3g
 numlockx
-odt2txt
 openmp
 openresolv
 openssh
@@ -172,7 +166,6 @@ patch
 pavucontrol
 pciutils
 perl
-perl-image-exiftool
 pkgconf
 plymouth-theme-manjaro
 polkit-gnome
@@ -224,7 +217,6 @@ ttf-dejavu
 ttf-droid
 ttf-inconsolata
 ttf-liberation
-ueberzugpp
 unace
 unrar
 usb_modeswitch
