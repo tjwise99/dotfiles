@@ -198,9 +198,9 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 
 exec_always --no-startup-id ~/.config/i3/picom-launch.sh
-# polybar is started by theme/session.sh, which renders its config first. Two
-# exec_always lines calling launch.sh would race: both kill polybar, both wait
-# for it to go, and both then start one.
+# Kept even though theme/session.sh also ends up here, so the bar does not
+# depend on the theme rendering. launch.sh serialises the two.
+exec_always --no-startup-id ~/.config/polybar/launch.sh
 exec_always --no-startup-id ~/.config/i3/network-notify.sh
 exec_always --no-startup-id ~/.config/i3/battery-notify.sh
 
