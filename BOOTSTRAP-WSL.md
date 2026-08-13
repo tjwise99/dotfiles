@@ -99,7 +99,48 @@ getent passwd "$USER" | cut -d: -f7
 
 Then close the terminal and reopen it.
 
-## 6. Verify
+## 6. Nix and Home Manager
+
+Tier 0 of `packages/manifest.yaml` lives in
+[WiseOS](https://github.com/tjwise99/WiseOS), not here. Until this step runs,
+the tools it owns have their config deployed on this box and no binary behind
+it — `ranger` and `htop` are the ones you will notice, because their config
+directories are linked by `profiles/base.conf.yaml` regardless.
+
+Everything below was written from the laptop, against Debian's Nix packaging
+rather than a running Ubuntu box. The apt names come from step 2's pre-flight
+and the group name in particular is worth confirming before you type it; Arch
+has no such group, so the laptop proves nothing here.
+
+`./install --packages` already installed `nix-bin` and `nix-setup-systemd`. Two
+things the package does not do on its own, the same two the laptop needed:
+
+```sh
+sudo nix-store --init
+printf 'experimental-features = nix-command flakes\n' | sudo tee -a /etc/nix/nix.conf
+sudo systemctl enable --now nix-daemon.socket
+```
+
+Then the group that gates the daemon socket. On Arch the socket is mode `0666`
+and any user can connect, which is why the laptop never needed this:
+
+```sh
+getent group nix-users && sudo usermod -aG nix-users "$USER"
+```
+
+That takes effect on next login, not in the current shell. Then:
+
+```sh
+git clone https://github.com/tjwise99/WiseOS.git ~/code/WiseOS
+nix run home-manager/release-26.05 -- switch --flake ~/code/WiseOS#wsl
+```
+
+`#wsl` rather than `#wise`: the two outputs share `home/wise.nix` and differ
+only in the username they are handed. If this box's account is not `wise`, that
+is the single line to change in `WiseOS/flake.nix` — the outputs are built by
+one function taking the username as its only argument.
+
+## 7. Verify
 
 ```sh
 python3 tools/check-manifest.py --deployed
@@ -119,15 +160,32 @@ And the check that the login shell alone cannot make — that a *non-interactive
 zsh has the toolchain, which is what `~/.zshenv` exists for:
 
 ```sh
-env -i HOME="$HOME" zsh -c 'command -v rg'     # expect: ~/.asdf/shims/rg
+env -i HOME="$HOME" zsh -c 'command -v node'   # expect: ~/.asdf/shims/node
+env -i HOME="$HOME" zsh -c 'command -v rg'     # expect: ~/.nix-profile/bin/rg
 env -i HOME="$HOME" zsh -c 'printf DATA'       # expect: DATA, and nothing else
 ```
 
-The second matters as much as the first. `ssh host <command>` runs a
+The first two are the tier boundary: asdf keeps the language runtimes, Nix owns
+the CLI tools, and a tool that exists in both must answer Nix.
+
+The third matters as much as either. `ssh host <command>` runs a
 non-interactive shell whose stdout *is* the command's output, so anything
 printed from `~/.zshenv` ends up prepended to the caller's data.
 
-## 7. Expected to differ from the laptop, correctly
+Last, the one that needs two shells to mean anything — the same tool resolving
+the same way whichever kind of shell asks:
+
+```sh
+env -i HOME="$HOME" zsh -c   'command -v jq'
+env -i HOME="$HOME" zsh -lic 'command -v jq'
+```
+
+These disagreed on the laptop, and nothing reported it. `~/.zshenv` runs before
+`/etc/profile`, so anything the distro's Nix packaging prepends there landed on
+top of the order `shell/env.sh` had just set — in a login shell only. Either
+answer alone looks correct; only the pair shows it.
+
+## 8. Expected to differ from the laptop, correctly
 
 - No `~/.config/zsh/x.zsh`, so no `fixWindows` or `clip` alias. That file is
   deployed by the manjaro profile alone and `zsh/zshrc` tests for it.

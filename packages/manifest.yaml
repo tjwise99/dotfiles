@@ -59,6 +59,27 @@ shared:
     apt: vim
     why: shell/env.sh resolves EDITOR to it
 
+  # Tier 0's substrate, and so the one entry here that is not plumbing for asdf.
+  # From the distro rather than the upstream installer, for the same reason
+  # everything else in this file is: a package installed by a script is one this
+  # manifest cannot vouch for, and cannot remove. The trade is a Nix a few
+  # versions behind the installer's, plus two steps the installer would have
+  # done — `nix-store --init` and enabling flakes — which BOOTSTRAP-WSL.md
+  # carries because they are already written down for the laptop.
+  - name: nix
+    pacman: nix
+    apt: nix-bin
+    why: the package manager behind tier 0
+
+  # Separate entry rather than a second name on the one above, because the
+  # manifest maps one tool to one name per host and these genuinely are two
+  # packages on Ubuntu. Manjaro's `nix` ships the units itself, so there is
+  # nothing left to name here for that column.
+  - name: nix daemon units
+    pacman: unavailable
+    apt: nix-setup-systemd
+    why: multi-user mode; Manjaro's nix package already carries these
+
 # Cannot run on the other host. The test is not whether it looks like a desktop
 # thing — a TUI that runs over ssh crosses fine, and those now live in tier 0.
 #
