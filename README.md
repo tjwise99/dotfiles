@@ -88,8 +88,9 @@ script that fails on exactly the machine it was meant to set up. The `jq` in the
 not a reason to switch back: it is installed *by* that block, so it does not exist yet at the point
 `install-asdf.sh` runs.
 
-`gh` is registered in the asdf plugin index as `github-cli`, so `asdf/tool-versions` names
-`github-cli` while the command stays `gh`.
+asdf carries the language runtimes and the editor. CLI tools are tier 0, built by Nix from
+[WiseOS](https://github.com/tjwise99/WiseOS)' `home/wise.nix` — a flake lock pins a version as well
+as `tool-versions` does, without compiling it on every fresh box.
 
 ## Packages
 

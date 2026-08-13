@@ -14,7 +14,9 @@
 # reset by an unattended install.
 set -uo pipefail
 
-export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
+# go from asdf, gh from tier 0. Both Nix profile forms: standalone Home Manager
+# links ~/.nix-profile, the NixOS module does not.
+export PATH="${HOME}/.nix-profile/bin:/etc/profiles/per-user/${USER:-${LOGNAME:-${HOME##*/}}}/bin:${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
 
 UPSTREAM="https://github.com/dlvhdr/gh-dash"
 COMMIT="a613ef744c99ef8d8ead33467813c6ee6086af52"

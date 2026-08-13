@@ -8,7 +8,9 @@
 # skips itself is worse than none, because it reads as protection.
 set -uo pipefail
 
-export PATH="${HOME}/.asdf/shims:${HOME}/.local/bin:${PATH}"
+# gitleaks is tier 0, so the Nix profile rather than the asdf shims. Both forms:
+# standalone Home Manager links ~/.nix-profile, the NixOS module does not.
+export PATH="${HOME}/.nix-profile/bin:/etc/profiles/per-user/${USER:-${LOGNAME:-${HOME##*/}}}/bin:${HOME}/.local/bin:${PATH}"
 
 if ! command -v gitleaks >/dev/null 2>&1; then
     echo "pre-commit: gitleaks not found — run ~/dotfiles/install" >&2

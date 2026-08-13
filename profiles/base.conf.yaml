@@ -108,56 +108,13 @@
     - command: ./asdf/install-asdf.sh
       description: Install asdf
 
+# Language runtimes and the editor. CLI tools are tier 0, in WiseOS'
+# home/wise.nix — a flake lock pins them without compiling them here.
 - asdf:
     - plugin: nodejs
       url: https://github.com/asdf-vm/asdf-nodejs
       versions:
         - 24.18.0
-    - plugin: gitleaks
-      url: https://github.com/jmcvetta/asdf-gitleaks.git
-      versions:
-        - 8.30.1
-    # Registered as "github-cli", not "gh" — the binary and the plugin have
-    # different names, so ~/.tool-versions names github-cli while the command
-    # stays gh.
-    - plugin: github-cli
-      url: https://github.com/bartlomiejdanek/asdf-github-cli.git
-      versions:
-        - 2.97.0
-    - plugin: jq
-      url: https://github.com/lsanwick/asdf-jq.git
-      versions:
-        - 1.8.2
-    - plugin: just
-      url: https://github.com/olofvndrhr/asdf-just.git
-      versions:
-        - 1.58.0
-
-    # Moved off the distro package managers rather than newly adopted: both are
-    # already installed here by pacman, at these versions. asdf gives the same
-    # version on both hosts — and for a tool Ubuntu renames, fd as fdfind and
-    # bat as batcat, it is also what keeps the command name the same.
-    - plugin: ripgrep
-      url: https://gitlab.com/wt0f/asdf-ripgrep.git
-      versions:
-        - 15.2.0
-    - plugin: fzf
-      url: https://github.com/kompiro/asdf-fzf.git
-      versions:
-        - 0.74.2
-
-    # Newly adopted rather than moved, unlike the two above. Pairs with the fzf
-    # already here: `zi` is a picker over the same database.
-    - plugin: zoxide
-      url: https://github.com/pauloedurezende/asdf-zoxide.git
-      versions:
-        - 0.10.0
-
-    - plugin: delta
-      url: https://github.com/andweeb/asdf-delta.git
-      versions:
-        - 0.19.2
-
     # Owns Python on both hosts: the interpreter as well as the packaging. No
     # distro python3 is declared in packages/manifest.yaml, and none should be —
     # asdf/uv-python.sh puts uv's interpreter on PATH ahead of it, which is what

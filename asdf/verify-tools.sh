@@ -22,9 +22,9 @@ fi
 status=0
 
 # A plugin named in the profile with no line in ~/.tool-versions installs a shim
-# that shadows the distro's binary and then refuses to run. The loop below reads
-# ~/.tool-versions, so it cannot see that at all: moving ripgrep to asdf left
-# `rg` answering "No version is set" while this script reported every tool ok.
+# that shadows whatever else provides the command, then refuses to run with
+# "No version is set". The loop below reads ~/.tool-versions, so it cannot see
+# that at all — the missing entry is the defect.
 profile="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/profiles/base.conf.yaml"
 if [ -r "${profile}" ]; then
     while read -r plugin; do
