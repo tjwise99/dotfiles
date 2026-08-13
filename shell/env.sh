@@ -14,38 +14,80 @@
 # it: see the askpass block, where "the helper has been installed" stood in for
 # "there is a display" until a host had one and not the other.
 
-# Guarded, because nested shells (tmux, subshells, editors, Claude Code) re-run
-# this over an already-populated PATH and would stack duplicates. Same idiom as
-# /etc/profile.d/home-local-bin.sh, which prepends before this runs — so
-# skipping is safe, the entry is already ahead of the system directories.
-case ":${PATH}:" in
-  *":${HOME}/.local/bin:"*) ;;
-  *) export PATH="${HOME}/.local/bin:${PATH}" ;;
-esac
+# Move one directory to the front of PATH, removing it from wherever it already
+# is. Removing before prepending is the point: it makes the call idempotent, so
+# it can run again later, and authoritative, so the last caller decides.
+#
+# Written with parameter expansion rather than `for dir in ${PATH}` under
+# IFS=":" because zsh does not word-split unquoted parameters — that loop reads
+# the whole PATH as a single element here and as many elsewhere.
+__wise_path_prefer() {
+  [ -n "${1:-}" ] || return 0
+  __wp_out=""
+  __wp_rest="${PATH}:"
+  while [ -n "${__wp_rest}" ]; do
+    __wp_dir="${__wp_rest%%:*}"
+    __wp_rest="${__wp_rest#*:}"
+    [ -n "${__wp_dir}" ] || continue
+    [ "${__wp_dir}" = "$1" ] && continue
+    __wp_out="${__wp_out:+${__wp_out}:}${__wp_dir}"
+  done
+  PATH="$1${__wp_out:+:${__wp_out}}"
+  export PATH
+  unset __wp_out __wp_rest __wp_dir
+}
 
 # Home Manager's session variables, which is what puts ~/.nix-profile/bin on
 # PATH at all — by way of the nix.sh it sources. Guarded on the file, so it
 # skips where standalone Home Manager has not run: the WSL box, and NixOS, where
 # the module form installs into /etc/profiles/per-user and the system already
 # carries that. The script guards itself against being sourced twice.
-#
-# Ahead of the asdf block on purpose. Both prepend, so whichever runs last ends
-# up first, and asdf owns the runtime versions this host shares with WSL.
 if [ -f "${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
   . "${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh"
 fi
 
-case ":${PATH}:" in
-  *":${HOME}/.asdf/shims:"*) ;;
-  *) export PATH="${HOME}/.asdf/shims:${PATH}" ;;
-esac
+# The front of PATH, most preferred first:
+#
+#   ~/bin                            hand-written scripts
+#   ~/.nix-profile/bin               Home Manager, standalone form
+#   /etc/profiles/per-user/<u>/bin   Home Manager, NixOS module form
+#   ~/.asdf/shims                    language runtimes
+#   ~/.local/bin                     pip and npm user installs
+#
+# Applied least-preferred first, because each call moves its argument to the
+# front and so the last call wins.
+#
+# This used to be four guarded prepends, which made the order a property of who
+# prepended last rather than a decision. Two things prepend after this file and
+# neither is visible from it: Manjaro's nix package ships
+# /etc/profile.d/nix-daemon.sh, which /etc/zsh/zprofile reaches through
+# /etc/profile — after ~/.zshenv. So a login shell put Nix ahead of asdf and a
+# non-interactive shell put asdf ahead of Nix, on the same machine, and NixOS
+# ships no such file and disagreed with both. `ssh laptop just --version` and a
+# terminal on that laptop ran different binaries, and nothing reported it.
+#
+# Nix ahead of asdf reverses what this file used to intend. The reason recorded
+# for asdf-first was that asdf owns the runtime versions shared with the WSL
+# box, but Nix packages none of those runtimes, so they never competed. What
+# does overlap is the CLI tools moving into home.packages, and there Nix is the
+# destination.
+__wise_path_apply() {
+  __wise_path_prefer "${HOME}/.local/bin"
+  __wise_path_prefer "${HOME}/.asdf/shims"
 
-if [ -d "${HOME}/bin" ]; then
-  case ":${PATH}:" in
-    *":${HOME}/bin:"*) ;;
-    *) export PATH="${HOME}/bin:${PATH}" ;;
-  esac
-fi
+  # USER is unset under some launchers; LOGNAME and the home directory's own
+  # name are the fallbacks. Guarded on the directory, so a wrong guess adds
+  # nothing rather than adding a path that does not exist.
+  __wp_peruser="/etc/profiles/per-user/${USER:-${LOGNAME:-${HOME##*/}}}/bin"
+  [ -d "${__wp_peruser}" ] && __wise_path_prefer "${__wp_peruser}"
+  unset __wp_peruser
+
+  [ -d "${HOME}/.nix-profile/bin" ] && __wise_path_prefer "${HOME}/.nix-profile/bin"
+  [ -d "${HOME}/bin" ] && __wise_path_prefer "${HOME}/bin"
+  return 0
+}
+
+__wise_path_apply
 
 # ssh consults this only when no tty is attached, so interactive shells keep
 # prompting inline; sudo only under `sudo -A`. Covers the tty-less callers
