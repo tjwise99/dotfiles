@@ -95,6 +95,9 @@ manjaro:
   # needs ./install --system as well as --packages. The one piece deliberately
   # left out is the credential under /var/lib/iwd, which is a PSK and this repo
   # is public.
+  # Present so far only as a dependency of gufw, hplip and the lightdm greeter,
+  # so nothing reported that the gtk theme source rests on it.
+  - {name: python-gobject, why: theme.sh gtk reads the active GTK theme through gi}
   - {name: iwd, why: owns wlan0; the only wifi stack on this host}
   - {name: yay, why: builds the manjaro-aur tier below; pacman cannot install from the AUR}
 
