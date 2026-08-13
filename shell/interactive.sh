@@ -9,13 +9,9 @@
 # Kept out of zsh/zshrc so the file stays about zsh — keymap, completion,
 # prompt — rather than about this machine's habits.
 
-# Re-assert the PATH order declared in shell/env.sh. ~/.zshrc is the only stage
-# that runs after /etc/profile, and on Manjaro /etc/profile.d/nix-daemon.sh
-# prepends there — so without this a login shell resolves tools differently from
-# the non-interactive shell behind `ssh host <command>`. The call is idempotent.
-#
-# First, because everything below that guards on `command -v` asks PATH which
-# binary it gets.
+# Re-assert the PATH order from shell/env.sh: ~/.zshrc is the only stage that
+# runs after /etc/profile, which the distro's Nix packaging prepends to. First,
+# because the `command -v` guards below ask PATH what they resolve to.
 command -v __wise_path_apply >/dev/null 2>&1 && __wise_path_apply
 
 alias ls='ls --color=auto'

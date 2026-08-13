@@ -103,17 +103,16 @@ Then close the terminal and reopen it.
 
 Tier 0 of `packages/manifest.yaml` lives in
 [WiseOS](https://github.com/tjwise99/WiseOS), not here. Until this step runs,
-the tools it owns have their config deployed on this box and no binary behind
-it — `ranger` and `htop` are the ones you will notice, because their config
-directories are linked by `profiles/base.conf.yaml` regardless.
+the tools it owns have config deployed on this box and no binary behind it —
+`ranger` and `htop` are the visible ones, since `profiles/base.conf.yaml` links
+their config directories regardless.
 
-Everything below was written from the laptop, against Debian's Nix packaging
-rather than a running Ubuntu box. The apt names come from step 2's pre-flight
-and the group name in particular is worth confirming before you type it; Arch
-has no such group, so the laptop proves nothing here.
+Written from the laptop against Debian's packaging, not a running Ubuntu box.
+Step 2's pre-flight is what confirms these names; the group below has no Arch
+equivalent, so the laptop proves nothing about it.
 
 `./install --packages` already installed `nix-bin` and `nix-setup-systemd`. Two
-things the package does not do on its own, the same two the laptop needed:
+things the package does not do on its own:
 
 ```sh
 sudo nix-store --init
@@ -121,24 +120,23 @@ printf 'experimental-features = nix-command flakes\n' | sudo tee -a /etc/nix/nix
 sudo systemctl enable --now nix-daemon.socket
 ```
 
-Then the group that gates the daemon socket. On Arch the socket is mode `0666`
-and any user can connect, which is why the laptop never needed this:
+Then the group gating the daemon socket, which Arch does not have — its socket
+is mode `0666`:
 
 ```sh
 getent group nix-users && sudo usermod -aG nix-users "$USER"
 ```
 
-That takes effect on next login, not in the current shell. Then:
+That takes effect on next login. Then:
 
 ```sh
 git clone https://github.com/tjwise99/WiseOS.git ~/code/WiseOS
 nix run home-manager/release-26.05 -- switch --flake ~/code/WiseOS#wsl
 ```
 
-`#wsl` rather than `#wise`: the two outputs share `home/wise.nix` and differ
-only in the username they are handed. If this box's account is not `wise`, that
-is the single line to change in `WiseOS/flake.nix` — the outputs are built by
-one function taking the username as its only argument.
+`#wsl` rather than `#wise`: both outputs come from one function taking the
+username as its only argument, so an account that is not `wise` is a one-line
+change in `WiseOS/flake.nix`.
 
 ## 7. Verify
 
@@ -165,25 +163,22 @@ env -i HOME="$HOME" zsh -c 'command -v rg'     # expect: ~/.nix-profile/bin/rg
 env -i HOME="$HOME" zsh -c 'printf DATA'       # expect: DATA, and nothing else
 ```
 
-The first two are the tier boundary: asdf keeps the language runtimes, Nix owns
-the CLI tools, and a tool that exists in both must answer Nix.
+The first two are the tier boundary: asdf keeps the runtimes, Nix owns the CLI
+tools, and a tool in both must answer Nix.
 
 The third matters as much as either. `ssh host <command>` runs a
 non-interactive shell whose stdout *is* the command's output, so anything
 printed from `~/.zshenv` ends up prepended to the caller's data.
 
-Last, the one that needs two shells to mean anything — the same tool resolving
-the same way whichever kind of shell asks:
+Last, the pair — the same tool answering the same way whichever shell asks:
 
 ```sh
 env -i HOME="$HOME" zsh -c   'command -v jq'
 env -i HOME="$HOME" zsh -lic 'command -v jq'
 ```
 
-These disagreed on the laptop, and nothing reported it. `~/.zshenv` runs before
-`/etc/profile`, so anything the distro's Nix packaging prepends there landed on
-top of the order `shell/env.sh` had just set — in a login shell only. Either
-answer alone looks correct; only the pair shows it.
+Either answer alone looks correct; only the pair catches `/etc/profile`
+prepending after `~/.zshenv` has set the order.
 
 ## 8. Expected to differ from the laptop, correctly
 

@@ -10,18 +10,9 @@
 # two hosts can disagree. Keeping it short is the design: a tool that moves up
 # out of it stops needing a mapping, and tier 3 has one column.
 #
-# The TRIPWIRE this header used to carry has fired, and tier 0 is what it fired
-# into. It predicted that past roughly 25-30 entries under `shared:`, a
-# hand-maintained two-column mapping stops paying and the answer is a package
-# manager that is itself cross-distro. The count never got near 30; a NixOS host
-# is what ended it, because a tool declared per-distro cannot follow a machine
-# with no distro package manager to declare it to.
-#
-# ORDERING: removing a row here reaches the other host within 20 minutes, and a
-# host not yet running Home Manager has nothing to supply the replacement. That
-# is how ranger, htop, fastfetch and zenity came to be declared nowhere and
-# installed nowhere on the WSL box. A tool leaves this file only once every host
-# that needs it can get it from tier 0.
+# ORDERING: a tool leaves this file only once every host that needs it can get
+# it from tier 0. Removing a row reaches the other host within 20 minutes, and a
+# host not yet running Home Manager has nothing to supply the replacement.
 #
 # An entry with no name for a supported host is written `unavailable` with the
 # reason. packages/resolve.py errors on a missing column rather than returning a
@@ -59,35 +50,27 @@ shared:
     apt: vim
     why: shell/env.sh resolves EDITOR to it
 
-  # Tier 0's substrate, and so the one entry here that is not plumbing for asdf.
-  # From the distro rather than the upstream installer, for the same reason
-  # everything else in this file is: a package installed by a script is one this
-  # manifest cannot vouch for, and cannot remove. The trade is a Nix a few
-  # versions behind the installer's, plus two steps the installer would have
-  # done — `nix-store --init` and enabling flakes — which BOOTSTRAP-WSL.md
-  # carries because they are already written down for the laptop.
+  # From the distro rather than the upstream installer, so this file can vouch
+  # for it and remove it. Costs `nix-store --init` and enabling flakes by hand;
+  # BOOTSTRAP-WSL.md carries both.
   - name: nix
     pacman: nix
     apt: nix-bin
-    why: the package manager behind tier 0
+    why: tier 0's package manager
 
-  # Separate entry rather than a second name on the one above, because the
-  # manifest maps one tool to one name per host and these genuinely are two
-  # packages on Ubuntu. Manjaro's `nix` ships the units itself, so there is
-  # nothing left to name here for that column.
+  # Two packages on Ubuntu, one on Manjaro, and this file maps one name per host.
   - name: nix daemon units
     pacman: unavailable
     apt: nix-setup-systemd
-    why: multi-user mode; Manjaro's nix package already carries these
+    why: multi-user mode; Manjaro's nix package carries these
 
 # Cannot run on the other host. The test is not whether it looks like a desktop
-# thing — a TUI that runs over ssh crosses fine, and those now live in tier 0.
+# thing — a TUI that runs over ssh crosses fine, and belongs in tier 0.
 #
-# X is the usual reason and was the only one until impala, which is a TUI and
-# would pass an X-shaped test — it is here because WSL has no radio for it to
-# manage. Written as the general test rather than patched per entry, because the
-# next tool that cannot cross hosts for a third reason should land here without
-# an argument about whether it counts.
+# X is the usual reason, but not the only one: impala is a TUI and would pass an
+# X-shaped test, and is here because WSL has no radio for it to manage. Written
+# as the general test rather than patched per entry, so the next tool that
+# cannot cross for a third reason lands here without an argument.
 manjaro:
   - {name: xorg-server}
   - {name: i3-wm}

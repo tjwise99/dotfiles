@@ -104,20 +104,13 @@ owns the tool:
 | 3 | `manjaro:` in the manifest | Needs X, so it has one column and no mapping |
 
 Tier 2 is the only place the two hosts can disagree, which is why the design pushes work up out of
-it rather than across into a bigger table.
+it rather than across into a bigger table. Tier 0 is what a tool declared per-distro cannot do:
+follow a machine with no distro package manager to declare it to. `shared:` is down to the
+bootstrap set as a result.
 
-Tier 0 is that tripwire having fired. The manifest header predicted it — past roughly 25-30 rows
-under `shared:`, hand-maintaining a two-column mapping stops paying and the answer is a package
-manager that is itself cross-distro. It arrived early rather than late: the count never reached 30,
-but a NixOS host did, and a tool declared per-distro cannot follow a machine that has no distro
-package manager to declare it to. `ranger`, `htop`, `fastfetch` and `zenity` were the first to move
-and are why `shared:` is now down to the bootstrap set.
-
-That move has an ordering hazard, and it has already bitten once. Removing a row here reaches the
-other host within 20 minutes of a commit, and a host that is not yet running Home Manager has
-nothing to supply the replacement — which is exactly how those four ended up declared nowhere and
-installed nowhere. **A tool leaves tiers 1-3 only after every host that needs it can get it from
-tier 0.**
+**A tool leaves tiers 1-3 only after every host that needs it can get it from tier 0.** Removing a
+row reaches the other host within 20 minutes of a commit, and a host not yet running Home Manager
+has nothing to supply the replacement.
 
 `packages/sync-packages.sh` expands the list and hands it whole to `pacman` or `apt-get`. It
 resolves nothing, orders nothing and removes nothing.

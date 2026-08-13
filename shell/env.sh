@@ -15,12 +15,11 @@
 # "there is a display" until a host had one and not the other.
 
 # Move one directory to the front of PATH, removing it from wherever it already
-# is. Removing before prepending is the point: it makes the call idempotent, so
-# it can run again later, and authoritative, so the last caller decides.
+# is. Removing before prepending is what makes this idempotent and the last
+# caller authoritative.
 #
-# Written with parameter expansion rather than `for dir in ${PATH}` under
-# IFS=":" because zsh does not word-split unquoted parameters — that loop reads
-# the whole PATH as a single element here and as many elsewhere.
+# Parameter expansion rather than `for dir in ${PATH}` under IFS=":" — zsh does
+# not word-split unquoted parameters.
 __wise_path_prefer() {
   [ -n "${1:-}" ] || return 0
   __wp_out=""
@@ -54,30 +53,18 @@ fi
 #   ~/.asdf/shims                    language runtimes
 #   ~/.local/bin                     pip and npm user installs
 #
-# Applied least-preferred first, because each call moves its argument to the
-# front and so the last call wins.
+# Nix ahead of asdf: the two overlap only on CLI tools being moved into
+# home.packages, since Nix packages none of the runtimes asdf pins.
 #
-# This used to be four guarded prepends, which made the order a property of who
-# prepended last rather than a decision. Two things prepend after this file and
-# neither is visible from it: Manjaro's nix package ships
-# /etc/profile.d/nix-daemon.sh, which /etc/zsh/zprofile reaches through
-# /etc/profile — after ~/.zshenv. So a login shell put Nix ahead of asdf and a
-# non-interactive shell put asdf ahead of Nix, on the same machine, and NixOS
-# ships no such file and disagreed with both. `ssh laptop just --version` and a
-# terminal on that laptop ran different binaries, and nothing reported it.
-#
-# Nix ahead of asdf reverses what this file used to intend. The reason recorded
-# for asdf-first was that asdf owns the runtime versions shared with the WSL
-# box, but Nix packages none of those runtimes, so they never competed. What
-# does overlap is the CLI tools moving into home.packages, and there Nix is the
-# destination.
+# Applied least-preferred first, each call moving its argument to the front.
+# shell/interactive.sh calls this again, because /etc/profile runs after
+# ~/.zshenv and the distro's Nix packaging prepends there.
 __wise_path_apply() {
   __wise_path_prefer "${HOME}/.local/bin"
   __wise_path_prefer "${HOME}/.asdf/shims"
 
-  # USER is unset under some launchers; LOGNAME and the home directory's own
-  # name are the fallbacks. Guarded on the directory, so a wrong guess adds
-  # nothing rather than adding a path that does not exist.
+  # USER is unset under some launchers. Guarded on the directory, so a wrong
+  # guess adds nothing.
   __wp_peruser="/etc/profiles/per-user/${USER:-${LOGNAME:-${HOME##*/}}}/bin"
   [ -d "${__wp_peruser}" ] && __wise_path_prefer "${__wp_peruser}"
   unset __wp_peruser
