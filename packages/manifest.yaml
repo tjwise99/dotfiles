@@ -1,19 +1,27 @@
 # What each host installs from its own package manager.
 #
 # Tiers, by who owns the tool:
-#   1  asdf, in asdf/tool-versions  — one pinned version, every host, no names here
-#   2  shared: below                — distro plumbing asdf cannot provide
-#   3  manjaro: below               — needs X, so it exists on one host only
+#   0  Nix, in WiseOS' home/wise.nix — one build, every host, no names here
+#   1  asdf, in asdf/tool-versions   — one pinned version, every host, no names here
+#   2  shared: below                 — bootstrap plumbing, needed before Nix exists
+#   3  manjaro: below                — needs X, so it exists on one host only
 #
 # Tier 2 is the only place a tool carries two names, and so the only place the
 # two hosts can disagree. Keeping it short is the design: a tool that moves up
-# to tier 1 stops needing a mapping, and tier 3 has one column.
+# out of it stops needing a mapping, and tier 3 has one column.
 #
-# TRIPWIRE: past roughly 25-30 entries under `shared:`, hand-maintaining this
-# mapping has stopped paying, and the answer is a package manager that is itself
-# cross-distro — Nix with Home Manager, or Homebrew on Linux — not more rows.
-# Recorded here because nothing measures it: the file gets one row longer at a
-# time and no single addition ever looks like the one that tipped it.
+# The TRIPWIRE this header used to carry has fired, and tier 0 is what it fired
+# into. It predicted that past roughly 25-30 entries under `shared:`, a
+# hand-maintained two-column mapping stops paying and the answer is a package
+# manager that is itself cross-distro. The count never got near 30; a NixOS host
+# is what ended it, because a tool declared per-distro cannot follow a machine
+# with no distro package manager to declare it to.
+#
+# ORDERING: removing a row here reaches the other host within 20 minutes, and a
+# host not yet running Home Manager has nothing to supply the replacement. That
+# is how ranger, htop, fastfetch and zenity came to be declared nowhere and
+# installed nowhere on the WSL box. A tool leaves this file only once every host
+# that needs it can get it from tier 0.
 #
 # An entry with no name for a supported host is written `unavailable` with the
 # reason. packages/resolve.py errors on a missing column rather than returning a
@@ -52,7 +60,7 @@ shared:
     why: shell/env.sh resolves EDITOR to it
 
 # Cannot run on the other host. The test is not whether it looks like a desktop
-# thing: ranger and htop read that way and are shared, because they run over ssh.
+# thing — a TUI that runs over ssh crosses fine, and those now live in tier 0.
 #
 # X is the usual reason and was the only one until impala, which is a TUI and
 # would pass an X-shaped test — it is here because WSL has no radio for it to

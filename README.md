@@ -93,25 +93,34 @@ not a reason to switch back: it is installed *by* that block, so it does not exi
 
 ## Packages
 
-`packages/manifest.yaml` names what each host installs from its own package manager, in three tiers
-by who owns the tool:
+`packages/manifest.yaml` names what each host installs from its own package manager, in tiers by who
+owns the tool:
 
 | Tier | Owner | Cross-host |
 | --- | --- | --- |
-| 1 | asdf, via `asdf/tool-versions` | One pinned version everywhere; no package names at all |
+| 0 | Nix, via [WiseOS](https://github.com/tjwise99/WiseOS)' `home/wise.nix` | One build everywhere; no package names here at all |
+| 1 | asdf, via `asdf/tool-versions` | One pinned version everywhere; no package names here at all |
 | 2 | `shared:` in the manifest | The same tool under two names |
 | 3 | `manjaro:` in the manifest | Needs X, so it has one column and no mapping |
 
-Tier 2 is the only place the two hosts can disagree, which is why the design pushes work up into
-tier 1 rather than across into a bigger table. A tool asdf can provide needs no names here, and for
-one Ubuntu renames — `fd` as `fdfind`, `bat` as `batcat` — asdf is also what keeps the command the
-same on both hosts.
+Tier 2 is the only place the two hosts can disagree, which is why the design pushes work up out of
+it rather than across into a bigger table.
+
+Tier 0 is that tripwire having fired. The manifest header predicted it — past roughly 25-30 rows
+under `shared:`, hand-maintaining a two-column mapping stops paying and the answer is a package
+manager that is itself cross-distro. It arrived early rather than late: the count never reached 30,
+but a NixOS host did, and a tool declared per-distro cannot follow a machine that has no distro
+package manager to declare it to. `ranger`, `htop`, `fastfetch` and `zenity` were the first to move
+and are why `shared:` is now down to the bootstrap set.
+
+That move has an ordering hazard, and it has already bitten once. Removing a row here reaches the
+other host within 20 minutes of a commit, and a host that is not yet running Home Manager has
+nothing to supply the replacement — which is exactly how those four ended up declared nowhere and
+installed nowhere. **A tool leaves tiers 1-3 only after every host that needs it can get it from
+tier 0.**
 
 `packages/sync-packages.sh` expands the list and hands it whole to `pacman` or `apt-get`. It
-resolves nothing, orders nothing and removes nothing; the moment it needs to special-case a package,
-the answer is a package manager that is itself cross-distro, not more rows. The manifest header
-records that tripwire, because nothing measures it — the file gets one row longer at a time and no
-single addition looks like the one that tipped it.
+resolves nothing, orders nothing and removes nothing.
 
 `packages/resolve.py --verify` checks both directions. Declared-but-absent asks whether a package is
 present at all, not whether it was installed by name: `curl`, `git`, `zsh` and `xclip` are all on
