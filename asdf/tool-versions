@@ -3,3 +3,5 @@ rust 1.97.1
 golang 1.26.5
 uv 0.12.3
 neovim v0.11.3
+just 1.58.0
+gitleaks 8.30.1
