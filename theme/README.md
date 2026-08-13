@@ -13,6 +13,7 @@ theme.sh pywal    # colours read from the X resource database
 
 | Source — edit these | |
 |---|---|
+| `wallpaper.jpg` | what `i3/config` hands `wal -i`; the pywal palette derives from it |
 | `resolve.py` | derives semantic values from a source |
 | `render.py` | substitutes `@key@` placeholders, verifies output |
 | `theme.sh` | resolve → render → reload |
@@ -35,7 +36,19 @@ next `theme.sh` run.
 
 `~/.local/bin/theme.sh` is a symlink here, for PATH only.
 
-## Adding a colour
+## Changing the wallpaper
+
+Replace `wallpaper.jpg`, then re-derive everything from it:
+
+```sh
+wal -i ~/.config/theme/wallpaper.jpg
+theme.sh pywal
+```
+
+`~/.config/theme` is a whole-directory link, so the new image is in place as
+soon as it is written here — no `./install`, and nothing for Nix to rebuild.
+The second command is not optional: `wal` alone repaints the desktop and leaves
+polybar, dunst, rofi and alacritty on the old palette.
 
 Add the key to both `from_pywal()` and `from_gtk()` in `resolve.py`, then use
 `@key@` in a template. `render.py` aborts if any placeholder is left

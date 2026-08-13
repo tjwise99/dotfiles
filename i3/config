@@ -36,8 +36,10 @@ bindsym $mod+Shift+x exec --no-startup-id loginctl lock-session
 # lightdm does not source .xinitrc, so Xft settings need loading here
 exec --no-startup-id xrdb -merge ~/.Xresources
 
-# sets the wallpaper (via feh) and generates the pywal palette
-exec --no-startup-id wal -i ~/Pictures/wallpaper.jpg
+# sets the wallpaper (via feh) and generates the pywal palette. Tracked in the
+# repo rather than left in ~/Pictures: every config theme.sh renders is derived
+# from this image, so a host without it has no palette, and so no bar.
+exec --no-startup-id wal -i ~/.config/theme/wallpaper.jpg
 
 
 # setup gaps
