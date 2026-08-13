@@ -9,6 +9,16 @@ theme.sh gtk      # colours read from the active GTK theme
 theme.sh pywal    # colours read from the X resource database
 ```
 
+The choice is recorded in `${XDG_STATE_HOME:-~/.local/state}/theme/source`, and
+`session.sh` re-applies it at every i3 start, defaulting to pywal. So a fresh
+machine comes up themed without anyone running this by hand, and a `theme.sh
+gtk` survives a logout rather than being reset to the default.
+
+`gtk` needs PyGObject, a distro package bound to the system interpreter —
+`python3` is uv's here and does not carry it. `theme.sh` picks an interpreter by
+whether it can `import gi`, not by path, which differs per host. On NixOS that
+is a wrapper carrying the introspection typelibs, declared in WiseOS.
+
 ## Layout
 
 | Source — edit these | |
