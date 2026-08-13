@@ -1,7 +1,13 @@
 # Host & tooling context
 
-Global notes for working on this WSL host. Not project-specific — per-project context lives in that
+Global notes for working on the user's hosts. Not project-specific — per-project context lives in that
 project's own `CLAUDE.md` (and a gitignored `CLAUDE.local.md` for machine/secret specifics).
+
+**This file syncs to more than one machine** (a WSL host and a bare-metal laptop), which differ in
+package manager, credential store and available desktop session. So a line here that names a concrete
+path or backend is a claim about *some* host, not this one. Where a fact varies, this file states the
+invariant and how to resolve it; prefer `command -v`, `--version` and `gh auth status` over recall,
+and put a genuinely machine-specific fact in that project's `CLAUDE.local.md` instead of here.
 
 ## The user
 Aerospace background: V-model requirements rigor (SYS→SRS→TST) and traceability-first thinking —
@@ -10,16 +16,29 @@ chrome. Treats AI tooling as a first-class repo reader: source files stay byte-i
 GFM/YAML, no frontmatter or generator dialects.
 
 ## Shell environment
-- Bash tool runs **non-interactive bash**, which sources **no startup file at all** — not `~/.zshenv`
-  (that is zsh's, and this is bash) and not `~/.zshrc` (interactive only), so neither
-  `dotfiles/shell/env.sh` nor `interactive.sh` runs. Everything in the environment arrived by
-  inheritance from the shell that launched Claude Code, so a session started before a config change
-  does not see it. `node` is normally on `PATH` regardless, inherited the same way. If it is
-  missing: `export PATH="$HOME/.asdf/shims:$PATH"`. Runtimes are
-  managed by asdf and declared in `~/.tool-versions` (from the dotfiles repo) — install a new one by
-  adding it there and re-running `~/dotfiles/install`, not by hand.
-- `python3` and Docker are available. `jq` is asdf-managed at `~/.asdf/shims/jq` — there is no
-  `/usr/bin/jq`, so a script run without the shims on `PATH` gets exit 127, not a jq error.
+- **The Bash tool's shell follows `$SHELL`, and sources no startup file at all** — not `~/.zshenv`,
+  not `~/.zshrc` (interactive only), so neither `dotfiles/shell/env.sh` nor `interactive.sh` runs.
+  Everything in the environment arrived by inheritance from the shell that launched Claude Code, so a
+  session started before a config change does not see it.
+- **That shell is zsh, not bash** — the dotfiles set the login shell, and the harness follows it
+  (`~/.claude/shell-snapshots/` names the shell in each filename; confirm with `echo $ZSH_VERSION`).
+  An earlier version of this note said bash. Two bash reflexes fail *silently* under zsh:
+  - **No word splitting on unquoted `$VAR`.** `SSH="ssh -o BatchMode=yes …"; $SSH host cmd` tries to
+    run the whole string as one command name — exit 127, "command not found". Use an array and quote
+    it: `ssh=(ssh -o BatchMode=yes …); "${ssh[@]}" host cmd`, which behaves identically in both shells.
+  - **`$PIPESTATUS` is unset.** zsh spells it `$pipestatus`, and indexes from **1**, not 0.
+  Scripts are unaffected: a `#!/bin/bash` shebang and just's `[script('bash')]` both pin bash, so the
+  idioms below still hold *inside* a script even where they fail when typed into the tool.
+- **Runtimes are asdf-managed**, declared in `~/.tool-versions` (from the dotfiles repo) — install a
+  new one by adding it there and re-running `~/dotfiles/install`, not by hand. If `node` is missing:
+  `export PATH="$HOME/.asdf/shims:$PATH"`.
+- **Where a CLI tool lives varies by host — resolve it, don't recall it.** `jq`, `just`, `gh`,
+  `gitleaks`, `rg` and `zenity` come from a nix home-manager profile (`~/.nix-profile/bin`) on one
+  host and asdf shims on another, and `python3` may be a uv-managed CPython under `~/.local/bin`
+  shadowing a *newer* `/usr/bin/python3`. What is constant: **none of them is the `/usr/bin` copy**,
+  so a script that runs without the right directory on `PATH` gets **exit 127, not a tool error** —
+  and a script that finds `python3` may be finding a different interpreter than the one you tested
+  against. Check with `command -v` and `--version` at the point of use. Docker is available on both.
 - **In the Bash tool's shell, `grep` is not GNU grep.** Claude Code injects a `grep` shell function
   that re-execs its own binary as ugrep (`exec -a ugrep "$CLAUDE_CODE_EXECPATH" -G --ignore-files …`).
   The two disagree on syntax — ugrep takes `(?:…)` as a non-capturing group under `-E`, GNU grep
@@ -30,9 +49,11 @@ GFM/YAML, no frontmatter or generator dialects.
   reports a defect that is not there — this inverted a reviewer's finding on PR #88.
 - **A pipeline reports the LAST command's status.** `just verify | tail -50` reports `tail`'s exit
   code, so a failing gate reads as green — this nearly got reported as a passing `verify`. Never
-  append `; echo "exit=$?"` to a pipeline and believe it. Redirect to a file and test `$?`, or
-  capture `st=("${PIPESTATUS[@]}")` **on the very next line** — `PIPESTATUS` is clobbered by the
-  following command, including the `echo` used to read it.
+  append `; echo "exit=$?"` to a pipeline and believe it. **Redirect to a file and test `$?`** — that
+  form is shell-agnostic, which the array capture is not: it is `${PIPESTATUS[@]}` in bash and
+  `$pipestatus[@]` in zsh, and reading the wrong one yields empty rather than an error. Either way it
+  must be captured **on the very next line**; the following command clobbers it, including the `echo`
+  used to read it.
 - **`set -o pipefail` + `grep -q` inverts a successful match.** `grep -q` exits on the first hit, the
   producer takes SIGPIPE and dies 141, and `pipefail` returns that — so the condition is false
   *precisely when the pattern matches*. It silently turned a whole service-disabling script into a
@@ -56,9 +77,13 @@ GFM/YAML, no frontmatter or generator dialects.
 ## GitHub: `gh` CLI for the API, git + SSH for pushes
 GitHub account: **`tjwise99`**. No GitHub MCP — use the `gh` CLI for all API work (token-friendly:
 built-in `--jq`, purpose-built subcommands).
-- **Auth is automatic — no prefix.** `gh` reads its token from the **system keyring** (`gh auth status`
-  → "Logged in … (keyring)"), so plain `gh …` works even where the environment is bare. Re-auth with
-  `gh auth login`; there is no token file to source, and nothing on disk holds the token.
+- **Auth is automatic — no prefix.** Plain `gh …` works even where the environment is bare; re-auth
+  with `gh auth login`. **Where the token is kept differs by host**, and `gh auth status` prints
+  which: a **system keyring** ("Logged in … (keyring)") where a Secret Service is running, or
+  **plaintext in `~/.config/gh/hosts.yml`** where there is none — WSL typically has none, so assume
+  the file form there. That matters twice: on the keyring host nothing on disk holds the token and
+  there is no file to source, while on the file host the token *is* on disk in cleartext — never
+  `cat` that file into a transcript, and never let it reach a synced or published tree.
 - **`GH_TOKEN` is for scripts that bypass `gh`.** `shell/env.sh` exports it from `gh auth token`,
   so it reaches the Bash tool only by inheritance from the launching shell — a session started before
   that shell ran sees it unset. WiseKiosk's `check-branch` gate needs it: it calls the GraphQL API
