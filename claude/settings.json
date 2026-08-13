@@ -9,6 +9,10 @@
       "Grep",
       "Glob",
       "Edit(//tmp/claude-1000/**)",
+      "Bash(cd:*)",
+      "Bash(echo:*)",
+      "Bash(git fetch:*)",
+      "Bash(magick identify:*)",
       "Bash(cat:*)",
       "Bash(head:*)",
       "Bash(tail:*)",
@@ -60,6 +64,16 @@
           {
             "type": "command",
             "command": "\"$HOME\"/dotfiles/claude/guard-publish.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/guard-read.sh",
             "timeout": 10
           }
         ]

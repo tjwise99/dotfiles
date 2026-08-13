@@ -210,9 +210,44 @@ def check_agents_readme():
     ]
 
 
+def check_doc_paths():
+    """Every repo path the Claude docs name still exists.
+
+    These files instruct an agent to run things. A renamed hook script leaves
+    prose that reads exactly as authoritative as before while naming nothing,
+    and the agent's own report of following it looks identical either way.
+    Deliberately narrow — script paths and Markdown links, not every backtick,
+    so a command or a glob is never mistaken for a missing file.
+    """
+    problems = []
+    for doc in ("claude/CLAUDE.md", "claude/README.md"):
+        text = read(doc)
+        if not text:
+            problems.append(f"{doc}: unreadable or empty")
+            continue
+
+        named = set(re.findall(r"`((?:claude|tools|git|zsh|notes)/[\w./-]+)`", text))
+        named |= {
+            m for m in re.findall(r"\]\(([\w./-]+)\)", text) if not m.startswith("http")
+        }
+
+        base = (ROOT / doc).parent
+        for ref in sorted(named):
+            if not (ROOT / ref).exists() and not (base / ref).exists():
+                problems.append(f"{doc} names a path that does not exist: {ref}")
+
+        # Scripts are usually cited by bare filename, which is precisely the
+        # form a rename orphans. Resolve those anywhere in the tree.
+        for name in sorted(set(re.findall(r"`([\w-]+\.(?:sh|py))`", text))):
+            if not any(ROOT.glob(f"*/{name}")) and not (ROOT / name).exists():
+                problems.append(f"{doc} names a script that does not exist: {name}")
+    return problems
+
+
 def main():
     problems, source_count = check_repo()
     problems += check_agents_readme()
+    problems += check_doc_paths()
     checked_deployment = "--deployed" in sys.argv
     if checked_deployment:
         problems += check_deployment()
