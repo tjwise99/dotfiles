@@ -39,8 +39,10 @@ done
 HOST="${DOTFILES_HOST:-$(detect_host)}"
 
 # asdf installs to ~/.local/bin with shims in ~/.asdf/shims. Dotbot's asdf
-# directive needs both before ~/.bashrc has ever been sourced.
-export PATH="${HOME}/.local/bin:${HOME}/.asdf/shims:${PATH}"
+# directive needs both before ~/.bashrc has ever been sourced. The Nix profile
+# carries tier 0, in both its forms: standalone Home Manager links
+# ~/.nix-profile, the NixOS module installs to /etc/profiles/per-user.
+export PATH="${HOME}/.nix-profile/bin:/etc/profiles/per-user/${USER:-${LOGNAME:-${HOME##*/}}}/bin:${HOME}/.local/bin:${HOME}/.asdf/shims:${PATH}"
 
 git submodule update --init --recursive
 

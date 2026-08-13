@@ -138,6 +138,13 @@ nix run home-manager/release-26.05 -- switch --flake ~/code/WiseOS#wsl
 username as its only argument, so an account that is not `wise` is a one-line
 change in `WiseOS/flake.nix`.
 
+Then re-run the installer. Step 4 ran before any of tier 0 existed, so anything
+needing it reported a skip — `gh-dash` is the one that does:
+
+```sh
+./install
+```
+
 ## 7. Verify
 
 ```sh

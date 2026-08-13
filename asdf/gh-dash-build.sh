@@ -34,6 +34,14 @@ command -v go >/dev/null 2>&1 || {
     exit 1
 }
 
+# Skipped rather than failed, unlike go above: gh is tier 0, and on a fresh box
+# ./install runs before Nix does. Re-running ./install after that step builds
+# it. Loud, because a silent skip here reads the same as a successful build.
+command -v gh >/dev/null 2>&1 || {
+    echo "skipped: gh-dash — gh not on PATH; re-run ./install after Home Manager" >&2
+    exit 0
+}
+
 if [ ! -r "${PATCH}" ]; then
     echo "missing patch: ${PATCH}" >&2
     exit 1
