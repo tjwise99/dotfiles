@@ -8,6 +8,11 @@ studio running six-day product sprints — most of it did not apply, and the sur
 selection space. What remains has been kept deliberately; the rest is in `~/.claude/agents-archive/`
 (moved, not deleted — restore with `mv`).
 
+**The archive is per-host and outside version control**, so it differs between machines and nothing
+here describes it. `gnc-engineer` — guidance, navigation and control — lives there rather than in the
+table below; restoring it means copying it into `claude/agents/engineering/` and adding its row,
+which `tools/check-manifest.py` then enforces in both directions.
+
 ## Current agents
 
 ### engineering/
@@ -24,7 +29,7 @@ selection space. What remains has been kept deliberately; the rest is in `~/.cla
 | **testing-architect** | inherit | Verification strategy: tier structure, what each tier guarantees, requirement-to-test traceability. Designs the map; does not write the tests |
 | **test-writer-fixer** | inherit | Tests that encode requirements; suite repair. Does not chase coverage |
 | **technical-documentation-writer** | sonnet | User-facing documentation: structure, guides, references, diagrams |
-| **gnc-engineer** | inherit | Guidance, navigation, control: estimation, filtering, control design, dynamics. Domain-specific, not from the pack |
+| **frontend-architect** | inherit | Client-side structure: component boundaries, the boundary schema the UI consumes, state and data flow, render and failure behaviour |
 
 ### operations/
 

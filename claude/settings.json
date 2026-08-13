@@ -43,6 +43,40 @@
   },
   "model": "opus",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/guard-bash.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/guard-publish.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/host-facts.sh",
+            "timeout": 15,
+            "statusMessage": "Resolving host facts"
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "hooks": [

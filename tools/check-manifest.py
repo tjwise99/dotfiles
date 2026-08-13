@@ -13,6 +13,7 @@ names targets this one is deliberately without.
 """
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +31,9 @@ except ModuleNotFoundError:
 # Repo infrastructure: present in the tree, deliberately never deployed.
 EXEMPT_FILES = {".gitignore", ".gitmodules", "install"}
 EXEMPT_DIRS = {"dotbot", "dotbot-plugins", "local", "profiles", "tools"}
+
+AGENTS = "claude/agents"
+README = "claude/agents/README.md"
 
 
 def exempt(path):
@@ -187,8 +191,28 @@ def check_deployment():
     return problems
 
 
+def check_agents_readme():
+    """The agents README table is an inventory, so drift either way is a defect.
+
+    Nothing else compares it to the tree: a row naming an agent that is not in
+    the repo reads as a real option to a session choosing one, and an agent with
+    no row is invisible to that same session. Scoped to tracked files, so an
+    agent archived outside version control on one host is correctly absent here.
+    """
+    listed = set(re.findall(r"^\|\s*\*\*([a-z0-9-]+)\*\*\s*\|", read(README), re.M))
+    on_disk = {p.stem for p in (ROOT / AGENTS).glob("*/*.md") if p.stem != "README"}
+
+    if not listed or not on_disk:
+        return [f"{README}: parsed {len(listed)} rows against {len(on_disk)} files — check the parser"]
+
+    return [f"{README} lists a nonexistent agent: {n}" for n in sorted(listed - on_disk)] + [
+        f"{README} is missing an agent that exists: {n}" for n in sorted(on_disk - listed)
+    ]
+
+
 def main():
     problems, source_count = check_repo()
+    problems += check_agents_readme()
     checked_deployment = "--deployed" in sys.argv
     if checked_deployment:
         problems += check_deployment()
