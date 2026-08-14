@@ -14,7 +14,7 @@ The scripts below are invoked by absolute path from `settings.json` and are not 
 | Script | Event | Does |
 |---|---|---|
 | `host-facts.sh` | SessionStart | Emits this machine's resolved state as context |
-| `guard-bash.sh` | PreToolUse / Bash | Denies an actual `gh pr merge` or gh `--admin`, matched per simple-command so mentions don't trip it |
+| `guard-bash.sh` | PreToolUse / Bash | Gates an actual `gh pr merge` or gh `--admin` — `allow` under an unexpired `merge-authorize.sh` grant, else `ask`; matched per simple-command so mentions don't trip it |
 | `guard-publish.sh` | PreToolUse / Edit\|Write | Asks before writing network-identifying detail into the published tree |
 | `guard-read.sh` | PreToolUse / Read | Denies oversized image reads, with the downscale command to use instead |
 
@@ -33,9 +33,18 @@ running and whether the gitleaks hook is armed all differ between the machines t
 Stating them in prose meant they were wrong on one host and silently rotted on both; resolving them
 at session start means they cannot.
 
-Each guard exits silently to allow, or prints a `permissionDecision` JSON envelope. `deny` is used
-only where the rule is categorical (a PR merge); heuristics use `ask`, because a gate that hard-
-refuses legal input with no override is a worse failure than one that surfaces a question.
+Each guard exits silently to allow, or prints a `permissionDecision` JSON envelope. Nothing here
+`deny`s: a gate that hard-refuses legal input with no override is a worse failure than one that
+surfaces a question. `guard-bash.sh` gates PR merges — `ask` by default, so approving the harness
+prompt is your per-PR authorization, and `allow` when an unexpired grant for that merge sits in
+`~/.claude/merge-auth`. That grant is the ahead-of-time path: authorize when you step away, and an
+unattended merge lands without a live prompt to block it.
+
+**`merge-authorize.sh` writes that grant** — `--pr N`, optional `--admin`, `--hours H` (default: any
+PR, 12h) — to `~/.claude/merge-auth`, which sits outside `~/dotfiles` so it is never published and
+carries an expiry so a forgotten grant lapses on its own. `--revoke` deletes it, `--show` prints it.
+Run it yourself with `! claude/merge-authorize.sh …`, or tell a session to. `--admin` (branch-
+protection bypass) is authorized only when the grant carries `admin=1`; a plain grant will not.
 
 They parse hook input with `jq`, fall back to `python3`, and fall back again to scanning the raw
 envelope — a gate that cannot read its input must not silently pass the thing it exists to catch.

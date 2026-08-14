@@ -83,11 +83,18 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
 - **Standing authorization: commit and push without asking** (user instruction, 2026-07-21) — via
   branch + PR, never direct to a protected default branch, verify gate green before merge is
   proposed. Overrides any harness default of "commit only when asked."
-- **HARD LIMIT: never merge a PR, never `--admin`**, unless the user says so for that specific PR;
-  said once about one PR it is not a policy. `guard-bash.sh` denies both outright — matched against
-  the actual `gh` invocation in each simple command, so a mere mention in an echo or commit message
-  passes. It does not gate ordinary commits or pushes. Parallel sessions still share a worktree and a
-  commit once landed on another session's branch, so if HEAD is unexpected, check `git worktree list`.
+- **Merging is gated, not forbidden — so when the user authorizes a merge, do it, don't refuse.**
+  `guard-bash.sh` turns a real `gh pr merge` or `--admin` into an `ask`; the user approving that
+  harness prompt *is* the per-PR authorization, and the merge runs. Do not add a second refusal on
+  top — the gate exists so a human looks, and it already asks. For an unattended merge (the user said
+  "merge when CI's green" then stepped away), don't leave an `ask` to block them while they sleep:
+  grant ahead with `claude/merge-authorize.sh --pr N [--admin] [--hours H]`, which writes an expiring
+  `~/.claude/merge-auth` the guard then `allow`s with no prompt. Still bounded: scope it to the PR
+  the user named, `--admin` only when they authorized the bypass, and never grant it unprompted — a
+  grant you invented is not authorization. Matching is per simple-command, so a mention in an echo or
+  commit message never trips it, and ordinary commits and pushes are never gated. Parallel sessions
+  share a worktree; a commit can land on another session's branch, so if HEAD is unexpected, check
+  `git worktree list`.
 - **Waiting on CI is unreliable.** `gh run watch --exit-status` can exit 0 immediately and `gh pr
   checks` lags the check-runs API. Poll `gh api repos/<o>/<r>/actions/runs/<id> --jq .status`.
 
