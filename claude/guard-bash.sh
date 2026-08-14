@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# PreToolUse hook on Bash. Two gates that CLAUDE.md previously stated in prose
-# with nothing enforcing them.
+# PreToolUse hook on Bash. One categorical gate:
 #
-#   deny  — `gh pr merge` and any --admin branch-protection bypass. A hard limit:
-#           the required-review gate exists so a human looks before anything lands.
-#   ask   — `git commit` / `git push` whose command chain does not confirm HEAD.
-#           Parallel sessions share a worktree and switch HEAD between tool calls;
-#           a commit once landed on another session's branch.
+#   deny — an actual `gh pr merge`, or gh's `--admin` branch-protection bypass.
+#          A hard limit: the required-review gate exists so a human looks before
+#          anything lands.
 #
-# Scans the whole command string rather than filtering on a prefix, because
-# `git fetch && gh pr merge 5` has no dangerous prefix and merges just the same.
+# The command is split into simple-command segments on shell separators and only
+# a segment whose effective command is `gh` is inspected, so an incidental
+# mention of "gh pr merge" in an echo, grep, path or commit message is not
+# denied. deny is reserved for this categorical rule; heuristics do not belong in
+# a hook that cannot offer an override (see claude/README.md).
 set -u
 
 payload=$(cat)
@@ -36,25 +36,32 @@ decide() {
     exit 0
 }
 
-case "$cmd" in
-    *"gh pr merge"*)
-        decide deny "CLAUDE.md hard limit: never merge a PR unless the user said so for this specific PR. Ask, naming the PR."
-        ;;
-    *--admin*)
-        decide deny "CLAUDE.md hard limit: --admin bypasses branch protection. Requires explicit per-PR authorization."
-        ;;
-esac
-
-case "$cmd" in
-    *"git commit"*|*"git push"*)
-        case "$cmd" in
-            *"git symbolic-ref"*|*"git switch "*|*"git checkout "*|*"--show-current"*)
+# Inspect each simple command on its own. Splitting on && || | ; means a gh
+# invocation chained after something harmless is still seen, without matching
+# the same text quoted inside another command's arguments.
+while IFS= read -r seg; do
+    seg="${seg#"${seg%%[![:space:]]*}"}"          # trim leading whitespace
+    # Strip leading wrappers and env-var assignments so `sudo gh …` / `FOO=1 gh …`
+    # resolve to their real command.
+    while :; do
+        case "$seg" in
+            sudo\ *|env\ *|command\ *|nohup\ *|time\ *|[A-Za-z_]*=*\ *)
+                seg="${seg#* }"
+                seg="${seg#"${seg%%[![:space:]]*}"}"
                 ;;
-            *)
-                decide ask "CLAUDE.md: confirm the branch in the same command chain as any commit or push. Prefix with 'git symbolic-ref --short HEAD &&' or 'git switch <branch> &&'."
-                ;;
+            *) break ;;
         esac
-        ;;
-esac
+    done
+    case "$seg" in
+        gh|gh\ *)
+            if [[ "$seg" =~ (^|[[:space:]])pr[[:space:]]+merge([[:space:]]|$) ]]; then
+                decide deny "CLAUDE.md hard limit: never merge a PR unless the user said so for this specific PR. Ask, naming the PR."
+            fi
+            if [[ "$seg" =~ (^|[[:space:]])--admin([[:space:]=]|$) ]]; then
+                decide deny "CLAUDE.md hard limit: --admin bypasses branch protection. Requires explicit per-PR authorization."
+            fi
+            ;;
+    esac
+done < <(printf '%s\n' "$cmd" | sed -E 's/&&|\|\||;|\|/\n/g')
 
 exit 0

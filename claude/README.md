@@ -14,7 +14,7 @@ The scripts below are invoked by absolute path from `settings.json` and are not 
 | Script | Event | Does |
 |---|---|---|
 | `host-facts.sh` | SessionStart | Emits this machine's resolved state as context |
-| `guard-bash.sh` | PreToolUse / Bash | Denies PR merges and `--admin`; asks on unconfirmed-HEAD commits |
+| `guard-bash.sh` | PreToolUse / Bash | Denies an actual `gh pr merge` or gh `--admin`, matched per simple-command so mentions don't trip it |
 | `guard-publish.sh` | PreToolUse / Edit\|Write | Asks before writing network-identifying detail into the published tree |
 | `guard-read.sh` | PreToolUse / Read | Denies oversized image reads, with the downscale command to use instead |
 

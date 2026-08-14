@@ -84,9 +84,10 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   branch + PR, never direct to a protected default branch, verify gate green before merge is
   proposed. Overrides any harness default of "commit only when asked."
 - **HARD LIMIT: never merge a PR, never `--admin`**, unless the user says so for that specific PR;
-  said once about one PR it is not a policy. `guard-bash.sh` denies both outright, and asks when a
-  commit or push does not confirm HEAD in the same chain — parallel sessions share a worktree, and a
-  commit once landed on another session's branch. If HEAD is unexpected, check `git worktree list`.
+  said once about one PR it is not a policy. `guard-bash.sh` denies both outright — matched against
+  the actual `gh` invocation in each simple command, so a mere mention in an echo or commit message
+  passes. It does not gate ordinary commits or pushes. Parallel sessions still share a worktree and a
+  commit once landed on another session's branch, so if HEAD is unexpected, check `git worktree list`.
 - **Waiting on CI is unreliable.** `gh run watch --exit-status` can exit 0 immediately and `gh pr
   checks` lags the check-runs API. Poll `gh api repos/<o>/<r>/actions/runs/<id> --jq .status`.
 
