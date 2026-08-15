@@ -8,26 +8,23 @@
         "color": "cyan"
       },
       {
-        "id": "2",
-        "type": "separator"
-      },
-      {
         "id": "3",
         "type": "context-length",
         "color": "brightBlack"
       },
       {
-        "id": "4",
-        "type": "separator"
+        "id": "17",
+        "type": "current-working-dir",
+        "color": "blue",
+        "metadata": {
+          "abbreviateHome": "true",
+          "fishStyle": "true"
+        }
       },
       {
         "id": "5",
         "type": "git-branch",
         "color": "magenta"
-      },
-      {
-        "id": "6",
-        "type": "separator"
       },
       {
         "id": "7",
@@ -42,31 +39,17 @@
         "color": "green"
       },
       {
-        "id": "11",
-        "type": "separator"
-      },
-      {
         "id": "12",
         "type": "weekly-usage",
         "color": "blue"
       },
       {
-        "id": "13",
-        "type": "separator"
+        "id": "36a3a8a1-3743-49c5-aa91-738a55b109a2",
+        "type": "fable-weekly-usage"
       },
       {
-        "id": "14",
-        "type": "weekly-opus-usage",
-        "color": "magenta"
-      },
-      {
-        "id": "15",
-        "type": "separator"
-      },
-      {
-        "id": "16",
-        "type": "block-reset-timer",
-        "color": "brightBlack"
+        "id": "17fb84aa-dc06-4a7c-8e7e-ba4fab10236e",
+        "type": "reset-timer"
       }
     ],
     []
@@ -80,7 +63,7 @@
   "gitCacheTtlSeconds": 5,
   "minimalistMode": false,
   "powerline": {
-    "enabled": false,
+    "enabled": true,
     "separators": [
       ""
     ],
@@ -88,8 +71,12 @@
       false
     ],
     "startCaps": [],
-    "endCaps": [],
+    "endCaps": [
+      ""
+    ],
     "autoAlign": false,
-    "continueThemeAcrossLines": false
-  }
+    "continueThemeAcrossLines": false,
+    "theme": "gruvbox"
+  },
+  "defaultPadding": " "
 }
