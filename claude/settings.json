@@ -109,9 +109,10 @@
   },
   "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
   "teammateMode": "auto",
   "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
-  "skipWorkflowUsageWarning": true
+  "inputNeededNotifEnabled": false,
+  "agentPushNotifEnabled": true
 }
