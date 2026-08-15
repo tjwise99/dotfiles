@@ -110,7 +110,7 @@
   "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "light",
+  "theme": "dark",
   "teammateMode": "auto",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": false,
