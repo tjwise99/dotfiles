@@ -73,8 +73,6 @@
       "Bash(/usr/bin/sed:*)",
       "Bash(docs/requirements/.venv/bin/python:*)",
       "Bash(docs/requirements/.venv/bin/doorstop:*)",
-      "Bash(./tools/kiosk-ssh.sh:*)",
-      "Bash(tools/kiosk-ssh.sh:*)",
       "Write(//tmp/claude-1000/**)"
     ],
     "defaultMode": "auto"
