@@ -57,6 +57,13 @@ more than the tokens.
   command needing it. Headless and cron have no display; it is a no-op there.
 - **Runtimes are asdf-managed** in `~/.tool-versions` — add one there and re-run `~/dotfiles/install`
   rather than installing by hand.
+- **Don't prepend `cd <path> &&` to every command.** The Bash tool starts in the primary working
+  directory and cwd *persists* across calls, so a bare command from the repo root already runs there —
+  the reflexive `cd` is noise, and a compound `cd X && cmd` is harder to match against the permission
+  allowlist than a bare `cmd`, so it can *cause* the prompt it was meant to dodge. Prefer
+  cwd-independent invocations — `git -C <dir>`, `go -C <dir>`, `just --justfile <path>`, absolute
+  paths — and when a task genuinely needs another tree, `cd` once and rely on persistence rather than
+  re-`cd`-ing each call.
 - **If "it passed" would look identical when the thing failed, nothing was measured.** True well past
   the shell: a test with no assertion, a mock that always succeeds, a health check grepping for a
   string absent from healthy *and* unhealthy output.
@@ -102,6 +109,13 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
 - **Decisions are the user's — walk trades conversationally first.** Honest pros and cons in prose,
   not option menus or document dumps; state a lean and let the user call it. Never bury a decision in
   a plan or ADR draft: plan approval is not approval of a decision inside it.
+- **Treat a "why" as a first-class request, not an interruption.** When the user asks why something
+  is built or decided the way it is — or pushes back on it — ground the answer in the actual tree
+  (the ADR, the file, the gate) before reaching for generics, and verify the premise there first.
+  Contrast with a paradigm the user already knows when it sharpens the point, name the tradeoffs
+  honestly, and when a prior claim was wrong or overstated, correct it plainly rather than defend it.
+  Default to offering the deeper "why" *after* the work is done, not only when asked — it is often the
+  part of the session that matters most.
 - **If consent has to be inferred, it wasn't given.** A ruling about *content* answers a different
   question and leaves the request open; continued engagement is not consent. Binds every irreversible
   or outward-facing action. Two corollaries: **don't perform a gate you would walk through anyway**,
