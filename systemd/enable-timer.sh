@@ -33,4 +33,7 @@ fi
 
 systemctl --user daemon-reload
 systemctl --user enable --now dotfiles-sync.timer
-systemctl --user list-timers dotfiles-sync.timer --no-pager | head -2
+# sed, not `| head -2`: with pipefail, head closing the pipe early SIGPIPEs
+# list-timers (exit 141) and fails this script — and the unit — over a purely
+# informational print. sed reads all input, so it exits 0.
+systemctl --user list-timers dotfiles-sync.timer --no-pager | sed -n '1,2p'

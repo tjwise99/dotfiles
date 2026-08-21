@@ -12,3 +12,5 @@
 [user]
 	name = Wise
 	email = 47094117+tjwise99@users.noreply.github.com
+[safe]
+	directory = /etc/nixos/WiseOS

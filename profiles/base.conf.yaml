@@ -69,10 +69,6 @@
     # committed.
     ~/.config/nvim: nvim
 
-    # Notes
-    ~/lessons: notes/lessons
-    ~/PROJECT_PLAYBOOK.md: notes/PROJECT_PLAYBOOK.md
-
     # Toolchain
     ~/.tool-versions: asdf/tool-versions
 
