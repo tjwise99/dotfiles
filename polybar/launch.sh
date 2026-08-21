@@ -7,8 +7,13 @@ RUNTIME="${XDG_RUNTIME_DIR:-/tmp}"
 exec 9>"${RUNTIME}/polybar-launch.lock" 2>/dev/null &&
     command -v flock >/dev/null 2>&1 && flock 9
 
-pkill -x polybar
-while pgrep -x polybar >/dev/null; do sleep 1; done
+# Quit via polybar's own IPC (enable-ipc=true), not `pkill -x polybar`: on NixOS
+# polybar is a wrapped binary whose comm is `.polybar-wrapped`, so a name match
+# reaps nothing and every relaunch stacks another bar. IPC is wrapper-agnostic.
+# The wait matches the argv `polybar main` (present on every platform) rather
+# than the name; this script's own argv is its path, so `-f` does not self-match.
+polybar-msg cmd quit >/dev/null 2>&1 || true
+while pgrep -f 'polybar main' >/dev/null 2>&1; do sleep 1; done
 
 # polybar exits outright if the pulseaudio module cannot reach the daemon, and
 # i3 runs this in the same second pulseaudio.service finishes starting.
