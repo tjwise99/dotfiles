@@ -7,13 +7,13 @@ argument-hint: <issue-number>
 
 Input: issue number **`$ARGUMENTS`**.
 
-**The split of labour.** The main thread (this session) owns scoping, planning, review, and applying
-review fixes — it is the cold context that read the ticket, so it plans well and reviews with the
-ticket's intent in mind. Implementation may run here or in a dedicated subagent; step 2 decides
+**The split of labour.** The main thread (this session) owns scoping, planning, and acts solely as an orchestrator. It will perform no work on its own.
+Review, and applying review fixes is delegated to other agents. It plans work and delegates
+questions back to the owner for making decision Implementation may runs in a dedicated subagent unless an approved recommendation to work scope inline is accepted; step 2 decides
 which. Keeping implementation churn out of the planning/review context is the reason to delegate it,
 and the only reason.
 
-**Always open with a planning pass**, however small the ticket looks. The plan *is* the implementer's
+**Always open with a planning pass**, however small the ticket looks. The plan _is_ the implementer's
 brief, so there is no straight-to-implementation escape hatch.
 
 ## 1. Pull the ticket
@@ -43,8 +43,8 @@ Decide two things explicitly here:
 - **Who opens the PR.** Decide explicitly, because `/pr-ready` needs one to exist. Either the
   implementer opens it (brief it to) or this thread does after implementation.
 - **How review will run.** `/pr-ready` owns this — see its review-mode table, which is the single
-  definition. Note the consequence now: *implementation inline on this thread means this session
-  cannot review its own work*, and a fresh-context reviewer becomes mandatory rather than optional.
+  definition. Note the consequence now: _implementation inline on this thread means this session
+  cannot review its own work_, and a fresh-context reviewer becomes mandatory rather than optional.
 
 Then **exit plan mode for approval before any code is written.**
 

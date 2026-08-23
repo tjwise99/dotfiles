@@ -23,6 +23,10 @@ ip -o monitor link address 2>/dev/null | awk '
     $2 ~ /:$/ && $3 ~ /NO-CARRIER/  { s=$2; sub(/:$/,"",s); print s "|disconnected"; fflush(); next }
     $2 ~ /:$/ && $3 ~ /LOWER_UP/    { s=$2; sub(/:$/,"",s); print s "|connected";    fflush(); next }
 ' | while IFS='|' read -r iface msg; do
-	[ "${iface}" = "lo" ] && continue
+	case "${iface}" in
+		# Docker churns these as containers start and stop: docker0, the
+		# br-<hex> bridge per user network, and a veth<hex> per container.
+		lo|docker0|br-*|veth*) continue ;;
+	esac
 	notify-send -a network "Network" "${iface} ${msg}"
 done
