@@ -18,6 +18,11 @@
 set -u
 
 payload=$(cat)
+
+# Orchestrator-mode overlay (main thread only; inert unless /orchestrate is ON).
+. "$HOME/dotfiles/claude/orchestrator-gate.sh"
+orchestrator_gate "$payload"
+
 auth="$HOME/.claude/merge-auth"
 
 extract() {

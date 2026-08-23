@@ -12,6 +12,10 @@ set -u
 
 payload=$(cat)
 
+# Orchestrator-mode overlay (main thread only; inert unless /orchestrate is ON).
+. "$HOME/dotfiles/claude/orchestrator-gate.sh"
+orchestrator_gate "$payload"
+
 path=""
 if command -v jq >/dev/null 2>&1; then
     path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // ""' 2>/dev/null)

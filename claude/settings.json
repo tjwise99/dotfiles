@@ -111,6 +111,18 @@
         ]
       }
     ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "orchestrate|work-ticket",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/orchestrator-toggle.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -130,6 +142,15 @@
             "type": "command",
             "command": "\"$HOME\"/dotfiles/tools/sync.sh",
             "timeout": 60
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/orchestrator-cleanup.sh",
+            "timeout": 10
           }
         ]
       }

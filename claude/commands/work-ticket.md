@@ -7,7 +7,7 @@ argument-hint: <issue-number>
 
 Input: issue number **`$ARGUMENTS`**.
 
-**The split of labour.** The main thread (this session) owns scoping, planning, and acts solely as an orchestrator. It will perform no work on its own.
+**The split of labour.** The main thread (this session) owns scoping, planning, and acts solely as an orchestrator. It will perform no work on its own. Typing `/work-ticket` turns orchestrator mode ON automatically, enforcing this mechanically: main-thread `Read`/`Edit`/`Write` and content-dumping `Bash` are denied with a reminder to delegate (`/orchestrate off` to suspend).
 Review, and applying review fixes is delegated to other agents. It plans work and delegates
 questions back to the owner for making decision Implementation may runs in a dedicated subagent unless an approved recommendation to work scope inline is accepted; step 2 decides
 which. Keeping implementation churn out of the planning/review context is the reason to delegate it,
