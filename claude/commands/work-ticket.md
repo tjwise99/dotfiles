@@ -16,17 +16,19 @@ and the only reason.
 **Always open with a planning pass**, however small the ticket looks. The plan _is_ the implementer's
 brief, so there is no straight-to-implementation escape hatch.
 
-## 1. Pull the ticket
+## 1. Discover
 
-- Drop into plan mode.
-- `gh issue view $ARGUMENTS`, plus anything it depends on. Read it fully.
-- Identify: the **base branch** (a milestone ticket usually targets its epic's integration branch, a
-  standalone improvement the default branch), any **blockers or dependencies**, and **whether the
-  design decisions are already locked in the ticket body**.
+- Run **`/discover $ARGUMENTS`** — it pulls the ticket, fans out read-only recon, and brings the open
+  decisions up to you *before* anything is planned. Discovery done late, mid-implementation, is the
+  failure this flow exists to prevent; do not shortcut it.
+- Its output — a surface map and your answered decisions — is the plan's input. Confirm from it the
+  **base branch** (a milestone ticket usually targets its epic's integration branch, a standalone
+  improvement the default branch) and any **blockers or dependencies**.
 
 ## 2. Plan, and get approval
 
-Even a pre-scoped one-line ticket gets a planning pass. Scale depth to the ticket — light for the
+**Enter plan mode** now — the plan-and-approve gate lives here, not in discovery. Even a pre-scoped
+one-line ticket gets a planning pass. Scale depth to the ticket — light for the
 trivial, thorough for the ambiguous — but never skip it, and **surface open decisions to the user**
 rather than choosing silently. Where the ticket body already locks the approach, this is fast:
 confirm the plan matches, note the base branch and scope boundaries, done.
