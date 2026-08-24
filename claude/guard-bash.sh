@@ -99,8 +99,15 @@ while IFS= read -r seg; do
                 first="${seg%% *}"
                 case "$first" in
                     [A-Za-z_][A-Za-z0-9_]*=*)
-                        seg="${seg#* }"
-                        seg="${seg#"${seg%%[![:space:]]*}"}"
+                        # Advance only if a command follows; a bare `FOO=1` segment has no space to
+                        # strip and must break, not spin the loop.
+                        case "$seg" in
+                            *" "*)
+                                seg="${seg#* }"
+                                seg="${seg#"${seg%%[![:space:]]*}"}"
+                                ;;
+                            *) break ;;
+                        esac
                         ;;
                     *) break ;;
                 esac

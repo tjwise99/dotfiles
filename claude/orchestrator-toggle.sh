@@ -20,7 +20,7 @@ input=$(cat)
 command -v jq >/dev/null 2>&1 || exit 0
 
 sid=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null)
-[ -n "$sid" ] || exit 0
+case "$sid" in ''|*[!A-Za-z0-9_-]*) exit 0 ;; esac   # well-formed session id only (path safety)
 name=$(printf '%s' "$input" | jq -r '.command_name // empty' 2>/dev/null)
 arg=$(printf '%s' "$input" | jq -r '.command_args // ""' 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
 

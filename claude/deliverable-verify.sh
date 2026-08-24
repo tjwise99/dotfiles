@@ -15,7 +15,8 @@ command -v jq >/dev/null 2>&1 || exit 0
 
 sid=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null)
 aid=$(printf '%s' "$input" | jq -r '.agent_id // empty' 2>/dev/null)
-[ -n "$sid" ] && [ -n "$aid" ] || exit 0
+case "$sid" in ''|*[!A-Za-z0-9_-]*) exit 0 ;; esac   # path safety
+case "$aid" in ''|*[!A-Za-z0-9_-]*) exit 0 ;; esac
 orchestrator_active "$sid" || exit 0
 
 # Paused for background work, not finishing — don't fight the scheduler.

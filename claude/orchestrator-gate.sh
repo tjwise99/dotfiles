@@ -17,7 +17,8 @@
 # The Bash classifier catches the common, reflexive sinks; it is NOT a sandbox. A determined
 # bypass through shell features it does not parse — command substitution $(…), `eval`, `xargs`,
 # `find -exec`, a pattern split by an unquoted-looking `|`, a base64'd path — can still get
-# content through. It is a habit gate for an LLM orchestrator, not a security boundary.
+# content through, as can a file read of an extensionless name not in _orch_looks_like_file's
+# known list. It is a habit gate for an LLM orchestrator, not a security boundary.
 
 SCRATCH_PREFIX="/tmp/claude-1000/"
 ORCH_DELIVERABLES="/tmp/claude-1000/orchestrator-deliverables"

@@ -117,6 +117,10 @@ it independently:
 | **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Partial — you specified it but didn't write it | **Review inline**, but treat the plan itself as suspect too: you share its blind spots. Verify against the ticket's intent, not just the plan |
 | **You, in this session** | **None** — you would be reviewing your own work | **Spawn a fresh-context reviewer.** Give it the diff and the spec, *not* your account of what you did. An agent reviewing its own output reviews its own intent, which is precisely what needs independent checking |
 
+**Under orchestrator mode the "review inline" cells above do not apply** — the review and its fixes are
+delegated regardless (per the mode note at the top of this step). The table decides only *who* reviews,
+not *where*.
+
 Whatever the mode: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
 
