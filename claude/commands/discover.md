@@ -11,10 +11,9 @@ Move discovery *before* planning, so unknowns surface now — while they are che
 mid-implementation, where they get resolved by guessing or by inventing scope no one asked for. This
 command ends by handing decisions **up to the human**. It does not plan, branch, or write code.
 
-**Runs in orchestrator mode.** Recon is delegated so the orchestrating context stays lean; the gate
-enforces it. If the mode is not already on (`/work-ticket` turns it on for you), run `/orchestrate on`
-first. Your job is to slice the work, brief the agents, and synthesize what returns — not to open
-files yourself.
+**Runs in orchestrator mode** — `/discover` turns it on automatically. Recon is delegated so the
+orchestrating context stays lean; the gate enforces it. Your job is to slice the work, brief the
+agents, and synthesize what returns — not to open files yourself.
 
 ## 1. Frame the surface
 
@@ -43,8 +42,10 @@ surfaces what a generic search walks past. When several fit, prefer the most spe
 
 Brief each with the task, its slice, and the output contract:
 
-- **Write findings to a file; return ≤10 lines** — a thin summary plus any open questions. Fat returns
-  re-pollute the context this delegation exists to protect.
+- **Write findings to the deliverable file it is assigned.** A hook hands each subagent a path under
+  `/tmp/claude-1000/…` and will not let it finish until that file is non-empty; its chat reply stays
+  ≤10 lines pointing at it. Brief it on *what* to capture — findings plus open questions. Fat chat
+  returns re-pollute the context this delegation exists to protect.
 - **Read-only. Change nothing.**
 - **Surface ambiguity; do not resolve it.** Anything the ticket leaves open, any place the codebase
   offers two patterns, any missing spec — report it as an open question, never pick.
@@ -54,7 +55,8 @@ a decision, rather than waiting for their final report.
 
 ## 3. Synthesize
 
-Collect the findings files into two artifacts:
+Read the deliverable files (under `/tmp/claude-1000/…`, which the gate lets the orchestrator read)
+and collect them into two artifacts:
 
 - **A surface map** — what this work actually touches, its blast radius, the patterns it must match.
 - **An open-decisions list** — every ambiguity, missing spec, scope boundary, or fork discovery

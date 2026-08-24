@@ -91,7 +91,7 @@
         ]
       },
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|NotebookEdit",
         "hooks": [
           {
             "type": "command",
@@ -109,15 +109,47 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/orchestrator-gate.sh",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptExpansion": [
       {
-        "matcher": "orchestrate|work-ticket",
+        "matcher": "^(orchestrate|work-ticket|discover|plan|implement)$",
         "hooks": [
           {
             "type": "command",
             "command": "\"$HOME\"/dotfiles/claude/orchestrator-toggle.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/deliverable-assign.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME\"/dotfiles/claude/deliverable-verify.sh",
             "timeout": 10
           }
         ]

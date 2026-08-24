@@ -35,16 +35,17 @@ delegate any reading still needed; do not open files here.
 
 - **Implementation shape.** Independent items, or churn-heavy work → a team of implementers, each in
   its **own worktree** (parallel implementers collide in a shared tree). A small, cohesive, sequential
-  change → one implementer, or inline on this thread. **Name the agent by fit, not by
-  topic-matching** — an architect-flavoured agent chosen by topic will re-make design decisions the
-  plan settled on purpose. Where the plan settles the design, an implementer that builds without
-  deciding and halts on ambiguity (e.g. `code-monkey`) is the right fit. Match the model to the work;
-  do not default to the heaviest for mechanical implementation.
+  change → one implementer. Either way it runs in a subagent — orchestrator mode blocks inline edits
+  on this thread, so there is no inline option. **Name the agent by fit, not by topic-matching** — an
+  architect-flavoured agent chosen by topic will re-make design decisions the plan settled on purpose.
+  Where the plan settles the design, an implementer that builds without deciding and halts on ambiguity
+  (e.g. `code-monkey`) is the right fit. Match the model to the work; do not default to the heaviest
+  for mechanical implementation.
 - **Who opens the PR.** Decide explicitly — `/pr-ready` needs one to exist. Either the implementer
   opens it (brief it to) or this thread does after implementation.
-- **How review will run.** `/pr-ready` owns this — see its review-mode table. Note the consequence
-  now: implementation inline on this thread means this session cannot review its own work, so a
-  fresh-context reviewer becomes mandatory, not optional.
+- **How review will run.** `/pr-ready` owns this — see its review-mode table. Implementation runs in a
+  subagent from a plan this session wrote, so review is partial-independence: reviewed here, but the
+  plan's own blind spots are shared — verify against the ticket's intent, not just the plan.
 
 ## 4. Approve, then record
 

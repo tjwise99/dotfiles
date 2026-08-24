@@ -48,8 +48,17 @@ body=$(field '(.tool_input.content // "") + (.tool_input.new_string // "")' 'con
 hits=""
 add() { hits="${hits}${hits:+; }$1"; }
 
+# In a script (not the Bash-tool ugrep shim) plain grep is GNU grep. Resolve it once; if it is
+# genuinely absent the scan cannot run, so fail CLOSED with an honest reason rather than letting
+# an empty result read as a hit in every category on every write.
+GREP=$(command -v grep || true)
+if [ -z "$GREP" ]; then
+    printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Secret scan could not run (grep not found on PATH). Verify by hand that this write carries no network-identifying detail."}}\n'
+    exit 0
+fi
+
 # grep -c, never -q: under pipefail a -q match kills the producer with SIGPIPE.
-count() { printf '%s' "$body" | /usr/bin/grep -cEi "$1" 2>/dev/null || true; }
+count() { printf '%s' "$body" | "$GREP" -cEi "$1" 2>/dev/null || true; }
 
 [ "$(count '\b([0-9a-f]{2}:){5}[0-9a-f]{2}\b')" != "0" ] && add "MAC address"
 [ "$(count '\b(10\.[0-9]{1,3}|192\.168|169\.254|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}\b')" != "0" ] && add "private/link-local IP"
