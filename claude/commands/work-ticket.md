@@ -37,27 +37,10 @@ outlives the session.
 
 ## 3. Implement
 
-Once approved, implement per the step-2 decision. Either way:
-
-- **Implement per the plan's shape decision.** One implementer works in this session's tree so the
-  diff is reviewed in place; a team of implementers each takes its own worktree, since parallel
-  implementers sharing one tree collide.
-- **Brief the implementer so it need not re-derive context**: ticket number and summary, base branch
-  (have it `git switch -c <branch> <base>` first), the approved plan, **scope boundaries**
-  (ticket-only, no drive-by changes), any shared contract it must update if touched, and the repo's
-  conventions — match surrounding idiom, comment density, and naming.
-- **Commit per work-item.** A granular commit each time a plan task finishes, with a clear message —
-  not one giant commit at the end. This checkpoints progress so work survives a dead session, and
-  gives a clean per-item history to review. Under squash-merge these collapse anyway, so there is no
-  cost to committing often.
-- **Open the PR at the start of the work**, not the end. Push the branch and `gh pr create --base
-  <base>` so **CI is running while implementation continues** and results are ready by `/pr-ready`.
-- **Verify checks CI-faithfully.** Where a repo documents a local check that diverges from CI —
-  typically a package CI installs in isolation but which resolves from a parent directory locally —
-  use the repo's CI-faithful recipe or read the CI job. Never sign off on the known-divergent local
-  command.
-- **The implementer does not run `/pr-ready` and does not merge.** It reports what changed and the PR
-  URL, and stops.
+Run **`/implement $ARGUMENTS`** — it executes the approved plan: one implementer in this tree by
+default, or a team of implementers in isolated worktrees converging on one PR when the plan
+decomposed. Implementers escalate any decision the plan does not settle instead of inventing, commit
+per work-item, and open the PR early so CI runs. The implementer does not run `/pr-ready` or merge.
 
 ## 4. Hand off to /pr-ready
 
