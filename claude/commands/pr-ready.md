@@ -99,6 +99,15 @@ fact somewhere.
 
 Once code and docs are final, review the **full diff** (`git diff origin/<base>...HEAD`).
 
+**If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
+read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Delegate the
+review to a fresh-context reviewer** (e.g. `independent-reviewer`): give it the diff range and the
+spec, not your account of the work; have it write findings to its deliverable file; read those back
+to decide. This is not a downgrade — for the `/work-ticket` case (a plan you wrote, code a subagent
+wrote) an independent read was the right mode anyway, so orchestrator mode only makes mandatory what
+the table below already recommends. The table still governs *who* reviews; the mode forces it off
+this thread.
+
 **First establish who wrote the code**, because it determines whether you are capable of reviewing
 it independently:
 
@@ -135,6 +144,10 @@ Lean on CI for the gate exactly as in step 3 — cite `gh pr checks <n>` rather 
 suite. Reserve local runs for a targeted check of a specific concern the diff raises.
 
 ### Applying findings
+
+**Under orchestrator mode, apply every fix through a subagent** — `Edit`/`Write` are gated on this
+thread — and the second-pass rule below (a fix touching what the finding was about goes back to the
+reviewer) still holds.
 
 **In the first two modes, fix findings inline.** You hold the full review context, so patching a
 finding yourself is the cheap path; resuming an implementer subagent re-runs a fresh inference pass
