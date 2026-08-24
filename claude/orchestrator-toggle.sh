@@ -2,11 +2,11 @@
 # UserPromptExpansion hook (matcher anchored to orchestrate|work-ticket|discover|plan|implement).
 # Fires in the slash-command expansion path, before the model sees anything.
 #
-# This event is HUMAN-INITIATED — it fires for a command typed in the composer, not for a
-# subagent's tool calls — and that is what keeps a delegate from flipping the mode. The event
-# does not carry agent_id, so there is no in-band subagent field to key on; human-initiation is
-# the guarantee. (A fork's expansion is the one exotic exception, and it can only turn the mode
-# ON, which is harmless.)
+# What keeps a delegate from flipping the mode: `/orchestrate` carries `disable-model-invocation:
+# true` (see orchestrate.md), so no model — forked or not — can invoke it; only a human can turn
+# the mode OFF. The four model-invocable commands (work-ticket, discover, plan, implement) only
+# ever call turn_on, never off. That, not any field on this event (it carries no agent_id), is the
+# guarantee. If `disable-model-invocation` is ever dropped from orchestrate.md, this breaks.
 #
 #   /orchestrate on | /orchestrate                  -> ON
 #   /orchestrate off                                -> OFF
@@ -41,7 +41,7 @@ turn_on() {
     echo $(( n + ttl_hours * 3600 )) > "$marker"
 }
 
-on_msg="Main-thread Read/Edit/Write/NotebookEdit, the Grep/Glob tools, and content-dumping Bash (git show/diff, rg, file readers, gh pr diff) are denied with a reminder — no human prompt. Delegate recon and edits to subagents; have them write findings under /tmp/claude-1000/ and return <=10 lines, which the orchestrator can read/grep there. /orchestrate off to suspend."
+on_msg="Main-thread Read/Edit/Write/NotebookEdit, the Grep/Glob tools, and content-dumping Bash (git show/diff, rg, file readers, gh pr diff) are denied with a reminder — no human prompt. Delegate recon and edits to subagents; each is handed a deliverable file to write and returns <=10 lines. This session's deliverables are under /tmp/claude-1000/orchestrator-deliverables/${sid}/ — read/grep them there to synthesize. /orchestrate off to suspend."
 
 case "$name" in
     orchestrate)

@@ -89,11 +89,22 @@ while IFS= read -r seg; do
     # resolve to their real command.
     while :; do
         case "$seg" in
-            sudo\ *|env\ *|command\ *|nohup\ *|time\ *|[A-Za-z_]*=*\ *)
+            sudo\ *|env\ *|command\ *|nohup\ *|time\ *)
                 seg="${seg#* }"
                 seg="${seg#"${seg%%[![:space:]]*}"}"
                 ;;
-            *) break ;;
+            *)
+                # Strip a leading VAR=val assignment — but only a real one: test the FIRST token,
+                # so a mid-command `--body=x` cannot chop `gh pr merge` off and slip the merge gate.
+                first="${seg%% *}"
+                case "$first" in
+                    [A-Za-z_][A-Za-z0-9_]*=*)
+                        seg="${seg#* }"
+                        seg="${seg#"${seg%%[![:space:]]*}"}"
+                        ;;
+                    *) break ;;
+                esac
+                ;;
         esac
     done
     case "$seg" in

@@ -43,9 +43,9 @@ delegate any reading still needed; do not open files here.
   for mechanical implementation.
 - **Who opens the PR.** Decide explicitly — `/pr-ready` needs one to exist. Either the implementer
   opens it (brief it to) or this thread does after implementation.
-- **How review will run.** `/pr-ready` owns this — see its review-mode table. Implementation runs in a
-  subagent from a plan this session wrote, so review is partial-independence: reviewed here, but the
-  plan's own blind spots are shared — verify against the ticket's intent, not just the plan.
+- **How review will run.** `/pr-ready` owns this and holds the single copy of the review-mode table.
+  Tell it implementation ran in a subagent from a plan this session wrote, and let it decide the mode;
+  do not restate the table here.
 
 ## 4. Approve, then record
 
