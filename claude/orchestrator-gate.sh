@@ -43,17 +43,30 @@ _orch_deny() {
 }
 
 _orch_is_scratch() { case "$1" in "$SCRATCH_PREFIX"*) return 0 ;; *) return 1 ;; esac; }
-_orch_looks_like_file() { case "$1" in -*|'<'*|'>'*) return 1 ;; */*|?*.?*) return 0 ;; *) return 1 ;; esac; }
 
-# A single Bash segment is exempt only when it names a scratch path AND no path outside scratch —
-# so `cat <scratch>/x && git show HEAD` no longer slips (that splits into two segments). (NB1)
+# A token that is (almost certainly) a file operand: a path, an extension, or a well-known
+# extensionless project filename. Deliberately conservative — bare extensionless words that are
+# also plausible grep patterns (README, TODO, install) are NOT listed, to avoid pattern/file
+# confusion; such a file operand is an accepted miss (see the limits note in the header). (NB-new-2)
+_orch_looks_like_file() {
+    case "$1" in
+        -*|'<'*|'>'*) return 1 ;;
+        */*|?*.?*) return 0 ;;
+        Makefile|makefile|GNUmakefile|Dockerfile|Containerfile|Vagrantfile|Jenkinsfile|Gemfile|Rakefile|Procfile|Brewfile|Caddyfile|justfile|Justfile|LICENSE|LICENCE|COPYING) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# A single Bash segment is exempt only when it names a scratch path AND no file operand outside
+# scratch — so `cat <scratch>/x && git show HEAD` splits and the git segment is not exempted, and
+# `cat Makefile <scratch>/x` is not exempted either. (NB1, NS-new-1)
 _orch_seg_scratch_only() {
     local tok saw=
     for tok in $1; do
         case "$tok" in
             "$SCRATCH_PREFIX"*) saw=1 ;;
             -*|'<'*|'>'*) ;;
-            */*|/*|?*.?*) return 1 ;;
+            *) _orch_looks_like_file "$tok" && return 1 ;;
         esac
     done
     [ -n "$saw" ]
@@ -101,13 +114,24 @@ _orch_bash_is_heavy() {
                 *)
                     first="${seg%% *}"
                     case "$first" in
-                        [A-Za-z_][A-Za-z0-9_]*=*) seg="${seg#* }"; seg="${seg#"${seg%%[![:space:]]*}"}" ;;
+                        [A-Za-z_][A-Za-z0-9_]*=*)
+                            # Advance only if a command follows the assignment; a bare `FOO=1`
+                            # segment has no space to strip and must break, not spin. (NB-new-1)
+                            case "$seg" in
+                                *" "*) seg="${seg#* }"; seg="${seg#"${seg%%[![:space:]]*}"}" ;;
+                                *) break ;;
+                            esac ;;
                         *) break ;;
                     esac ;;
             esac
         done
-        _orch_seg_scratch_only "$seg" && continue
         h="${seg%% *}"
+        # Scratch exemption applies only to commands that read their operands (deliverable reads),
+        # never to git/gh, which read a ref/PR regardless of a path argument. (NS-new-1)
+        case "$h" in
+            cat|head|tail|less|more|bat|nl|sed|awk|jq|diff|grep|egrep|fgrep|rg|ag)
+                _orch_seg_scratch_only "$seg" && continue ;;
+        esac
         case "$h" in
             rg|ag) return 0 ;;
             cat|head|tail|less|more|bat|nl)                 # read files: any real operand
