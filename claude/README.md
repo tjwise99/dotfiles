@@ -15,8 +15,13 @@ The scripts below are invoked by absolute path from `settings.json` and are not 
 |---|---|---|
 | `host-facts.sh` | SessionStart | Emits this machine's resolved state as context |
 | `guard-bash.sh` | PreToolUse / Bash | Gates an actual `gh pr merge` or gh `--admin` — `allow` under an unexpired `merge-authorize.sh` grant, else `ask`; matched per simple-command so mentions don't trip it |
-| `guard-publish.sh` | PreToolUse / Edit\|Write | Asks before writing network-identifying detail into the published tree |
+| `guard-publish.sh` | PreToolUse / Edit\|Write\|NotebookEdit | Asks before writing network-identifying detail into the published tree |
 | `guard-read.sh` | PreToolUse / Read | Denies oversized image reads, with the downscale command to use instead |
+| `orchestrator-gate.sh` | PreToolUse / Grep\|Glob, and sourced by the three guards | In orchestrator mode, denies main-thread content-dumping tools so the driver must delegate; exempts subagents (`agent_id`) and the scratch tree |
+| `orchestrator-toggle.sh` | UserPromptExpansion | Sets/clears the session's orchestrator-mode marker (human-typed `/orchestrate`, `/work-ticket`, `/discover`, `/plan`, `/implement`) |
+| `orchestrator-cleanup.sh` | SessionEnd | Removes this session's orchestrator-mode marker |
+| `deliverable-assign.sh` | SubagentStart | In orchestrator mode, tells each subagent the deliverable file it must write |
+| `deliverable-verify.sh` | SubagentStop | In orchestrator mode, blocks a subagent's stop until its deliverable file is non-empty (one bounded retry) |
 
 **`guard-read.sh` exists because of a measurement, not a hunch.** Across 107 sessions of
 transcripts, 26 image reads accounted for **54% of all tool-result context ever consumed** —
@@ -33,9 +38,12 @@ running and whether the gitleaks hook is armed all differ between the machines t
 Stating them in prose meant they were wrong on one host and silently rotted on both; resolving them
 at session start means they cannot.
 
-Each guard exits silently to allow, or prints a `permissionDecision` JSON envelope. Nothing here
-`deny`s: a gate that hard-refuses legal input with no override is a worse failure than one that
-surfaces a question. `guard-bash.sh` gates PR merges — `ask` by default, so approving the harness
+Each guard exits silently to allow, or prints a `permissionDecision` JSON envelope. `deny` is used
+where the remedy is automatic and lossless — `guard-read.sh` denies an oversized image because the
+model downscales and re-reads with no one involved, and the orchestrator gate denies a main-thread
+read because the fix is to delegate it. Where the remedy is a human judgement the guard `ask`s
+instead — `guard-publish.sh` on network-shaped detail, `guard-bash.sh` on a PR merge. `guard-bash.sh`
+gates PR merges — `ask` by default, so approving the harness
 prompt is your per-PR authorization, and `allow` when an unexpired grant for that merge sits in
 `~/.claude/merge-auth`. That grant is the ahead-of-time path: authorize when you step away, and an
 unattended merge lands without a live prompt to block it.
@@ -48,6 +56,29 @@ protection bypass) is authorized only when the grant carries `admin=1`; a plain 
 
 They parse hook input with `jq`, fall back to `python3`, and fall back again to scanning the raw
 envelope — a gate that cannot read its input must not silently pass the thing it exists to catch.
+
+## Orchestrator mode
+
+A session-scoped mode that keeps the main thread a lean orchestrator: while it is on, the
+content-dumping tools (`Read`, `Edit`/`Write`/`NotebookEdit`, `Grep`/`Glob`, and `Bash` forms that
+dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, `gh pr diff`) are
+**denied on the main thread**, so the only way to look at or change a file is to send a subagent.
+`deny`, not `ask`: the human is never prompted; the model gets a reason and delegates.
+
+- **Marker.** `~/.claude/orchestrator-mode/<session_id>`, contents an epoch expiry (8h). Set/cleared
+  by `orchestrator-toggle.sh` on the human-typed commands; removed at `SessionEnd`; a stale or
+  corrupt marker is pruned on sight, so it can never gate a later session or wedge this one. Never
+  published (`~/.claude` markers are not symlinked into the tree).
+- **Subagents are never gated** — the gate exits early on `agent_id`, which is present only inside a
+  subagent — so the very agents doing the delegated work are unaffected. Nor is the deliverables
+  scratch tree (`/tmp/claude-1000/…`), so the orchestrator can read back what agents write there.
+- **Deliverable enforcement.** In orchestrator mode, `deliverable-assign.sh` (SubagentStart) hands
+  each subagent a deliverable path — a pure function of `session_id` + `agent_id`, under the scratch
+  tree — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file is
+  non-empty. This makes CLAUDE.md's "a subagent's deliverable is a file it wrote, never its prose"
+  structural. Bounded: one enforced retry (`stop_hook_active`) then the harness cap.
+- **Off by default.** With no marker the gate is inert — a normal session is byte-for-byte unaffected.
+  `/orchestrate on|off` toggles it; `/work-ticket`, `/discover`, `/plan`, `/implement` turn it on.
 
 ## Restoring an MCP server
 
