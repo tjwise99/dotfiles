@@ -77,6 +77,15 @@ dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, 
   tree — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file is
   non-empty. This makes CLAUDE.md's "a subagent's deliverable is a file it wrote, never its prose"
   structural. Bounded: one enforced retry (`stop_hook_active`) then the harness cap.
+- **Enforcement covers in-process subagents, not teammates.** The `/discover`/`/plan`/`/implement`
+  flow uses one-shot Task/Agent subagents — they share the session id, carry `agent_id`, and stop
+  once, so assign-and-verify fits them exactly. Agent-team *teammates* are different: pane teammates
+  (`teammateMode: tmux`/`iterm2`) are separate `claude` processes with their own session id and no
+  marker, so they escape enforcement silently; in-process teammates fire `SubagentStop` once per turn,
+  so they get nudged rather than cleanly enforced. Teammates coordinate by `SendMessage`, not the
+  deliverable file. `teammateMode: auto` resolves to in-process only when the shell is not inside
+  tmux/iTerm2 — pin `"teammateMode": "in-process"` for coverage that does not depend on the launching
+  terminal (cost: no side-by-side teammate panes).
 - **Off by default.** With no marker the gate is inert — a normal session is byte-for-byte unaffected.
   `/orchestrate on|off` toggles it; `/work-ticket`, `/discover`, `/plan`, `/implement` turn it on.
 

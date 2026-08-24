@@ -50,8 +50,10 @@ Brief each with the task, its slice, and the output contract:
 - **Surface ambiguity; do not resolve it.** Anything the ticket leaves open, any place the codebase
   offers two patterns, any missing spec — report it as an open question, never pick.
 
-Run them in parallel. Under agent teams these are teammates that message you the moment a slice raises
-a decision, rather than waiting for their final report.
+Run them in parallel — one-shot subagents, each writes its deliverable and stops (that is what the
+deliverable hook enforces). You *can* instead drive this with agent-team teammates that message you
+the moment a slice raises a decision; note teammates coordinate by message, not the deliverable file,
+and are not deliverable-enforced — see the README's orchestrator-mode section.
 
 ## 3. Synthesize
 
