@@ -25,41 +25,23 @@ brief, so there is no straight-to-implementation escape hatch.
   **base branch** (a milestone ticket usually targets its epic's integration branch, a standalone
   improvement the default branch) and any **blockers or dependencies**.
 
-## 2. Plan, and get approval
+## 2. Plan
 
-**Enter plan mode** now — the plan-and-approve gate lives here, not in discovery. Even a pre-scoped
-one-line ticket gets a planning pass. Scale depth to the ticket — light for the
-trivial, thorough for the ambiguous — but never skip it, and **surface open decisions to the user**
-rather than choosing silently. Where the ticket body already locks the approach, this is fast:
-confirm the plan matches, note the base branch and scope boundaries, done.
+Run **`/plan $ARGUMENTS`** — it plans from the discovery brief, decomposes the work into items,
+decides the implementation shape (one implementer vs a team of implementers in isolated worktrees) and
+PR ownership, and gates on plan-mode approval before any code. Do not plan inline; `/plan` owns it,
+carrying the base branch confirmed in step 1.
 
-Decide two things explicitly here:
-
-- **Where implementation runs, and by whom.** Small, self-contained ticket → inline on this thread.
-  Larger or churn-heavy work → a dedicated implementer subagent, so the planning and review context
-  stays clean. **Name the agent, do not leave it to description-matching** — an architect-flavoured
-  agent selected by topic will make design decisions this flow put in the plan step on purpose. Where
-  the plan settles the design, `code-monkey` is the right implementer: it implements without
-  deciding, and halts if the plan turns out to be ambiguous. Pick the model to match the work; do not
-  default to the heaviest for mechanical implementation.
-- **Who opens the PR.** Decide explicitly, because `/pr-ready` needs one to exist. Either the
-  implementer opens it (brief it to) or this thread does after implementation.
-- **How review will run.** `/pr-ready` owns this — see its review-mode table, which is the single
-  definition. Note the consequence now: _implementation inline on this thread means this session
-  cannot review its own work_, and a fresh-context reviewer becomes mandatory rather than optional.
-
-Then **exit plan mode for approval before any code is written.**
-
-Post the approved approach and any resolved decisions back to the ticket (`gh issue comment`) so the
-record outlives the session.
+Post the approved approach and resolved decisions back to the ticket (`gh issue comment`) so the record
+outlives the session.
 
 ## 3. Implement
 
 Once approved, implement per the step-2 decision. Either way:
 
-- **Work in this session's working tree** so the diff can be reviewed in place. (If multiple agents
-  are implementing in parallel, they need isolated worktrees — but that is a different flow, and
-  parallel implementers sharing one tree will collide.)
+- **Implement per the plan's shape decision.** One implementer works in this session's tree so the
+  diff is reviewed in place; a team of implementers each takes its own worktree, since parallel
+  implementers sharing one tree collide.
 - **Brief the implementer so it need not re-derive context**: ticket number and summary, base branch
   (have it `git switch -c <branch> <base>` first), the approved plan, **scope boundaries**
   (ticket-only, no drive-by changes), any shared contract it must update if touched, and the repo's
