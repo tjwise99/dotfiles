@@ -7,7 +7,8 @@
 #
 # Layered: when the overlay does not fire, control returns to the sourcing guard so its own
 # check still runs, main thread and subagent alike. The overlay never fires in a subagent
-# (agent_id), and never on the deliverables scratch tree (see the scratch exemption below).
+# (agent_id), and never on the orchestrator's own trees — the deliverables scratch tree or the
+# memory tree, both of which the orchestrator authors and cannot delegate (see _orch_is_exempt_path).
 #
 # Marker: ~/.claude/orchestrator-mode/<session_id>, contents = epoch expiry. Corrupt markers are
 # pruned always and expired ones when the clock is readable, so a dead session cannot gate a
@@ -22,6 +23,11 @@
 
 SCRATCH_PREFIX="/tmp/claude-1000/"
 ORCH_DELIVERABLES="/tmp/claude-1000/orchestrator-deliverables"
+# The memory tree is orchestrator-native bookkeeping, not churn: its content is authored FROM the
+# orchestrating context (facts about this conversation) and cannot be delegated — a subagent has no
+# conversation to remember. Writing it out pulls nothing IN, so the gate's reason to deny does not
+# apply. Exempt for read and write alike (updating a memory means reading it first). Not published:
+# ~/.claude is not symlinked into the tree. (deliverable-enforcement bookkeeping exemption)
 
 # Single liveness predicate (shared with the deliverable hooks): marker exists with a future
 # numeric expiry. Returns 1 (not live) when the clock is unreadable — callers then fail open.
@@ -37,13 +43,16 @@ orchestrator_deliverable_path() { printf '%s/%s/%s.md' "$ORCH_DELIVERABLES" "$1"
 
 _orch_deny() {
     local tool="$1" reason
-    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read/grep deliverables under ${SCRATCH_PREFIX}. To work inline, the human runs /orchestrate off."
+    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate CODEBASE work to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read/write ${SCRATCH_PREFIX} and its own memory tree (~/.claude/projects/*/memory/) inline. Do NOT spawn a subagent whose only job is a write you were just denied — that launders the gate and pulls the content back through a fresh context for nothing. If this is your OWN plan or notes, write it under ${SCRATCH_PREFIX} yourself, or record the plan via ExitPlanMode and gh issue comment — there is no repo plan file. To work inline, the human runs /orchestrate off."
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":%s}}\n' \
         "$(printf '%s' "$reason" | jq -R -s '.')"
     exit 0
 }
 
 _orch_is_scratch() { case "$1" in "$SCRATCH_PREFIX"*) return 0 ;; *) return 1 ;; esac; }
+_orch_is_memory() { case "$1" in "$HOME/.claude/projects/"*/memory/*) return 0 ;; *) return 1 ;; esac; }
+# Paths the orchestrator may touch inline: the deliverables scratch tree and its own memory tree.
+_orch_is_exempt_path() { _orch_is_scratch "$1" && return 0; _orch_is_memory "$1"; }
 
 # A token that is (almost certainly) a file operand: a path, an extension, or a well-known
 # extensionless project filename. Deliberately conservative — bare extensionless words that are
@@ -201,15 +210,15 @@ orchestrator_gate() {
     case "$tool" in
         Read)
             fp=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
-            _orch_is_scratch "$fp" && return 0
+            _orch_is_exempt_path "$fp" && return 0
             _orch_deny "Read" ;;
         Edit|Write|NotebookEdit)
             fp=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty' 2>/dev/null)
-            _orch_is_scratch "$fp" && return 0
+            _orch_is_exempt_path "$fp" && return 0
             _orch_deny "$tool" ;;
         Grep|Glob)
             fp=$(printf '%s' "$payload" | jq -r '.tool_input.path // empty' 2>/dev/null)
-            _orch_is_scratch "$fp" && return 0
+            _orch_is_exempt_path "$fp" && return 0
             _orch_deny "$tool" ;;
         Bash)
             cmd=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null)

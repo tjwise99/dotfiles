@@ -53,5 +53,10 @@ delegate any reading still needed; do not open files here.
   a decision buried inside it — call out any decision the plan assumes so it is approved on its own.
 - For a ticket, post the approved approach and resolved decisions back with `gh issue comment` so the
   record outlives the session.
+- **The plan is not a repo file.** It lives as the plan-mode contract (ExitPlanMode), the `gh issue
+  comment` record, and the brief you hand each implementer from this context — `/implement` reads it
+  from that brief, not from disk. Do not write a `PLAN.md` into the tree; orchestrator mode denies it,
+  and delegating that write to a subagent only launders the gate. If you need a scratchpad, the scratch
+  tree (`/tmp/claude-1000/…`) is writable inline.
 
 The deliverable is an approved, decomposed plan — the brief the implementation step consumes.

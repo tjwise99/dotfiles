@@ -70,8 +70,13 @@ dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, 
   corrupt marker is pruned on sight, so it can never gate a later session or wedge this one. Never
   published (`~/.claude` markers are not symlinked into the tree).
 - **Subagents are never gated** — the gate exits early on `agent_id`, which is present only inside a
-  subagent — so the very agents doing the delegated work are unaffected. Nor is the deliverables
-  scratch tree (`/tmp/claude-1000/…`), so the orchestrator can read back what agents write there.
+  subagent — so the very agents doing the delegated work are unaffected. Nor are the orchestrator's
+  own trees: the deliverables scratch tree (`/tmp/claude-1000/…`), so it can read back what agents
+  write there; and its memory tree (`~/.claude/projects/*/memory/`), read and write. Memory is
+  orchestrator-native bookkeeping, not churn — its content is authored from the conversation and
+  cannot be delegated — so gating the write would only push the model to launder it through a
+  throwaway subagent. Same reasoning for a plan: it has no repo file (plan-mode contract + `gh issue
+  comment` + the implementer's brief), so there is nothing to write and nothing to launder.
 - **Deliverable enforcement.** In orchestrator mode, `deliverable-assign.sh` (SubagentStart) hands
   each subagent a deliverable path — a pure function of `session_id` + `agent_id`, under the scratch
   tree — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file is
