@@ -237,7 +237,7 @@ index 25d04b9..2d2b388 100644
 +            && let Some((start, end)) = Self::file_span(&self.display_rows, fi)
 +        {
 +            // start is the file's header row; the picker already names the file.
-+            self.display_rows = self.display_rows[start + 1..end].to_vec();
++            self.display_rows = self.display_rows[start..end].to_vec();
 +        }
          self.search.recompute(&self.display_rows);
      }
