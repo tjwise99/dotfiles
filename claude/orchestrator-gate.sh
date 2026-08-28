@@ -7,8 +7,9 @@
 #
 # Layered: when the overlay does not fire, control returns to the sourcing guard so its own
 # check still runs, main thread and subagent alike. The overlay never fires in a subagent
-# (agent_id), and never on the orchestrator's own trees — the deliverables scratch tree or the
-# memory tree, both of which the orchestrator authors and cannot delegate (see _orch_is_exempt_path).
+# (agent_id), and never on the orchestrator's own trees — the deliverables scratch tree, the memory
+# tree, or the harness plan store, all of which the orchestrator authors and cannot delegate (see
+# _orch_is_exempt_path).
 #
 # Marker: ~/.claude/orchestrator-mode/<session_id>, contents = epoch expiry. Corrupt markers are
 # pruned always and expired ones when the clock is readable, so a dead session cannot gate a
@@ -43,7 +44,7 @@ orchestrator_deliverable_path() { printf '%s/%s/%s.md' "$ORCH_DELIVERABLES" "$1"
 
 _orch_deny() {
     local tool="$1" reason
-    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate CODEBASE work to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read/write ${SCRATCH_PREFIX} and its own memory tree (~/.claude/projects/*/memory/) inline. Do NOT spawn a subagent whose only job is a write you were just denied — that launders the gate and pulls the content back through a fresh context for nothing. If this is your OWN plan or notes, write it under ${SCRATCH_PREFIX} yourself, or record the plan via ExitPlanMode and gh issue comment — there is no repo plan file. To work inline, the human runs /orchestrate off."
+    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate CODEBASE work to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read/write ${SCRATCH_PREFIX} and its own memory tree (~/.claude/projects/*/memory/) inline. Do NOT spawn a subagent whose only job is a write you were just denied — that launders the gate and pulls the content back through a fresh context for nothing. If this is your OWN plan or notes, write it under ${SCRATCH_PREFIX} or ~/.claude/plans/ yourself — both are exempt — or record the plan via ExitPlanMode and gh issue comment. To work inline, the human runs /orchestrate off."
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":%s}}\n' \
         "$(printf '%s' "$reason" | jq -R -s '.')"
     exit 0
@@ -51,8 +52,12 @@ _orch_deny() {
 
 _orch_is_scratch() { case "$1" in "$SCRATCH_PREFIX"*) return 0 ;; *) return 1 ;; esac; }
 _orch_is_memory() { case "$1" in "$HOME/.claude/projects/"*/memory/*) return 0 ;; *) return 1 ;; esac; }
-# Paths the orchestrator may touch inline: the deliverables scratch tree and its own memory tree.
-_orch_is_exempt_path() { _orch_is_scratch "$1" && return 0; _orch_is_memory "$1"; }
+# The harness plan store (~/.claude/plans/): plan-mode persists a plan file here, authored FROM the
+# conversation, so — like the memory tree — writing it pulls nothing IN and cannot be delegated (a
+# subagent has no conversation to plan). Exempt for read and write alike. Not published.
+_orch_is_plans() { case "$1" in "$HOME/.claude/plans/"*) return 0 ;; *) return 1 ;; esac; }
+# Paths the orchestrator may touch inline: the deliverables scratch tree, its memory tree, its plans.
+_orch_is_exempt_path() { _orch_is_scratch "$1" && return 0; _orch_is_memory "$1" && return 0; _orch_is_plans "$1"; }
 
 # A token that is (almost certainly) a file operand: a path, an extension, or a well-known
 # extensionless project filename. Deliberately conservative — bare extensionless words that are

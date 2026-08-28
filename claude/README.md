@@ -17,7 +17,7 @@ The scripts below are invoked by absolute path from `settings.json` and are not 
 | `guard-bash.sh` | PreToolUse / Bash | Gates an actual `gh pr merge` or gh `--admin` — `allow` under an unexpired `merge-authorize.sh` grant, else `ask`; matched per simple-command so mentions don't trip it |
 | `guard-publish.sh` | PreToolUse / Edit\|Write\|NotebookEdit | Asks before writing network-identifying detail into the published tree |
 | `guard-read.sh` | PreToolUse / Read | Denies oversized image reads, with the downscale command to use instead |
-| `orchestrator-gate.sh` | PreToolUse / Grep\|Glob, and sourced by the three guards | In orchestrator mode, denies main-thread content-dumping tools so the driver must delegate; exempts subagents (`agent_id`) and the scratch tree |
+| `orchestrator-gate.sh` | PreToolUse / Grep\|Glob, and sourced by the three guards | In orchestrator mode, denies main-thread content-dumping tools so the driver must delegate; exempts subagents (`agent_id`), the scratch tree, the memory tree, and the plan store |
 | `orchestrator-toggle.sh` | UserPromptExpansion | Sets/clears the session's orchestrator-mode marker (human-typed `/orchestrate`, `/work-ticket`, `/discover`, `/plan`, `/implement`) |
 | `orchestrator-cleanup.sh` | SessionEnd | Removes this session's orchestrator-mode marker |
 | `deliverable-assign.sh` | SubagentStart | In orchestrator mode, tells each subagent the deliverable file it must write |
@@ -72,11 +72,12 @@ dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, 
 - **Subagents are never gated** — the gate exits early on `agent_id`, which is present only inside a
   subagent — so the very agents doing the delegated work are unaffected. Nor are the orchestrator's
   own trees: the deliverables scratch tree (`/tmp/claude-1000/…`), so it can read back what agents
-  write there; and its memory tree (`~/.claude/projects/*/memory/`), read and write. Memory is
-  orchestrator-native bookkeeping, not churn — its content is authored from the conversation and
-  cannot be delegated — so gating the write would only push the model to launder it through a
-  throwaway subagent. Same reasoning for a plan: it has no repo file (plan-mode contract + `gh issue
-  comment` + the implementer's brief), so there is nothing to write and nothing to launder.
+  write there; its memory tree (`~/.claude/projects/*/memory/`), read and write; and the harness plan
+  store (`~/.claude/plans/`), read and write. Memory and plans are orchestrator-native bookkeeping,
+  not churn — their content is authored from the conversation and cannot be delegated (a subagent has
+  no conversation to remember or plan), so gating the write would only push the model to launder it
+  through a throwaway subagent. None of the three is published (`~/.claude` is not symlinked into the
+  tree).
 - **Deliverable enforcement.** In orchestrator mode, `deliverable-assign.sh` (SubagentStart) hands
   each subagent a deliverable path — a pure function of `session_id` + `agent_id`, under the scratch
   tree — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file is
