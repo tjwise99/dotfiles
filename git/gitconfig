@@ -1,10 +1,18 @@
 [push]
 	autoSetupRemote = true
 [core]
-	editor = vim
+	editor = nvim
 	hooksPath = ~/.config/git/hooks
-	pager = delta
-# core.pager covers diff, show and log; git add -p reads interactive.diffFilter.
+	#pager = delta
+# core.pager covers diff, show a7nd log; git add -p reads interactive.diffFilter.
+[diff]
+    tool = nvimdiff
+[difftool]
+    prompt = false
+[difftool "nvimdiff"]
+    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+
+
 [interactive]
 	diffFilter = delta --color-only
 [delta]
