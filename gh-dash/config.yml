@@ -49,6 +49,7 @@ keybindings:
   prs:
     - key: d
       name: review
-      command: gh-review {{.RepoName}} {{.PrNumber}}
+      #command: gh-review {{.RepoName}} {{.PrNumber}}
+      command: gh pr checkout {{.PrNumber}} && nvim -c "DiffviewOpen origin/{{.BaseRefName}}...HEAD" -c "tabonly"
 
 confirmQuit: false

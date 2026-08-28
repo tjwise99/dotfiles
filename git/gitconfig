@@ -6,11 +6,12 @@
 	#pager = delta
 # core.pager covers diff, show a7nd log; git add -p reads interactive.diffFilter.
 [diff]
-    tool = nvimdiff
+    tool = diffview
+[difftool "diffview"]
+    # This instructs Neovim to open the plugin directly using the temporary directories Git provides
+    cmd = nvim -R -c "DiffviewOpen --left-rev=$LOCAL --right-rev=$REMOTE" -c "tabonly"
 [difftool]
     prompt = false
-[difftool "nvimdiff"]
-    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
 
 
 [interactive]

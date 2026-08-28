@@ -90,8 +90,8 @@ return {
       queries = {
         html = {
           { pattern = 'class="([^"]*)"', placeholder = "@" }, -- classes in html
-          { pattern = 'href="(.-)"' },                        -- hrefs in html
-          { pattern = 'src="(.-)"' },                         -- HTML img src attribute
+          { pattern = 'href="(.-)"' }, -- hrefs in html
+          { pattern = 'src="(.-)"' }, -- HTML img src attribute
         },
       },
     },
@@ -151,7 +151,7 @@ return {
   {
     "kristijanhusak/vim-dadbod-ui",
     dependencies = {
-      { "tpope/vim-dadbod",                     lazy = true },
+      { "tpope/vim-dadbod", lazy = true },
       { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true }, -- Optional
     },
     cmd = {
@@ -335,6 +335,18 @@ return {
     ft = { "\\cjustfile", "*.just", ".justfile" },
   },
 
+  -- git
+  {
+    "sindrets/diffview.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" }, -- Optional: for file icons
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewToggleFiles", "DiffviewFocusFiles" },
+    config = function()
+      require("diffview").setup {
+        -- Your custom configuration goes here if needed
+      }
+    end,
+  },
+
   -- Misc
   {
     "stevearc/oil.nvim",
@@ -343,7 +355,7 @@ return {
       require("oil").setup(opts)
     end,
     keys = {
-      { "-",        "<Cmd>Oil<CR>",         mode = "n", desc = "Open parent directory" },
+      { "-", "<Cmd>Oil<CR>", mode = "n", desc = "Open parent directory" },
       { "<space>-", "<Cmd>Oil --float<CR>", mode = "n", desc = "Open parent directory in floating window" },
     },
     -- Cannot be lazy loaded because otherwise it won't open
