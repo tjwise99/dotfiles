@@ -74,9 +74,9 @@ the public `github.com/tjwise99/dotfiles`. No review step — anything sitting i
 published whether or not anyone meant it to be, so **a project directory under `~/dotfiles` is a
 published project.**
 
-`~/.claude/{CLAUDE.md,settings.json,agents,skills,commands}`, `~/lessons`, `~/PROJECT_PLAYBOOK.md`,
-`~/.zshrc` and `~/.gitconfig` are symlinks into it. Edit refuses to write through a symlink, so
-resolve with `readlink -f` and write the real path.
+`~/.claude/{CLAUDE.md,settings.json,agents,skills,commands}`, `~/.zshrc` and `~/.gitconfig` are
+symlinks into it. Edit refuses to write through a symlink, so resolve with `readlink -f` and write
+the real path.
 
 **Strip identifying detail before writing there** — SSID, MAC, internal subnet, hostname, serial,
 router model, address, client name. gitleaks catches only credential-shaped strings, so none of that
