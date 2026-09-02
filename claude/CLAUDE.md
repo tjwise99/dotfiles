@@ -40,10 +40,16 @@ more than the tokens.
   so `SSH="ssh -o …"; $SSH host cmd` runs the whole string as one command name (exit 127) — use a
   quoted array; and `$PIPESTATUS` is unset, spelled `$pipestatus`, indexed from **1**. Scripts are
   unaffected — a `#!/bin/bash` shebang and just's `[script('bash')]` pin bash.
-- **`grep` in the Bash tool is ugrep**, a shell function re-execing Claude Code's own binary. It is
-  not exported, so scripts, `just` and CI get GNU grep, and the two disagree on syntax. Nothing is
-  misconfigured. **When grep's behaviour is itself under test, call `/usr/bin/grep` or invoke the
-  script under test** — a case seeded as a Bash-tool pipeline measures a different engine.
+- **`grep` in the Bash tool works — it's ugrep, use it normally.** GNU grep is installed; plain
+  `grep` is just shadowed by a Claude Code shell function that re-execs its own binary as ugrep
+  (gitignore-aware, skips `.git`, ignores binaries) — a *good* default for searching a tree, not a
+  breakage. If a GNU-ism misbehaves, grep isn't missing; you hit ugrep's engine. The one case that
+  matters: the function isn't exported, so scripts, `just` and CI run **GNU grep**, and the two
+  disagree on syntax. **So when the thing under test is grep's own behaviour** (a gate, hook or script
+  that greps, and will run under GNU grep elsewhere), reach past the wrapper with **`command grep`** —
+  it bypasses the function and runs whatever grep is on PATH, GNU grep on every host (don't hardcode
+  `/usr/bin/grep`; it doesn't exist on NixOS). Testing such a gate as a Bash-tool pipeline measures
+  ugrep, not the engine that ships.
 - **A pipeline reports the LAST command's status.** `just verify | tail -50` reports `tail`'s exit
   code, so a failing gate reads green. Never append `; echo "exit=$?"` to a pipeline and believe it —
   redirect to a file and test `$?` **on the very next line**, before anything clobbers it.
