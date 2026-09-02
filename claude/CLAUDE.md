@@ -16,7 +16,7 @@ chrome. Treats AI tooling as a first-class repo reader: source files stay byte-i
 GFM/YAML, no frontmatter or generator dialects.
 
 ## Delegation
-**Standing authorization: spawn subagents without asking** (user instruction, 2026-08-13). Opus 5's
+**Standing authorization: spawn subagents without asking** (user instruction, 2026-08-13). The harness's default
 prompt bundle carries "do not call the AgentTool unless the user requested it" — this is that
 request, standing. Delegate research, sweeps and review whenever a fresh or parallel context is worth
 more than the tokens.
