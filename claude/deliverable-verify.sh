@@ -33,6 +33,6 @@ path=$(orchestrator_deliverable_path "$sid" "$aid")
 }
 
 last=$(printf '%s' "$input" | jq -r '.last_assistant_message // ""' 2>/dev/null | head -c 200)
-printf 'You cannot finish yet: %s does not exist or is empty.\nYou ended with: "%s"\nWrite your deliverable now (cat > %s <<'"'"'EOF'"'"' … EOF, or the Write tool). If you found nothing, write that and why.\n' \
+printf 'You cannot finish yet: %s does not exist or is empty.\nYou ended with: "%s"\nWrite your deliverable now (use the Write tool — allow-listed here — or cat > %s <<'"'"'EOF'"'"' … EOF). If you found nothing, write that and why.\n' \
     "$path" "$last" "$path" >&2
 exit 2

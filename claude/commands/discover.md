@@ -43,7 +43,7 @@ surfaces what a generic search walks past. When several fit, prefer the most spe
 Brief each with the task, its slice, and the output contract:
 
 - **Write findings to the deliverable file it is assigned.** A hook hands each subagent a path under
-  `/tmp/claude-1000/…` and will not let it finish until that file is non-empty; its chat reply stays
+  `~/.claude/deliverables/…` and will not let it finish until that file is non-empty; its chat reply stays
   ≤10 lines pointing at it. Brief it on *what* to capture — findings plus open questions. Fat chat
   returns re-pollute the context this delegation exists to protect.
 - **Read-only. Change nothing.**
@@ -57,7 +57,7 @@ and are not deliverable-enforced — see the README's orchestrator-mode section.
 
 ## 3. Synthesize
 
-Read the deliverable files (under `/tmp/claude-1000/…`, which the gate lets the orchestrator read)
+Read the deliverable files (under `~/.claude/deliverables/…`, which the gate lets the orchestrator read)
 and collect them into two artifacts:
 
 - **A surface map** — what this work actually touches, its blast radius, the patterns it must match.

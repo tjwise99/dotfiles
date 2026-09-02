@@ -7,7 +7,7 @@
 #
 # Layered: when the overlay does not fire, control returns to the sourcing guard so its own
 # check still runs, main thread and subagent alike. The overlay never fires in a subagent
-# (agent_id), and never on the orchestrator's own trees — the deliverables scratch tree, the memory
+# (agent_id), and never on the orchestrator's own trees — the durable deliverables tree, the memory
 # tree, or the harness plan store, all of which the orchestrator authors and cannot delegate (see
 # _orch_is_exempt_path).
 #
@@ -23,7 +23,9 @@
 # known list. It is a habit gate for an LLM orchestrator, not a security boundary.
 
 SCRATCH_PREFIX="/tmp/claude-1000/"
-ORCH_DELIVERABLES="/tmp/claude-1000/orchestrator-deliverables"
+# Deliverables are durable: ~/.claude (NOT symlinked into the published tree) is not wiped at
+# SessionEnd or reboot, so a synthesis the orchestrator has not finished stays recoverable.
+ORCH_DELIVERABLES="$HOME/.claude/deliverables"
 # The memory tree is orchestrator-native bookkeeping, not churn: its content is authored FROM the
 # orchestrating context (facts about this conversation) and cannot be delegated — a subagent has no
 # conversation to remember. Writing it out pulls nothing IN, so the gate's reason to deny does not
@@ -44,20 +46,22 @@ orchestrator_deliverable_path() { printf '%s/%s/%s.md' "$ORCH_DELIVERABLES" "$1"
 
 _orch_deny() {
     local tool="$1" reason
-    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate CODEBASE work to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read/write ${SCRATCH_PREFIX} and its own memory tree (~/.claude/projects/*/memory/) inline. Do NOT spawn a subagent whose only job is a write you were just denied — that launders the gate and pulls the content back through a fresh context for nothing. If this is your OWN plan or notes, write it under ${SCRATCH_PREFIX} or ~/.claude/plans/ yourself — both are exempt — or record the plan via ExitPlanMode and gh issue comment. To work inline, the human runs /orchestrate off."
+    reason="Orchestrator mode is ON: ${tool} on the main thread is gated to keep the orchestrating context lean. Delegate CODEBASE work to a subagent — recon reads/greps freely, edits run in an Agent — and have it write findings under ${SCRATCH_PREFIX} then return <=10 lines. The orchestrator may read agent deliverables under ${ORCH_DELIVERABLES}, read/write ${SCRATCH_PREFIX}, and read/write its own memory tree (~/.claude/projects/*/memory/) inline. Do NOT spawn a subagent whose only job is a write you were just denied — that launders the gate and pulls the content back through a fresh context for nothing. If this is your OWN plan or notes, write it under ${SCRATCH_PREFIX} or ~/.claude/plans/ yourself — both are exempt — or record the plan via ExitPlanMode and gh issue comment. To work inline, the human runs /orchestrate off."
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":%s}}\n' \
         "$(printf '%s' "$reason" | jq -R -s '.')"
     exit 0
 }
 
 _orch_is_scratch() { case "$1" in "$SCRATCH_PREFIX"*) return 0 ;; *) return 1 ;; esac; }
+_orch_is_deliverables() { case "$1" in "$ORCH_DELIVERABLES"/*) return 0 ;; *) return 1 ;; esac; }
 _orch_is_memory() { case "$1" in "$HOME/.claude/projects/"*/memory/*) return 0 ;; *) return 1 ;; esac; }
 # The harness plan store (~/.claude/plans/): plan-mode persists a plan file here, authored FROM the
 # conversation, so — like the memory tree — writing it pulls nothing IN and cannot be delegated (a
 # subagent has no conversation to plan). Exempt for read and write alike. Not published.
 _orch_is_plans() { case "$1" in "$HOME/.claude/plans/"*) return 0 ;; *) return 1 ;; esac; }
-# Paths the orchestrator may touch inline: the deliverables scratch tree, its memory tree, its plans.
-_orch_is_exempt_path() { _orch_is_scratch "$1" && return 0; _orch_is_memory "$1" && return 0; _orch_is_plans "$1"; }
+# Paths the orchestrator may touch inline: the scratch tree, the durable deliverables tree, its
+# memory tree, its plans.
+_orch_is_exempt_path() { _orch_is_scratch "$1" && return 0; _orch_is_deliverables "$1" && return 0; _orch_is_memory "$1" && return 0; _orch_is_plans "$1"; }
 
 # A token that is (almost certainly) a file operand: a path, an extension, or a well-known
 # extensionless project filename. Deliberately conservative — bare extensionless words that are
@@ -72,14 +76,14 @@ _orch_looks_like_file() {
     esac
 }
 
-# A single Bash segment is exempt only when it names a scratch path AND no file operand outside
-# scratch — so `cat <scratch>/x && git show HEAD` splits and the git segment is not exempted, and
-# `cat Makefile <scratch>/x` is not exempted either. (NB1, NS-new-1)
+# A single Bash segment is exempt only when it names a scratch or deliverable path AND no file
+# operand outside those — so `cat <scratch>/x && git show HEAD` splits and the git segment is not
+# exempted, and `cat Makefile <scratch>/x` is not exempted either. (NB1, NS-new-1)
 _orch_seg_scratch_only() {
     local tok saw=
     for tok in $1; do
         case "$tok" in
-            "$SCRATCH_PREFIX"*) saw=1 ;;
+            "$SCRATCH_PREFIX"*|"$ORCH_DELIVERABLES"*) saw=1 ;;
             -*|'<'*|'>'*) ;;
             *) _orch_looks_like_file "$tok" && return 1 ;;
         esac

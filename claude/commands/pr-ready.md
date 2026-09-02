@@ -100,13 +100,22 @@ fact somewhere.
 Once code and docs are final, review the **full diff** (`git diff origin/<base>...HEAD`).
 
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
-read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Delegate the
-review to a fresh-context reviewer** (e.g. `independent-reviewer`): give it the diff range and the
-spec, not your account of the work; have it write findings to its deliverable file; read those back
-to decide. This is not a downgrade — for the `/work-ticket` case (a plan you wrote, code a subagent
-wrote) an independent read was the right mode anyway, so orchestrator mode only makes mandatory what
-the table below already recommends. The table still governs *who* reviews; the mode forces it off
-this thread.
+read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
+a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn the
+reviewer (e.g. `independent-reviewer`) as a teammate too, and give it the diff range and the spec —
+not your account of the work. The reviewer takes its findings **straight to the implementer** by
+`SendMessage`; the two settle mechanical findings between themselves and you neither sit in that loop
+nor re-dispatch fixes. What reaches **you** is only what must: an escalation (below) or a short
+readiness digest. This is not a downgrade — for the `/work-ticket` case (a plan you wrote, code a
+subagent wrote) an independent read was the right mode anyway.
+
+**The peer loop is bounded to what the plan already settles.** Mechanical findings — a rename, a
+missing null check, a doc fix, a test that asserts nothing — the reviewer and implementer resolve
+directly. **Everything else escalates to you, and you take it to the human: any ambiguity, any design
+decision, any finding that questions a contract, a shared value, an abstraction, or the plan itself.**
+Neither teammate resolves such a finding between themselves and neither invents an answer — that is
+the exact defect the review exists to catch. Keep a running digest on the shared task list so the
+human can watch the exchange without being its switchboard.
 
 **First establish who wrote the code**, because it determines whether you are capable of reviewing
 it independently:
@@ -117,9 +126,9 @@ it independently:
 | **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Partial — you specified it but didn't write it | **Review inline**, but treat the plan itself as suspect too: you share its blind spots. Verify against the ticket's intent, not just the plan |
 | **You, in this session** | **None** — you would be reviewing your own work | **Spawn a fresh-context reviewer.** Give it the diff and the spec, *not* your account of what you did. An agent reviewing its own output reviews its own intent, which is precisely what needs independent checking |
 
-**Under orchestrator mode the "review inline" cells above do not apply** — the review and its fixes are
-delegated regardless (per the mode note at the top of this step). The table decides only *who* reviews,
-not *where*.
+**Under orchestrator mode the "review inline" cells above do not apply** — the review runs as a
+reviewer–implementer team regardless (per the mode note at the top of this step). The table decides
+only *who* reviews, not *where*.
 
 Whatever the mode: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
@@ -149,9 +158,11 @@ suite. Reserve local runs for a targeted check of a specific concern the diff ra
 
 ### Applying findings
 
-**Under orchestrator mode, apply every fix through a subagent** — `Edit`/`Write` are gated on this
-thread — and the second-pass rule below (a fix touching what the finding was about goes back to the
-reviewer) still holds.
+**Under orchestrator mode, fixes happen in the implementer teammate, not on this thread** —
+`Edit`/`Write` are gated here, and the reviewer already sends findings straight to the implementer, so
+you neither apply fixes nor relay them. The second-pass rule below (a fix touching what the finding
+was about goes back to the reviewer) holds — as a direct reviewer↔implementer exchange, not a
+round-trip through you.
 
 **In the first two modes, fix findings inline.** You hold the full review context, so patching a
 finding yourself is the cheap path; resuming an implementer subagent re-runs a fresh inference pass

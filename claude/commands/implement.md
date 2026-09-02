@@ -23,6 +23,11 @@ Follow the plan's shape decision:
   integrates its branch onto the single PR branch and resolves any conflict. One review surface per
   ticket; the integration is the orchestrator's job, never a teammate's.
 
+Either way, spawn implementers as **named teammates**, not one-shot subagents: a name makes each a team
+member that can `SendMessage` — the channel §3's escalation and the `/pr-ready` review both ride — and
+keeps it alive to answer a reviewer directly instead of routing findings back through you. Leave them
+running when implementation finishes; `/pr-ready` reaches them for the review pass.
+
 ## 2. Brief each implementer
 
 So it need not re-derive context:
@@ -40,10 +45,11 @@ So it need not re-derive context:
 
 The rule every implementer carries, and the reason this flow exists:
 
-**If you hit anything the plan does not settle — a fork, an ambiguity, a change needed outside your
-item's scope — STOP and `SendMessage` the orchestrator. Do not resolve it yourself; do not invent
-scope.** The orchestrator surfaces the decision to the human and relays the answer back. Unblocked
-items keep moving meanwhile.
+**If you hit anything the plan does not settle — a fork, an ambiguity, a design decision, a change
+needed outside your item's scope — STOP and `SendMessage` the orchestrator. Do not resolve it
+yourself; do not invent an answer or scope.** A choice made because *the code already does it* or *I
+would build it this way* is exactly the invented decision this flow exists to prevent. The orchestrator
+surfaces the decision to the human and relays the answer back. Unblocked items keep moving meanwhile.
 
 ## 4. Run it
 

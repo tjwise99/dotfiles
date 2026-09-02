@@ -72,7 +72,7 @@
       "Bash(/usr/bin/sed:*)",
       "Bash(docs/requirements/.venv/bin/python:*)",
       "Bash(docs/requirements/.venv/bin/doorstop:*)",
-      "Write(//tmp/claude-1000/**)"
+      "Edit(//home/wise/.claude/deliverables/**)"
     ],
     "defaultMode": "auto"
   },

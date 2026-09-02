@@ -22,14 +22,26 @@ request, standing. Delegate research, sweeps and review whenever a fresh or para
 more than the tokens.
 - **`independent-reviewer` for any diff this session wrote.** Independence is a property of context,
   not of instruction — an agent cannot review its own work by being told to be critical.
-- **A subagent's deliverable is a file it wrote, never its prose.** Name the path, then `ls` it before
-  treating completion as real: an idle notification is contentless, so *answered in prose* and *was
-  denied permission* look identical from here. `Write` is in no allow-list under `defaultMode: auto`,
-  so have it serialise with `cat > <path> <<'EOF'`, which matches `Bash(cat:*)`. Verify a ruling
-  landed by `grep`ping the file, never by reading the agent's status list.
-- **Cross-examine a panel, never just collect it.** Send each reviewer the others' blocking findings
-  and require concur-or-dissent with a reason. Surviving peer attack is worth far more than being
-  gathered. Tell an agent it may refuse your number, and treat refusal as signal about the number.
+- **A delegate escalates every ambiguity and design decision; it never invents an answer.** This is
+  the contract the orchestrated flow rests on — the reason a plan gets an independent completeness
+  read before it reaches the human. A choice settled only by *the code already does it* or *I would
+  build it this way* is an invented decision: surface it, do not make it.
+- **A subagent's deliverable is a file it wrote, never its prose.** Not because prose is invisible —
+  since Claude Code 2.1.251 an idle notification carries the agent's content — but because a file is
+  *durable* (it survives this context's compaction) and *checkable* (an artifact, not a claim). The
+  scratch and deliverable trees are write-allowed (their `Edit()` allow-rule covers the Write tool),
+  so the agent writes with the Write tool. `ls` the path and `grep` the file to confirm a ruling
+  landed — never the agent's status list, which can report a write that never happened.
+- **Name an agent only when you want a teammate.** With agent-teams on, a *named* subagent becomes a
+  teammate (peer `SendMessage` mesh, a full instance); an *unnamed* one is an isolated subagent that
+  returns its result (cheaper, reliable). Name the implementer and the reviewers of a live team so
+  they talk to each other and escalate; leave one-shot recon unnamed so its findings return the
+  reliable way. Mesh delivery needs Claude Code >=2.1.251.
+- **Cross-examine a panel, never just collect it.** As teammates, reviewers exchange their blocking
+  findings *directly* and each concurs-or-dissents with a reason — surviving peer attack is worth far
+  more than being gathered, and routing every finding back through you is the cost the mesh removes.
+  Tell an agent it may refuse your number, and treat refusal as signal about the number. Any decision
+  the panel cannot settle from the spec is escalated to the human, never invented.
 - **`@`-mentioning an agent definition file means adopt that persona inline** — never a spawn.
 
 ## Shell environment

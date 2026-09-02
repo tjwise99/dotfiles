@@ -71,17 +71,19 @@ dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, 
   published (`~/.claude` markers are not symlinked into the tree).
 - **Subagents are never gated** — the gate exits early on `agent_id`, which is present only inside a
   subagent — so the very agents doing the delegated work are unaffected. Nor are the orchestrator's
-  own trees: the deliverables scratch tree (`/tmp/claude-1000/…`), so it can read back what agents
-  write there; its memory tree (`~/.claude/projects/*/memory/`), read and write; and the harness plan
+  own trees: the durable deliverables tree (`~/.claude/deliverables/…`), so it can read back what
+  agents write there and recover an unfinished synthesis after the session; its memory tree
+  (`~/.claude/projects/*/memory/`), read and write; and the harness plan
   store (`~/.claude/plans/`), read and write. Memory and plans are orchestrator-native bookkeeping,
   not churn — their content is authored from the conversation and cannot be delegated (a subagent has
   no conversation to remember or plan), so gating the write would only push the model to launder it
   through a throwaway subagent. None of the three is published (`~/.claude` is not symlinked into the
   tree).
 - **Deliverable enforcement.** In orchestrator mode, `deliverable-assign.sh` (SubagentStart) hands
-  each subagent a deliverable path — a pure function of `session_id` + `agent_id`, under the scratch
-  tree — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file is
-  non-empty. This makes CLAUDE.md's "a subagent's deliverable is a file it wrote, never its prose"
+  each subagent a deliverable path — a pure function of `session_id` + `agent_id`, under the durable
+  `~/.claude/deliverables` tree (not `/tmp`, and not deleted at SessionEnd, so an unfinished synthesis
+  survives) — and `deliverable-verify.sh` (SubagentStop) refuses the subagent's stop until that file
+  is non-empty. This makes CLAUDE.md's "a subagent's deliverable is a file it wrote, never its prose"
   structural. Bounded: one enforced retry (`stop_hook_active`) then the harness cap.
 - **Enforcement covers in-process subagents, not teammates.** The `/discover`/`/plan`/`/implement`
   flow uses one-shot Task/Agent subagents — they share the session id, carry `agent_id`, and stop
@@ -91,7 +93,11 @@ dump file/diff/tree content — `git show`/`diff`/`log -p`, `rg`, file readers, 
   so they get nudged rather than cleanly enforced. Teammates coordinate by `SendMessage`, not the
   deliverable file. `teammateMode: auto` resolves to in-process only when the shell is not inside
   tmux/iTerm2 — pin `"teammateMode": "in-process"` for coverage that does not depend on the launching
-  terminal (cost: no side-by-side teammate panes).
+  terminal (cost: no side-by-side teammate panes). The `/implement` and `/pr-ready` flows lean on
+  this: implementers and the reviewer run as teammates that `SendMessage` each other and escalate any
+  ambiguity or design decision to the human, so review findings are settled between peers rather than
+  relayed through the orchestrator's context. One-shot recon (`/discover`) stays unnamed subagents —
+  deliverable-enforced, findings returned the reliable way.
 - **Off by default.** With no marker the gate is inert — a normal session is byte-for-byte unaffected.
   `/orchestrate on|off` toggles it; `/work-ticket`, `/discover`, `/plan`, `/implement` turn it on.
 

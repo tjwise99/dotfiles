@@ -41,7 +41,7 @@ turn_on() {
     echo $(( n + ttl_hours * 3600 )) > "$marker"
 }
 
-on_msg="Main-thread Read/Edit/Write/NotebookEdit, the Grep/Glob tools, and content-dumping Bash (git show/diff, rg, file readers, gh pr diff) are denied with a reminder — no human prompt. Delegate recon and edits to subagents; each is handed a deliverable file to write and returns <=10 lines. This session's deliverables are under /tmp/claude-1000/orchestrator-deliverables/${sid}/ — read/grep them there to synthesize. /orchestrate off to suspend."
+on_msg="Main-thread Read/Edit/Write/NotebookEdit, the Grep/Glob tools, and content-dumping Bash (git show/diff, rg, file readers, gh pr diff) are denied with a reminder — no human prompt. Delegate recon and edits to subagents; each one-shot subagent is handed a deliverable file to write and returns <=10 lines. This session's deliverables are under ~/.claude/deliverables/${sid}/ — read/grep them there to synthesize. Implement and review run as agent-team teammates that coordinate by SendMessage and escalate any ambiguity or design decision to you — they do not route every finding through this thread. /orchestrate off to suspend."
 
 case "$name" in
     orchestrate)
