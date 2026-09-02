@@ -50,8 +50,9 @@ costs repaint on a Pi-class browser running for weeks.
 - **Spacing on one grid.** A single spacing unit and the steps built from it, so the implementer is
   never guessing a gap.
 - **Component states.** For every interactive or data-bound element, specify default, hover/focus
-  where a pointer exists, active, disabled, loading, empty, and error — the same states
-  `frontend-developer` is required to render.
+  where a pointer exists, active, disabled, loading, empty, stale, and failed — the data and
+  interaction states an implementer must never leave blank. Stale earns its place: a timer-refreshed
+  display that stopped updating looks healthy until staleness is shown.
 - **Motion, sparingly.** Duration, easing, and what each transition communicates; note the cheap
   option where an expensive one buys nothing.
 

@@ -16,10 +16,10 @@ chrome. Treats AI tooling as a first-class repo reader: source files stay byte-i
 GFM/YAML, no frontmatter or generator dialects.
 
 ## Delegation
-**Standing authorization: spawn subagents without asking** (user instruction, 2026-08-13). The harness's default
-prompt bundle carries "do not call the AgentTool unless the user requested it" — this is that
-request, standing. Delegate research, sweeps and review whenever a fresh or parallel context is worth
-more than the tokens.
+**Standing authorization: spawn subagents without asking** (user instruction, 2026-08-13). The
+harness's default prompt bundle carries "do not call the AgentTool unless the user requested it" —
+this is that request, standing. Delegate research, sweeps and review whenever a fresh or parallel
+context is worth more than the tokens.
 - **`independent-reviewer` for any diff this session wrote.** Independence is a property of context,
   not of instruction — an agent cannot review its own work by being told to be critical.
 - **A delegate escalates every ambiguity and design decision; it never invents an answer.** This is
