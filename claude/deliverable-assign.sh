@@ -17,7 +17,7 @@ orchestrator_active "$sid" || exit 0
 
 path=$(orchestrator_deliverable_path "$sid" "$aid")
 mkdir -p "$(dirname "$path")" 2>/dev/null || exit 0
-msg="Your deliverable file is ${path}. Write your findings there — it must exist and be non-empty before you finish; you cannot stop until it does. Keep your chat reply to <=10 lines pointing at that file. Finding nothing is a valid result: write the file saying so, and why."
+msg="Your deliverable file is ${path}. Write your findings there — it must exist and be non-empty before you finish; you cannot stop until it does. Your chat reply is <=10 lines and must STATE the conclusion the orchestrator needs to act on — the verdict, the decisions, the answer — not merely point at the file; the file holds the evidence behind it, so the orchestrator rarely needs to open it. Finding nothing is a valid result: write the file saying so, and why."
 printf '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":%s}}\n' \
     "$(printf '%s' "$msg" | jq -R -s '.')"
 exit 0

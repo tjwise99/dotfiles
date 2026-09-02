@@ -57,8 +57,12 @@ and are not deliverable-enforced — see the README's orchestrator-mode section.
 
 ## 3. Synthesize
 
-Read the deliverable files (under `~/.claude/deliverables/…`, which the gate lets the orchestrator read)
-and collect them into two artifacts:
+Work from what the agents returned — each ≤10-line reply states its verdict and decisions. `grep` or
+`head` a deliverable under `~/.claude/deliverables/…` only to pull a specific detail a reply did not
+carry; **never full-`Read` a deliverable** — that re-ingests every agent's payload into the
+orchestrator and is the largest single source of context accretion. If synthesis genuinely needs
+several deliverables' full content at once, delegate that synthesis too. Collect the result into two
+artifacts:
 
 - **A surface map** — what this work actually touches, its blast radius, the patterns it must match.
 - **An open-decisions list** — every ambiguity, missing spec, scope boundary, or fork discovery
