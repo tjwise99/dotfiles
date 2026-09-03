@@ -45,9 +45,29 @@ holes, so approval of a plan the author only *feels* is complete is where invent
   for mechanical implementation.
 - **Who opens the PR.** Decide explicitly — `/pr-ready` needs one to exist. Either the implementer
   opens it (brief it to) or this thread does after implementation.
-- **How review will run.** `/pr-ready` owns this and holds the single copy of the review-mode table.
-  Tell it implementation ran in a subagent from a plan this session wrote, and let it decide the mode;
-  do not restate the table here.
+- **How review will run — settle it now, as an approved part of the plan.** The plan must scope far
+  enough into `/pr-ready` to state three things, so the review loop is decided here and not improvised
+  when the diff lands:
+  - **The feedback path — who reviews, and how findings reach the implementer.** This is the one that
+    keeps getting skipped: name the **reviewer**, name the **implementer teammate(s) that stay alive to
+    receive its findings**, and state the **channel** — the reviewer takes findings *straight to the
+    implementer* by `SendMessage`; the two settle mechanical findings between themselves; anything that
+    touches a contract, a shared value, an abstraction, or the plan itself escalates to the human. A
+    plan that does not name this leaves the implementer with no defined way to get its review feedback,
+    which is the exact failure this step exists to prevent.
+  - **The review mode**, arrived at **by reference to `/pr-ready` §6's review-mode table — cite it, do
+    not restate it here**; that table stays the single definition of the mode logic, and the plan only
+    records which row applies. For the `/work-ticket` flow the row is already fixed: code is written by
+    a subagent from a plan this thread wrote, and orchestrator mode runs the review as a
+    reviewer–implementer team regardless — so the reviewer is a fresh-context independent read (e.g.
+    `independent-reviewer`) as a teammate, feeding the implementer teammate(s) `/implement` leaves
+    running.
+  - **The ticket-specific criteria** the review must verify — the checks particular to *this* change (a
+    contract it must not break, an observable it must preserve, an edge case discovery surfaced), on top
+    of `/pr-ready`'s generic checklist.
+
+  These review params are approved with the plan in §5; `/pr-ready` consumes them rather than
+  re-deciding the mode or re-deriving the loop.
 
 ## 4. Review the plan for completeness
 
@@ -75,6 +95,12 @@ step a clean yes on a complete plan rather than a prompt to adjudicate what the 
 
 ## 5. Approve, then record
 
+- **Do not propose the plan while any question is open.** The `ExitPlanMode` call *is* the proposal —
+  it must not fire until every open decision from discovery (§1) and every hole the completeness read
+  turned up (§4) has been answered by the human, review params (§3) included. Plan-mode entry fires no
+  hook, so this cannot be gated mechanically; it holds as an instruction, and an unanswered decision
+  blocks the proposal, no exceptions. Presenting a plan with an "open question" or "TBD" still in it is
+  the failure this step exists to prevent.
 - **Exit plan mode for approval before any code is written.** Approval of the plan is not approval of
   a decision buried inside it — call out any decision the plan assumes so it is approved on its own.
 - For a ticket, post the approved approach and resolved decisions back with `gh issue comment` so the
@@ -85,4 +111,5 @@ step a clean yes on a complete plan rather than a prompt to adjudicate what the 
   and delegating that write to a subagent only launders the gate. If you need a scratchpad, the scratch
   tree (`/tmp/claude-1000/…`) is writable inline.
 
-The deliverable is an approved, decomposed plan — the brief the implementation step consumes.
+The deliverable is an approved, decomposed plan — with its review params settled (§3) — the brief the
+implementation and review steps both consume.

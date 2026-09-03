@@ -31,8 +31,13 @@ brief, so there is no straight-to-implementation escape hatch.
 
 Run **`/plan $ARGUMENTS`** — it plans from the discovery brief, decomposes the work into items,
 decides the implementation shape (one implementer vs a team of implementers in isolated worktrees) and
-PR ownership, and gates on plan-mode approval before any code. Do not plan inline; `/plan` owns it,
-carrying the base branch confirmed in step 1. `/plan` records the approved approach back to the ticket.
+PR ownership, and **settles the review parameters as part of the plan** — the reviewer, the implementer
+teammate(s) that stay alive to receive its findings, the feedback channel between them, the mode, and
+the ticket-specific criteria — so how an implementer gets its review feedback is decided here, not
+improvised at `/pr-ready`. It gates on plan-mode approval before any code. **The plan is not proposed
+for approval while any decision — from discovery or from the plan's own completeness read — is still
+open.** Do not plan inline; `/plan` owns it, carrying the base branch confirmed in step 1. `/plan`
+records the approved approach back to the ticket.
 
 ## 3. Implement
 
@@ -46,9 +51,11 @@ per work-item, and open the PR early so CI runs. The implementer does not run `/
 The PR is open with CI running. Run **`/pr-ready`**, which owns the rest: verification, the code
 review, the documentation sweep, memory housekeeping, and PR hygiene.
 
-**Tell it who wrote the code** — implementation ran in a subagent from a plan this thread wrote. That
-is the only input it needs from you: `/pr-ready` owns the review-mode decision and holds the single
-copy of that table. Do not re-derive the answer here.
+**Point it at the plan's review params** — the reviewer, the live implementer teammate(s), the feedback
+channel, the mode, and the ticket-specific criteria were all settled in step 2. `/pr-ready` **consumes
+them, it does not re-decide the mode or re-derive the feedback loop**; the review-mode table it holds is
+the menu the plan already selected from. Do not re-derive the answer here — that is how the review loop
+the plan pinned down gets replaced with an improvised one.
 
 Relay its verdict.
 

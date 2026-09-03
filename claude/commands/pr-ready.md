@@ -99,36 +99,48 @@ fact somewhere.
 
 Once code and docs are final, review the **full diff** (`git diff origin/<base>...HEAD`).
 
+**Review runs as two separate reviewer agents, in every mode — never one combined pass, never a review
+you hold only in your own head.** Comment and documentation discipline is the first thing a
+correctness-focused read skims past, so it gets its own reviewer with its own mandate:
+
+- A **content reviewer** — correctness, scope, contracts, abstractions, dependencies, tests (the
+  *Content* checklist below).
+- A **comment & documentation-discipline reviewer** — comment and citation hygiene in the code *and*
+  the state of the §4 documentation sweep (the *Documentation discipline* checklist below).
+
+Both read the same diff on disjoint mandates and report independently. Spawning two agents even when you
+could read the diff yourself is deliberate: the second lens is the one that otherwise vanishes.
+
+**If the plan supplied review params** (the `/work-ticket` flow settles them in `/plan` §3) **use them,
+do not re-derive them — before you choose or spawn anything.** The plan already names the two reviewers,
+the implementer teammate(s) that stay alive to receive findings, the feedback channel, the mode, and the
+ticket-specific criteria; apply that and fold its criteria into the checklists. Deriving your own
+reviewer or loop here is exactly how the plan's pinned-down review loop gets silently replaced.
+
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
-a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn the
-reviewer (e.g. `independent-reviewer`) as a teammate too, and give it the diff range and the spec —
-not your account of the work. The reviewer takes its findings **straight to the implementer** by
-`SendMessage`; the two settle mechanical findings between themselves and you neither sit in that loop
-nor re-dispatch fixes. What reaches **you** is only what must: an escalation (below) or a short
-readiness digest. This is not a downgrade — for the `/work-ticket` case (a plan you wrote, code a
-subagent wrote) an independent read was the right mode anyway.
+a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **both
+reviewers** as teammates too, and give each the diff range, the spec, and its mandate — not your account
+of the work. Each reviewer takes its findings **straight to the implementer** by `SendMessage`; they
+settle mechanical findings between themselves and you neither sit in that loop nor re-dispatch fixes.
+What reaches **you** is only what must: an escalation (below) or a short readiness digest.
 
 **The peer loop is bounded to what the plan already settles.** Mechanical findings — a rename, a
-missing null check, a doc fix, a test that asserts nothing — the reviewer and implementer resolve
-directly. **Everything else escalates to you, and you take it to the human: any ambiguity, any design
-decision, any finding that questions a contract, a shared value, an abstraction, or the plan itself.**
-Neither teammate resolves such a finding between themselves and neither invents an answer — that is
-the exact defect the review exists to catch. Keep a running digest on the shared task list so the
-human can watch the exchange without being its switchboard.
+missing null check, a doc fix, a comment that states a reason instead of a mechanism, a test that
+asserts nothing — the reviewer and implementer resolve directly. **Everything else escalates to you,
+and you take it to the human: any ambiguity, any design decision, any finding that questions a contract,
+a shared value, an abstraction, or the plan itself.** Neither teammate resolves such a finding between
+themselves and neither invents an answer — that is the exact defect the review exists to catch. Keep a
+running digest on the shared task list so the human can watch the exchange without being its switchboard.
 
-**First establish who wrote the code**, because it determines whether you are capable of reviewing
-it independently:
+**Brief each reviewer by who wrote the code** — it does not change *whether* they are spawned (always
+two, always fresh context) but *what they are told to distrust*:
 
-| Who wrote it | Your independence | Review mode |
-|---|---|---|
-| **The human**, or an agent in a session you had no part in | Full — no authorship stake | **Review inline, here.** No subagent needed; spinning one up adds cost and no independence you lack |
-| **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Partial — you specified it but didn't write it | **Review inline**, but treat the plan itself as suspect too: you share its blind spots. Verify against the ticket's intent, not just the plan |
-| **You, in this session** | **None** — you would be reviewing your own work | **Spawn a fresh-context reviewer.** Give it the diff and the spec, *not* your account of what you did. An agent reviewing its own output reviews its own intent, which is precisely what needs independent checking |
-
-**Under orchestrator mode the "review inline" cells above do not apply** — the review runs as a
-reviewer–implementer team regardless (per the mode note at the top of this step). The table decides
-only *who* reviews, not *where*.
+| Who wrote it | What the reviewers are briefed to distrust |
+|---|---|
+| **The human**, or an agent in a session you had no part in | Verify against the ticket's stated intent; no plan to treat as suspect |
+| **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Treat the **plan itself as suspect too** — it shares your blind spots; verify against the ticket's intent, not just the plan |
+| **You, in this session** | The reviewers are your only independent read — give them the diff and the spec, *not* your account of what you did |
 
 Whatever the mode: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
