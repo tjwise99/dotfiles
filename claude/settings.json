@@ -198,5 +198,6 @@
   "teammateMode": "in-process",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "feedbackDrafts": "off"
 }
