@@ -36,7 +36,10 @@ context is worth more than the tokens.
   teammate (peer `SendMessage` mesh, a full instance); an *unnamed* one is an isolated subagent that
   returns its result (cheaper, reliable). Name the implementer and the reviewers of a live team so
   they talk to each other and escalate; leave one-shot recon unnamed so its findings return the
-  reliable way. Mesh delivery needs Claude Code >=2.1.251.
+  reliable way. The implement→review loop is always a live team, not recon — name the implementer
+  and its reviewer(s) even when there is exactly one of each, so review findings mesh straight to
+  the implementer instead of routing through you; only genuinely one-shot work (a discovery sweep, a
+  single-fact lookup) stays unnamed. Mesh delivery needs Claude Code >=2.1.251.
 - **Cross-examine a panel, never just collect it.** As teammates, reviewers exchange their blocking
   findings *directly* and each concurs-or-dissents with a reason — surviving peer attack is worth far
   more than being gathered, and routing every finding back through you is the cost the mesh removes.
