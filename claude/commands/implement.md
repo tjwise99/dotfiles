@@ -40,10 +40,10 @@ So it need not re-derive context:
 - The **escalation rule** (§3) and the return contract: **report what changed and the commit/PR refs
   in ≤10 lines; write anything longer to a file.** Fat reports re-pollute the context this delegation
   protects.
-- The **review feedback loop the plan named**: it stays alive after implementing, receives the
-  reviewer's findings **directly by `SendMessage`**, resolves mechanical ones with the reviewer, and
-  escalates anything touching a contract, shared value, abstraction, or the plan (§3) rather than
-  patching it. Consumed in the `/pr-ready` review pass.
+- The **review feedback loop the plan named**: it stays alive after implementing, receives the two
+  reviewers' findings **directly by `SendMessage`**, resolves mechanical ones with the reviewer that
+  raised them, and escalates anything touching a contract, shared value, abstraction, or the plan (§3)
+  rather than patching it. Consumed in the `/pr-ready` review pass.
 
 ## 3. Escalate, never invent
 

@@ -9,8 +9,8 @@ make the doc edits — don't just report on it. Report a short pass/fail summary
 end, and stop to flag anything needing a human decision.
 
 This command is **source-agnostic**: it runs the same way whether the human wrote the code, an agent
-wrote it in another context, or you wrote it yourself in this session. The one thing that changes is
-the review mode in step 6 — see the table there.
+wrote it in another context, or you wrote it yourself in this session. The review in step 6 always runs
+as two dedicated reviewers; what changes with authorship is only how they are briefed — see step 6.
 
 **Discover the repo's conventions; don't assume them.** Before starting, skim `CONTRIBUTING.md`,
 `CLAUDE.md`, and any docs index (`docs/README.md`) for: the gate commands, the merge strategy, the
@@ -145,52 +145,62 @@ two, always fresh context) but *what they are told to distrust*:
 Whatever the mode: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
 
-Check for:
+**Content reviewer — check for:**
 
 - **Correctness** against the stated intent.
 - **Scope discipline** — nothing beyond the ticket; no drive-by refactors.
-- **Idiom match** — naming, comment density, and structure consistent with surrounding code.
+- **Idiom match** — naming and structure consistent with surrounding code.
 - **Shared-contract consistency** — any value that must agree across a boundary is defined once or
   tested for agreement, never kept in sync by a comment.
 - **Abstraction with no second consumer** — new extension points, registries, or indirection built
   for a case that does not exist yet.
+- **A new dependency does work the standard library cannot reasonably do.** Ask it once per added
+  dependency, at the moment it is cheapest to answer; nothing downstream will.
+- **Orphaned references** — deletions leave nothing dangling. Grep for the removed names.
+- **Tests that assert something.** A new test that cannot fail is a false signal.
+
+**Comment & documentation-discipline reviewer — check for:**
+
+- **Comment density** — consistent with surrounding code; minimal inline comments, no narrative blocks.
 - **Comments state mechanism, not reason.** What the code does or how it does it stays; a statement
   of why, of history, or of evaluative judgment belongs in whichever doc the repo's map assigns it,
   with the comment citing that home instead.
 - **A citation cites rather than restates.** Strip the identifier from the sentence — if any
   assertion still stands without it, the comment restated the source rather than pointing at it, and
   the repo now holds the same fact twice.
-- **A new dependency does work the standard library cannot reasonably do.** Ask it once per added
-  dependency, at the moment it is cheapest to answer; nothing downstream will.
-- **Orphaned references** — deletions leave nothing dangling. Grep for the removed names.
-- **Tests that assert something.** A new test that cannot fail is a false signal.
+- **The §4 documentation sweep landed** — every doc the change affects updated, each fact in the one
+  home the repo's doc map assigns it, no restatement across docs.
+- **No point-in-time numbers** — coverage percentages, test counts, file counts; document the
+  mechanism a reader re-derives the current number from, not a figure that rots.
+- **No temporal phrasing** — "now", "currently", "no longer", "previously", "recently"; state the
+  timeless fact.
+- **A decision with a genuinely rejected alternative has a decision record**, not a prose paragraph
+  buried in a history file.
 
 Lean on CI for the gate exactly as in step 3 — cite `gh pr checks <n>` rather than re-running the
 suite. Reserve local runs for a targeted check of a specific concern the diff raises.
 
 ### Applying findings
 
+Both reviewers' findings converge on the same diff; apply them the same way.
+
 **Under orchestrator mode, fixes happen in the implementer teammate, not on this thread** —
-`Edit`/`Write` are gated here, and the reviewer already sends findings straight to the implementer, so
-you neither apply fixes nor relay them. The second-pass rule below (a fix touching what the finding
-was about goes back to the reviewer) holds — as a direct reviewer↔implementer exchange, not a
-round-trip through you.
+`Edit`/`Write` are gated here, and each reviewer sends its findings straight to the implementer, so you
+neither apply fixes nor relay them. The second-pass rule below holds as a direct reviewer↔implementer
+exchange, not a round-trip through you.
 
-**In the first two modes, fix findings inline.** You hold the full review context, so patching a
-finding yourself is the cheap path; resuming an implementer subagent re-runs a fresh inference pass
-over its entire transcript. Bounce back only for a **large, cohesive chunk of new implementation** a
-finding exposes — not a normal review nit.
+**Running standalone (no orchestrator mode):**
 
-**In the third mode — you wrote the code and delegated review — applying the fixes yourself puts
-unreviewed changes back into your own work, downstream of the only independent read.** CI passing is
-not a substitute; CI never reviewed anything. So:
-
-- **Mechanical fixes** (a rename, a missing null check, a doc correction) — apply them and say you
-  did.
-- **A fix touching what the finding was about** — a boundary contract, a shared value, an
-  abstraction the reviewer questioned, error handling it flagged — **goes back to the reviewer for a
-  second pass** on that fix. This is the class of defect the review existed to catch; re-introducing
-  it while patching is the specific risk. Size is not the test here; subject matter is.
+- **Mechanical fixes** — a rename, a missing null check, a doc correction, a comment reworded to state
+  mechanism — apply them and say you did.
+- **A fix touching what a finding was about** — a boundary contract, a shared value, an abstraction the
+  content reviewer questioned, a doc-map placement or decision record the discipline reviewer flagged —
+  **goes back to the reviewer that raised it for a second pass** on that fix. This is the class of
+  defect the review existed to catch; re-introducing it while patching is the specific risk. Size is
+  not the test here; subject matter is.
+- **If you wrote the code yourself**, do not apply subject-matter fixes without that second pass —
+  patching them yourself puts unreviewed changes back downstream of your only independent read. CI
+  passing is not a substitute; CI never reviewed anything.
 
 Commit fixes as their own review-fix commit(s), push, and re-confirm the affected CI job.
 
