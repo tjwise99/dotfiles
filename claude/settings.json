@@ -192,7 +192,6 @@
     "command": "env PATH=\"$HOME/.local/bin:$HOME/.asdf/shims:$PATH\" ccstatusline"
   },
   "awaySummaryEnabled": false,
-  "enableArtifact": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
