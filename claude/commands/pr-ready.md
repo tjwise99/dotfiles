@@ -113,9 +113,9 @@ could read the diff yourself is deliberate: the second lens is the one that othe
 
 **If the plan supplied review params** (the `/work-ticket` flow settles them in `/plan` §3) **use them,
 do not re-derive them — before you choose or spawn anything.** The plan already names the two reviewers,
-the implementer teammate(s) that stay alive to receive findings, the feedback channel, the mode, and the
-ticket-specific criteria; apply that and fold its criteria into the checklists. Deriving your own
-reviewer or loop here is exactly how the plan's pinned-down review loop gets silently replaced.
+the implementer teammate(s) that stay alive to receive findings, the feedback channel, the briefing row,
+and the ticket-specific criteria; apply that and fold its criteria into the checklists. Deriving your
+own reviewer or loop here is exactly how the plan's pinned-down review loop gets silently replaced.
 
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
@@ -142,7 +142,7 @@ two, always fresh context) but *what they are told to distrust*:
 | **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Treat the **plan itself as suspect too** — it shares your blind spots; verify against the ticket's intent, not just the plan |
 | **You, in this session** | The reviewers are your only independent read — give them the diff and the spec, *not* your account of what you did |
 
-Whatever the mode: **verify prior claims, don't trust them.** An implementer's self-report is a
+In every case: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
 
 **Content reviewer — check for:**

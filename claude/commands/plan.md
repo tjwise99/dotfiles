@@ -19,7 +19,8 @@ holes, so approval of a plan the author only *feels* is complete is where invent
 - **The premise must be confirmed sound first.** Discovery verifies the ticket's problem is real
   against today's tree (`/discover` §1). If the brief does not carry that confirmation — the premise was
   never checked, or came back shaky — send it back for verification rather than planning against an
-  assumption; a plan is the most expensive place to discover the ticket was never needed.
+  assumption; a plan is the most expensive place to discover the ticket was never needed. If the brief
+  reports the premise *failed*, do not re-verify or plan: that is a close-or-rescope call for the human.
 - Build only on the surface map and the **answered** decisions. A decision still open is a blocker —
   surface it and stop; do not plan past it.
 - If planning reveals a fork discovery missed, treat it the same way: raise it to the human, never pick.
@@ -60,19 +61,19 @@ holes, so approval of a plan the author only *feels* is complete is where invent
     findings between themselves; anything that touches a contract, a shared value, an abstraction, or the
     plan itself escalates to the human. A plan that does not name this leaves the implementer with no
     defined way to get its review feedback, which is the exact failure this step exists to prevent.
-  - **The review mode**, arrived at **by reference to `/pr-ready` §6's briefing table — cite it, do
-    not restate it here**; that table stays the single definition of the briefing logic, and the plan
-    only records which row applies. For the `/work-ticket` flow the row is already fixed: code is
-    written by a subagent from a plan this thread wrote, and orchestrator mode runs the review as a
-    reviewer–implementer team regardless — so the two reviewers are fresh-context teammates (e.g.
-    `independent-reviewer` for content, a second for documentation discipline), briefed to treat the
-    plan itself as suspect, feeding the implementer teammate(s) `/implement` leaves running.
+  - **The briefing row** — which row of `/pr-ready` §6's briefing table applies, **cited, not restated
+    here**; that table stays the single definition of the briefing logic, and the plan only records the
+    row. For the `/work-ticket` flow the row is already fixed: code is written by a subagent from a plan
+    this thread wrote, and orchestrator mode runs the review as a reviewer–implementer team regardless —
+    so the two reviewers are fresh-context teammates (e.g. two `independent-reviewer` teammates, one
+    briefed for content and one for documentation discipline), told to treat the plan itself as suspect,
+    feeding the implementer teammate(s) `/implement` leaves running.
   - **The ticket-specific criteria** the review must verify — the checks particular to *this* change (a
     contract it must not break, an observable it must preserve, an edge case discovery surfaced), on top
     of `/pr-ready`'s generic checklist.
 
   These review params are approved with the plan in §5; `/pr-ready` consumes them rather than
-  re-deciding the mode or re-deriving the loop.
+  re-deciding the briefing row or re-deriving the loop.
 
 ## 4. Review the plan for completeness
 

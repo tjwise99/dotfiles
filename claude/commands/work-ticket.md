@@ -37,11 +37,12 @@ Run **`/plan $ARGUMENTS`** — it plans from the discovery brief, decomposes the
 decides the implementation shape (one implementer vs a team of implementers in isolated worktrees) and
 PR ownership, and **settles the review parameters as part of the plan** — the two reviewers (content
 and comment/documentation-discipline), the implementer teammate(s) that stay alive to receive their
-findings, the feedback channel between them, the mode, and the ticket-specific criteria — so how an
-implementer gets its review feedback is decided here, not improvised at `/pr-ready`. It gates on plan-mode approval before any code. **The plan is not proposed
-for approval while any decision — from discovery or from the plan's own completeness read — is still
-open.** Do not plan inline; `/plan` owns it, carrying the base branch confirmed in step 1. `/plan`
-records the approved approach back to the ticket.
+findings, the feedback channel between them, the briefing row, and the ticket-specific criteria — so
+how an implementer gets its review feedback is decided here, not improvised at `/pr-ready`. It gates on
+plan-mode approval before any code. **The plan is not proposed for approval while any decision — from
+discovery or from the plan's own completeness read — is still open.** Do not plan inline; `/plan` owns
+it, carrying the base branch confirmed in step 1. `/plan` records the approved approach back to the
+ticket.
 
 ## 3. Implement
 
@@ -56,10 +57,10 @@ The PR is open with CI running. Run **`/pr-ready`**, which owns the rest: verifi
 review, the documentation sweep, memory housekeeping, and PR hygiene.
 
 **Point it at the plan's review params** — the two reviewers, the live implementer teammate(s), the
-feedback channel, the mode, and the ticket-specific criteria were all settled in step 2. `/pr-ready`
-**consumes them, it does not re-decide the mode or re-derive the feedback loop**; the briefing table it
-holds is the menu the plan already selected from. Do not re-derive the answer here — that is how the review loop
-the plan pinned down gets replaced with an improvised one.
+feedback channel, the briefing row, and the ticket-specific criteria were all settled in step 2.
+`/pr-ready` **consumes them, it does not re-decide the briefing row or re-derive the feedback loop**;
+the briefing table it holds is the menu the plan already selected from. Do not re-derive the answer
+here — that is how the review loop the plan pinned down gets replaced with an improvised one.
 
 Relay its verdict.
 

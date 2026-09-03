@@ -20,19 +20,21 @@ agents, and synthesize what returns — not to open files yourself.
 Read the ticket to frame the work — `gh issue view $ARGUMENTS` is a thin, allowed call; a prose task
 needs no pull. Everything past the ticket text — opening files, tracing callers — is a subagent's job.
 
-**Verify the premise before anything else — this is the first slice, and it can end the ticket.** A
-ticket asserts a problem: a bug that misbehaves, a gap that is missing, a need that is unmet. Before
-tracing how to fix it, confirm the problem is *real against today's tree* — reproduce the asserted
-defect, find the missing thing actually absent, confirm the need is not already met by code that landed
-since the ticket was filed. **That a new check would fire is not evidence the check was needed.** If the
-premise does not hold, the ticket is done here (§4) — do not plan, do not build. This is the slice that
-keeps an evening from being spent building something the tree already handles.
+**Verify the premise — the slice that can end the ticket.** A ticket asserts a problem: a bug that
+misbehaves, a gap that is missing, a need that is unmet. Before tracing how to fix it, confirm the
+problem is *real against today's tree* — reproduce the asserted defect, find the missing thing actually
+absent, confirm the need is not already met by code that landed since the ticket was filed. **That a
+new check would fire is not evidence the check was needed.** If the premise does not hold, the ticket is
+done at synthesis (§4) — do not plan, do not build. This is the slice that keeps an evening from being
+spent building something the tree already handles.
 
 Cut what else must be understood into independent slices. Typical slices, adapted to the task rather
 than run by rote:
 
 - **The premise** — reproduce the problem the ticket asserts against the current tree; report whether
-  it holds, and if not, what already handles it. Everything below matters only if this one passes.
+  it holds, and if not, what already handles it. It runs in the parallel fan-out with the slices below,
+  but its verdict governs them: a failed premise makes their findings moot and stops the ticket at
+  synthesis (§4) before any planning.
 - **The change site** — the code the task edits, and how it works today.
 - **Callers and dependents** — what relies on what will change; the blast radius.
 - **Patterns to match** — how the codebase already solves this shape, so the plan conforms instead of
