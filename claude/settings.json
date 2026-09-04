@@ -76,7 +76,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-opus-4-8",
+  "model": "claude-fable-5-1[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -191,6 +191,7 @@
     "type": "command",
     "command": "env PATH=\"$HOME/.local/bin:$HOME/.asdf/shims:$PATH\" ccstatusline"
   },
+  "feedbackDrafts": "off",
   "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
@@ -198,6 +199,5 @@
   "teammateMode": "in-process",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": true,
-  "feedbackDrafts": "off"
+  "agentPushNotifEnabled": true
 }
