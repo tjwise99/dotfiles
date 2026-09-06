@@ -199,5 +199,39 @@
   "teammateMode": "in-process",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": false,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: PUBLIC — tjwise99/WiseKiosk (github.com), confirmed via gh",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured (repo carries `backend/internal/secret/`, gitleaks-style scan scripts, and `.gitignore`d `.env`/`secrets/` patterns, but no secrets manager/service is named)",
+      "**Default / protected branches**: `main` is default and protected — active ruleset `main protection` on tjwise99/WiseKiosk; treat any push there as requiring a branch + PR, never direct push",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine with open internet",
+      "**Source control**: The trusted repo (tjwise99/WiseKiosk on github.com) and its remote(s) only — no additional orgs configured",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar — in this repo that includes `backend/internal/secret/`, `docs/decisions/0023-secret-output-containment.md`, `docs/decisions/0024-secret-file-delivery.md`, `scripts/check-secret-unwrap.py`, `scripts/image/layer_secret_scan.py`, `scripts/image/secret-patterns.txt`, and gitignored `.env`/`.env.*`/`secrets/`",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development — WiseKiosk (config-driven smart-mirror kiosk display), including requirements-tree (Doorstop) maintenance, architecture model (LikeC4) edits, and ticket/PR process work",
+      "**Trusted repo**: tjwise99/WiseKiosk (github.com:tjwise99/WiseKiosk.git), the working directory's repo — PUBLIC, so only this repo's own work belongs there; confidential/secret material is never cleared into it by visibility alone",
+      "**Org-specific CLIs**: None configured (repo uses `gh`, `doorstop`, `just`, `likec4`, standard toolchains — no org-internal CLI observed)",
+      "routine under tjwise99/WiseKiosk on github.com — commit/push via branch + PR to non-default branches is routine per this repo's own CLAUDE.md; merges to `main` remain gated by branch protection"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(gh pr merge:*) in tjwise99/WiseKiosk — protected/ruleset-guarded `main`, keep as a soft block requiring explicit per-PR confirmation",
+      "Bash(doorstop:*) bare invocation in tjwise99/WiseKiosk — running bare `doorstop` stamps unreviewed items per this repo's own tree-pass skill docs, so treat as a soft block distinct from `just check-reqs`"
+    ]
+  }
 }
