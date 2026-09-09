@@ -156,6 +156,12 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   the checks that exist today. That a new check fires is not evidence it was needed.
 - **Find the document that already decides it** before forming a position — ask "which document
   decides this?" and read that one, not the one the task handed you.
+- **Search the repo before escalating — a repo-answerable question is never the human's to answer.**
+  A convention, precedent, prior commit, sibling file, or existing gate that settles it *is* the
+  answer: find it and apply it. Escalate only a genuine fork that nothing in the tree decides.
+  Handing up a question the repo already answers — including relaying a delegate's such question
+  instead of resolving it from the tree yourself — is a failure, not caution. This recurs across
+  sessions; it is the specific thing this rule exists to stop.
 - **When a correction recurs, stop correcting the instance and find what is not gating the class** —
   and record the reason, so the next editor meets an argument rather than a gap.
 - **When you delete a mechanism, grep the whole tree for its name.** A justfile `[doc()]`, a workflow
