@@ -10,7 +10,7 @@ end, and stop to flag anything needing a human decision.
 
 This command is **source-agnostic**: it runs the same way whether the human wrote the code, an agent
 wrote it in another context, or you wrote it yourself in this session. The review in step 6 always runs
-as two dedicated reviewers; what changes with authorship is only how they are briefed — see step 6.
+as three dedicated reviewers; what changes with authorship is only how they are briefed — see step 6.
 
 **Discover the repo's conventions; don't assume them.** Before starting, skim `CONTRIBUTING.md`,
 `CLAUDE.md`, and any docs index (`docs/README.md`) for: the gate commands, the merge strategy, the
@@ -99,29 +99,37 @@ fact somewhere.
 
 Once code and docs are final, review the **full diff** (`git diff origin/<base>...HEAD`).
 
-**Review runs as two separate reviewer agents, in every mode — never one combined pass, never a review
-you hold only in your own head.** Comment and documentation discipline is the first thing a
-correctness-focused read skims past, so it gets its own reviewer with its own mandate:
+**Review runs as three separate reviewer agents, in every mode — never one combined pass, never a
+review you hold only in your own head.** Comment/documentation discipline and test quality are each
+the first thing a correctness-focused read skims past, so each gets its own reviewer with its own
+mandate:
 
 - A **content reviewer** — correctness, scope, contracts, abstractions, dependencies, tests (the
   *Content* checklist below).
 - A **comment & documentation-discipline reviewer** — comment and citation hygiene in the code *and*
   the state of the §4 documentation sweep (the *Documentation discipline* checklist below).
+- A **test-quality reviewer** (the `testing-architect` agent, spawned review-only — no edit tools,
+  the same restriction `independent-reviewer` carries by design) — whether the diff's tests
+  meaningfully verify behaviour rather than merely execute lines for coverage (the *Test quality*
+  checklist below).
 
-Both read the same diff on disjoint mandates and report independently. Spawning two agents even when you
-could read the diff yourself is deliberate: the second lens is the one that otherwise vanishes.
+All three read the same diff on disjoint mandates and report independently. Spawning three agents even
+when you could read the diff yourself is deliberate: each lens is one that otherwise vanishes.
 
 **If the plan supplied review params** (the `/work-ticket` flow settles them in `/plan` §3) **use them,
-do not re-derive them — before you choose or spawn anything.** The plan already names the two reviewers,
-the implementer teammate(s) that stay alive to receive findings, the feedback channel, the briefing row,
-and the ticket-specific criteria; apply that and fold its criteria into the checklists. Deriving your
-own reviewer or loop here is exactly how the plan's pinned-down review loop gets silently replaced.
+do not re-derive them — before you choose or spawn anything.** The plan already names the three
+reviewers, the implementer teammate(s) that stay alive to receive findings, the feedback channel, the
+briefing row, and the ticket-specific criteria; apply that and fold its criteria into the checklists.
+Deriving your own reviewer or loop here is exactly how the plan's pinned-down review loop gets silently
+replaced.
 
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
-a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **both
-reviewers** as teammates too, and give each the diff range, the spec, and its mandate — not your account
-of the work. Each reviewer takes its findings **straight to the implementer** by `SendMessage`; they
+a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **all
+three reviewers** as teammates too, and give each the diff range, the spec, and its mandate — not your
+account of the work. The test-quality teammate is spawned review-only (no edit tools), the same
+restriction the `independent-reviewer` teammates carry by design. Each reviewer takes its findings
+**straight to the implementer** by `SendMessage`; they
 settle mechanical findings between themselves and you neither sit in that loop nor re-dispatch fixes.
 What reaches **you** is only what must: an escalation (below) or a short readiness digest.
 
@@ -134,7 +142,7 @@ themselves and neither invents an answer — that is the exact defect the review
 running digest on the shared task list so the human can watch the exchange without being its switchboard.
 
 **Brief each reviewer by who wrote the code** — it does not change *whether* they are spawned (always
-two, always fresh context) but *what they are told to distrust*:
+three, always fresh context) but *what they are told to distrust*:
 
 | Who wrote it | What the reviewers are briefed to distrust |
 |---|---|
@@ -177,12 +185,28 @@ starting point, never evidence.
 - **A decision with a genuinely rejected alternative has a decision record**, not a prose paragraph
   buried in a history file.
 
+**Test-quality reviewer (testing-architect) — check for:**
+
+- **Tests assert behaviour, not execution.** A test that runs a code path but carries no assertion
+  capable of failing on a wrong result is coverage padding, not verification — name it as such.
+- **Coverage-padding patterns** — an assertion on a trivial invariant (a function returned *something*,
+  a mock was called), a snapshot test with no reviewed expectation, or a test shaped to move a number
+  rather than pin a fact.
+- **Defensive or error-handling code deleted to make a diff coverable**, rather than exercised by a
+  test that reaches it. This is the specific inversion the reviewer exists to catch: the code got
+  easier to test by getting worse, not the tests got better.
+- **Boundary and failure-path coverage** — a changed boundary or a changed failure path (empty input,
+  timeout, malformed data) has a test able to fail on the wrong behaviour, not only exercise the happy
+  path.
+- **Test doubles stand on a backed contract** — a mock's behaviour is proven to match the real thing
+  somewhere, or the diff introduces an unbacked assumption.
+
 Lean on CI for the gate exactly as in step 3 — cite `gh pr checks <n>` rather than re-running the
 suite. Reserve local runs for a targeted check of a specific concern the diff raises.
 
 ### Applying findings
 
-Both reviewers' findings converge on the same diff; apply them the same way.
+All three reviewers' findings converge on the same diff; apply them the same way.
 
 **Under orchestrator mode, fixes happen in the implementer teammate, not on this thread** —
 `Edit`/`Write` are gated here, and each reviewer sends its findings straight to the implementer, so you
@@ -194,7 +218,8 @@ exchange, not a round-trip through you.
 - **Mechanical fixes** — a rename, a missing null check, a doc correction, a comment reworded to state
   mechanism — apply them and say you did.
 - **A fix touching what a finding was about** — a boundary contract, a shared value, an abstraction the
-  content reviewer questioned, a doc-map placement or decision record the discipline reviewer flagged —
+  content reviewer questioned, a doc-map placement or decision record the discipline reviewer flagged,
+  or a test the test-quality reviewer found to be coverage-padding or built on deleted defensive code —
   **goes back to the reviewer that raised it for a second pass** on that fix. This is the class of
   defect the review existed to catch; re-introducing it while patching is the specific risk. Size is
   not the test here; subject matter is.

@@ -54,9 +54,10 @@ holes, so approval of a plan the author only *feels* is complete is where invent
   enough into `/pr-ready` to state three things, so the review loop is decided here and not improvised
   when the diff lands:
   - **The feedback path — who reviews, and how findings reach the implementer.** This is the one that
-    keeps getting skipped: name the **two reviewers** (a content reviewer and a comment/documentation-
-    discipline reviewer — `/pr-ready` §6 fixes this split, cite it rather than re-deriving it), name the
-    **implementer teammate(s) that stay alive to receive their findings**, and state the **channel** —
+    keeps getting skipped: name the **three reviewers** (a content reviewer, a comment/documentation-
+    discipline reviewer, and a test-quality reviewer using the `testing-architect` agent — `/pr-ready`
+    §6 fixes this split, cite it rather than re-deriving it), name the **implementer teammate(s) that
+    stay alive to receive their findings**, and state the **channel** —
     each reviewer takes findings *straight to the implementer* by `SendMessage`; they settle mechanical
     findings between themselves; anything that touches a contract, a shared value, an abstraction, or the
     plan itself escalates to the human. A plan that does not name this leaves the implementer with no
@@ -65,9 +66,10 @@ holes, so approval of a plan the author only *feels* is complete is where invent
     here**; that table stays the single definition of the briefing logic, and the plan only records the
     row. For the `/work-ticket` flow the row is already fixed: code is written by a subagent from a plan
     this thread wrote, and orchestrator mode runs the review as a reviewer–implementer team regardless —
-    so the two reviewers are fresh-context teammates (e.g. two `independent-reviewer` teammates, one
-    briefed for content and one for documentation discipline), told to treat the plan itself as suspect,
-    feeding the implementer teammate(s) `/implement` leaves running.
+    so the three reviewers are fresh-context teammates (e.g. two `independent-reviewer` teammates — one
+    briefed for content and one for documentation discipline — plus a `testing-architect` teammate
+    briefed for test quality and spawned review-only, no edit tools), told to treat the plan itself as
+    suspect, feeding the implementer teammate(s) `/implement` leaves running.
   - **The ticket-specific criteria** the review must verify — the checks particular to *this* change (a
     contract it must not break, an observable it must preserve, an edge case discovery surfaced), on top
     of `/pr-ready`'s generic checklist.
@@ -93,7 +95,8 @@ plan does not decide?**
   those are open decisions, not made ones. Default to unsettled when unsure.
 - **The review params (§3) are in scope for this read, not just implementer-facing holes.** The
   feedback path is an orchestration decision the implementer does not build, so the adversarial
-  question above would walk past a half-specified one — check it explicitly: are both reviewers named,
+  question above would walk past a half-specified one — check it explicitly: are all three reviewers
+  named,
   the live implementer teammate(s) named, the channel and the escalation boundary stated? A missing or
   vague feedback path is the failure §3 exists to prevent, and the author's own §3 is where it hides —
   so the independent read, not author self-assessment, must confirm it.
