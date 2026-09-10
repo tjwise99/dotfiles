@@ -152,6 +152,11 @@
       stdout: true
       stderr: true
 
+    - command: ./asdf/rust-components.sh
+      description: Install rustup components
+      stdout: true
+      stderr: true
+
     - command: ./asdf/uv-python.sh
       description: Install Python with uv
       stdout: true
