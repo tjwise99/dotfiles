@@ -76,7 +76,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "claude-opus-4-8",
+  "model": "sonnet",
   "hooks": {
     "PreToolUse": [
       {
@@ -201,6 +201,11 @@
   "inputNeededNotifEnabled": false,
   "agentPushNotifEnabled": true,
   "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(gh pr merge:*) in tjwise99/WiseKiosk — protected/ruleset-guarded `main`, keep as a soft block requiring explicit per-PR confirmation",
+      "Bash(doorstop:*) bare invocation in tjwise99/WiseKiosk — running bare `doorstop` stamps unreviewed items per this repo's own tree-pass skill docs, so treat as a soft block distinct from `just check-reqs`"
+    ],
     "environment": [
       "### Org-wide",
       "**Organization**: None configured",
@@ -227,11 +232,6 @@
       "**Trusted repo**: tjwise99/WiseKiosk (github.com:tjwise99/WiseKiosk.git), the working directory's repo — PUBLIC, so only this repo's own work belongs there; confidential/secret material is never cleared into it by visibility alone",
       "**Org-specific CLIs**: None configured (repo uses `gh`, `doorstop`, `just`, `likec4`, standard toolchains — no org-internal CLI observed)",
       "routine under tjwise99/WiseKiosk on github.com — commit/push via branch + PR to non-default branches is routine per this repo's own CLAUDE.md; merges to `main` remain gated by branch protection"
-    ],
-    "soft_deny": [
-      "$defaults",
-      "Bash(gh pr merge:*) in tjwise99/WiseKiosk — protected/ruleset-guarded `main`, keep as a soft block requiring explicit per-PR confirmation",
-      "Bash(doorstop:*) bare invocation in tjwise99/WiseKiosk — running bare `doorstop` stamps unreviewed items per this repo's own tree-pass skill docs, so treat as a soft block distinct from `just check-reqs`"
     ]
   }
 }
