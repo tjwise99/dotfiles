@@ -21,6 +21,7 @@ which `tools/check-manifest.py` then enforces in both directions.
 |---|---|---|
 | **independent-reviewer** | opus | Adversarial review of a diff against its specification, in a context that did not write it. Reports findings; **no edit tools by design** |
 | **code-monkey** | sonnet | Implementing a settled specification **without making design decisions** — halts and asks when the spec is ambiguous rather than inventing plausibly |
+| **test-first** | sonnet | Writing the **failing tests that specify a task, before any code exists** — the RED to code-monkey's GREEN. Halts and asks rather than inventing a contract; **never writes production code** |
 | **software-architect** | opus | Turning vague requirements into concrete architecture and decision records |
 | **systems-requirements-engineer** | opus | Translating problem descriptions into testable requirements; auditing requirement sets for gaps and conflicts |
 | **backend-architect** | inherit | Server-side structure for small self-hosted services: API shape, boundaries, config and secret handling |
@@ -89,13 +90,35 @@ and leave each as a check that fails on regression.
 Use `code-monkey` when the design is settled. Do *not* use it for exploration or debugging with an
 unknown cause — it will halt immediately, and correctly.
 
+## The red-green pair, and where test-first is not test-writer-fixer
+
+`test-first` is the third structural agent, and it pairs with `code-monkey` the way the two above
+pair with each other — from opposite ends of the same settled spec. `test-first` writes the failing
+tests that encode the work-item's contracts **before** any code exists; `code-monkey` then makes them
+green **without modifying them** (its standing rule). Both derive the same contracts independently
+from the same plan, so a complete spec produces agreement and a green suite means correct, while a
+*silent* spec makes **both** halt — a double spec-quality signal. The danger the pairing removes is
+the one `test-first` is built to refuse: inventing a contract in an assertion, which launders an
+unspecified decision into "verified" behaviour that `code-monkey` will dutifully satisfy.
+
+**`test-first` is not `test-writer-fixer`.** The split is *phase*, not topic. `test-first` runs
+**before** the code, writes only failing tests, never touches production code, and never repairs a
+test to make an implementation pass — a red test that will not go green is either a code defect or a
+spec gap, both of which it surfaces rather than resolves. `test-writer-fixer` runs **after** code
+exists: it adds coverage, diagnoses failures, and repairs tests that broke for the right reasons.
+Reach for `test-first` to *open* a test-driven work-item; reach for `test-writer-fixer` to strengthen
+or fix a suite around code that is already there. And `test-first` is not `testing-architect` either:
+the architect designs the verification *strategy* and, in `/pr-ready`, *reviews* test quality;
+`test-first` *authors* the failing tests inside that strategy. Author, not strategist, and not reviewer.
+
 ## Conventions
 
 - **Model assignment is mostly unnecessary.** Subagents inherit the parent model, which is usually
   right. It earns its keep in two cases only: **pinning up** (`independent-reviewer` should stay
   strong even when you are running something cheap) and **pinning down** (`code-monkey` does
   mechanical work and should not cost architecture rates). Everything advisory wants the good model
-  anyway — leave it inherited.
+  anyway — leave it inherited. `test-first` is pinned down alongside `code-monkey` for the same
+  reason: authoring failing tests from a settled contract is disciplined but mechanical work.
 - **Keep descriptions short.** Every agent's `description` sits in context whenever delegation is
   considered. A short `<example>` block or two is a legitimate selection aid; several fabricated
   multi-turn dialogues are not, and the borrowed pack ran 1,400–3,400 characters each.

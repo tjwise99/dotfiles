@@ -28,6 +28,13 @@ member that can `SendMessage` — the channel §3's escalation and the `/pr-read
 keeps it alive to answer a reviewer directly instead of routing findings back through you. Leave them
 running when implementation finishes; `/pr-ready` reaches them for the review pass.
 
+Where the plan paired a `test-first` teammate with an implementer (§3 of `/plan`, TDD), spawn it as a
+named teammate too, and **spawn it first** — its failing tests are the target the implementer builds
+against, so they must exist before `code-monkey` starts. Its job **ends at the RED→GREEN handoff**; it
+does not persist into `/pr-ready`, whose review runs on code that now exists — that is squarely outside
+test-first's before-the-code charter. Where the review then faults a test-first-authored test, the plan
+already says who owns it (`/plan` §3), which is never `code-monkey` (it cannot edit tests).
+
 ## 2. Brief each implementer
 
 So it need not re-derive context:
@@ -37,6 +44,13 @@ So it need not re-derive context:
 - Its **work-item(s)** from the plan: what changes, the **scope boundary** (ticket-only, no drive-by
   changes), the contract it must honour, and how it is proven.
 - Repo conventions — match surrounding idiom, comment density, naming.
+- **For a TDD-paired item:** brief the `test-first` teammate with the item's contracts to encode and
+  the instruction to **halt on any assertion the plan does not determine rather than invent it**; brief
+  the `code-monkey` implementer that those failing tests are its acceptance criteria — make them green,
+  **do not modify them**, **do not author its own tests for the item's specified behaviour** (that is
+  `test-first`'s; if it believes a test is missing it messages `test-first` or escalates rather than
+  adding one, so the RED checkpoint stays the single record of what was specified), and raise a
+  test↔code dispute (§3) rather than either side weakening a test.
 - The **escalation rule** (§3) and the return contract: **report what changed and the commit/PR refs
   in ≤10 lines; write anything longer to a file.** Fat reports re-pollute the context this delegation
   protects.
@@ -60,6 +74,13 @@ surfaces the decision to the human and relays the answer back. Unblocked items k
 
 - **Open the PR at the start**, not the end — push the branch and `gh pr create --base <base>` so CI
   runs while implementation continues and results are ready for `/pr-ready`.
+- **Run TDD-paired items red before green.** For a work-item the plan paired with `test-first`: the
+  `test-first` teammate writes its failing tests and **commits them as a RED checkpoint** first, then
+  `code-monkey` implements against them and commits the GREEN. CI on the early-opened PR is expected to
+  be red between those commits — that is the visible red→green sequence, not a fault. Default is batch
+  (all of the item's tests, then the code); switch to an interleaved test↔code loop only where the plan
+  marked that item for it. A test↔code disagreement is escalated per §3, **never** resolved by
+  weakening a test.
 - **Commit per work-item** — a granular commit as each plan item finishes, with a clear message.
   Checkpoints survive a dead session and give a clean per-item history; squash-merge collapses them
   anyway, so there is no cost to committing often.

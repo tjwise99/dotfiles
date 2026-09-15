@@ -48,6 +48,15 @@ holes, so approval of a plan the author only *feels* is complete is where invent
   Where the plan settles the design, an implementer that builds without deciding and halts on ambiguity
   (e.g. `code-monkey`) is the right fit. Match the model to the work; do not default to the heaviest
   for mechanical implementation.
+- **Test-first pairing (TDD).** For any work-item that produces testable behaviour, pair a `test-first`
+  teammate with the `code-monkey` implementer: `test-first` writes the failing tests that encode the
+  item's contracts **before** `code-monkey` writes code, and `code-monkey` makes them green without
+  modifying them (its standing rule). Default to **batch red-then-green per work-item** — `test-first`
+  commits the failing tests as a RED checkpoint, then hands off — and note the item where an
+  **interleaved** test↔code loop is wanted instead. A work-item with **no meaningful test surface**
+  (pure docs or config) skips the pairing, but the plan **states that skip explicitly** — an unrecorded
+  skip is how TDD quietly lapses. Both are named teammates so the red→green handoff and any test↔code
+  contract dispute run over `SendMessage`, escalating to the human when the spec does not decide.
 - **Who opens the PR.** Decide explicitly — `/pr-ready` needs one to exist. Either the implementer
   opens it (brief it to) or this thread does after implementation.
 - **How review will run — settle it now, as an approved part of the plan.** The plan must scope far
@@ -62,6 +71,11 @@ holes, so approval of a plan the author only *feels* is complete is where invent
     findings between themselves; anything that touches a contract, a shared value, an abstraction, or the
     plan itself escalates to the human. A plan that does not name this leaves the implementer with no
     defined way to get its review feedback, which is the exact failure this step exists to prevent.
+    **On a TDD-paired item, name where a test-quality finding on a `test-first`-authored test goes** —
+    not to `code-monkey`, which cannot edit tests. If the finding says the test wrongly encodes or omits
+    a spec'd contract, it is a requirement question and escalates to the human; if it is mechanical
+    post-code test repair, it belongs to `test-writer-fixer` (the after-code test agent). `test-first`
+    is gone by review time, so it is never the owner.
   - **The briefing row** — which row of `/pr-ready` §6's briefing table applies, **cited, not restated
     here**; that table stays the single definition of the briefing logic, and the plan only records the
     row. For the `/work-ticket` flow the row is already fixed: code is written by a subagent from a plan
@@ -99,7 +113,10 @@ plan does not decide?**
   named,
   the live implementer teammate(s) named, the channel and the escalation boundary stated? A missing or
   vague feedback path is the failure §3 exists to prevent, and the author's own §3 is where it hides —
-  so the independent read, not author self-assessment, must confirm it.
+  so the independent read, not author self-assessment, must confirm it. **Confirm the TDD pairing the
+  same way:** does every work-item with a test surface name a `test-first` teammate ahead of its
+  implementer, and does every item that omits one carry an explicit recorded skip? A silent omission
+  reads identically to a decision, which is exactly how test-first coverage lapses unnoticed.
 - **It surfaces, it does not resolve.** Holes come back as open calls — the options and what is at
   stake — never a recommendation dressed as a finding, the contract discovery already holds.
 - **Thoroughness is a method, not a resolve:** enumerate the properties the plan must settle, check
