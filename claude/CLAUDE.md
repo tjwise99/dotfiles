@@ -45,6 +45,11 @@ context is worth more than the tokens.
   more than being gathered, and routing every finding back through you is the cost the mesh removes.
   Tell an agent it may refuse your number, and treat refusal as signal about the number. Any decision
   the panel cannot settle from the spec is escalated to the human, never invented.
+- **Every spawn names its model — never inherit, never Fable, never fork.** An omitted `model`
+  inherits the session's, and a `fork` always inherits the parent's — both are ways to run an agent
+  on the wrong model silently. Fable is banned for agents; scale to the job — `sonnet` for recon,
+  sweeps, mechanical implementation and most review, `opus` only where the work needs real judgement
+  (a hard design read, an adversarial review of a subtle diff).
 - **`@`-mentioning an agent definition file means adopt that persona inline** — never a spawn.
 
 ## Shell environment

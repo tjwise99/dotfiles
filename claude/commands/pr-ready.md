@@ -169,7 +169,10 @@ starting point, never evidence.
 
 **Comment & documentation-discipline reviewer — check for:**
 
-- **Comment density** — consistent with surrounding code; minimal inline comments, no narrative blocks.
+- **Comment density is an absolute bar, not calibrated to surrounding code** — minimal, mechanism-only
+  inline comments, no narrative blocks. Existing sibling comments are legacy density to trim when
+  touched, never the standard to match; a reviewer who calibrates to neighbours passes what the owner
+  rejects.
 - **Comments state mechanism, not reason.** What the code does or how it does it stays; a statement
   of why, of history, or of evaluative judgment belongs in whichever doc the repo's map assigns it,
   with the comment citing that home instead.
