@@ -117,7 +117,11 @@ step a clean yes on a complete plan rather than a prompt to adjudicate what the 
   blocks the proposal, no exceptions. Presenting a plan with an "open question" or "TBD" still in it is
   the failure this step exists to prevent.
 - **Exit plan mode for approval before any code is written.** Approval of the plan is not approval of
-  a decision buried inside it — call out any decision the plan assumes so it is approved on its own.
+  a decision buried inside it, so the approval message *leads* with a "Decisions you are approving"
+  list — one line each for anything that adds a document (an ADR especially), a dependency, a gate or
+  CI job, a requirement or tree change, a numeric threshold, a repo setting, or a scope extension into
+  shared code — and the mechanism prose stays short beneath it. A decision left sitting among file
+  names and flag values gets approved without being seen.
 - For a ticket, post the approved approach and resolved decisions back with `gh issue comment` so the
   record outlives the session.
 - **The plan is not a repo file.** It lives as the plan-mode contract (ExitPlanMode), the `gh issue
