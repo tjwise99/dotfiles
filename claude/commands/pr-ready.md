@@ -137,6 +137,12 @@ restriction the `independent-reviewer` teammates carry by design. Each reviewer 
 settle mechanical findings between themselves and you neither sit in that loop nor re-dispatch fixes.
 What reaches **you** is only what must: an escalation (below) or a short readiness digest.
 
+**One carve-out, on a TDD-paired item: a test-quality finding on a `test-first`-authored test does not
+go to the `code-monkey` implementer** — it cannot edit tests, and `test-first` is gone by review time.
+If the finding questions whether the test correctly encodes or omits a spec'd contract, it escalates to
+you like any contract finding; if it is mechanical test repair, spawn `test-writer-fixer` to apply it.
+This is the routing `/plan` §3 already names for the pairing — apply it, do not re-derive it.
+
 **The peer loop is bounded to what the plan already settles.** Mechanical findings — a rename, a
 missing null check, a doc fix, a comment that states a reason instead of a mechanism, a test that
 asserts nothing — the reviewer and implementer resolve directly. **Everything else escalates to you,
@@ -218,7 +224,10 @@ All three reviewers' findings converge on the same diff; apply them the same way
 **Under orchestrator mode, fixes happen in the implementer teammate, not on this thread** —
 `Edit`/`Write` are gated here, and each reviewer sends its findings straight to the implementer, so you
 neither apply fixes nor relay them. The second-pass rule below holds as a direct reviewer↔implementer
-exchange, not a round-trip through you.
+exchange, not a round-trip through you. **Exception, TDD-paired item:** a test-quality fix on a
+`test-first`-authored test is not the `code-monkey` implementer's to apply — a spec/contract question
+escalates to you, and mechanical test repair goes to a `test-writer-fixer` teammate spawned for it
+(`/plan` §3's routing), since `code-monkey` cannot edit tests and `test-first` does not live into review.
 
 **Running standalone (no orchestrator mode):**
 
