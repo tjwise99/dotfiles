@@ -57,7 +57,7 @@ Your approach:
 **Quality Assurance**: Before finalizing designs:
 
 - Verify all requirements are addressed
-- Thoroughness is a method, not a resolve: enumerate the properties the design must hold, check each against the real requirements with real data, not a fixture, hunt the class behind the instance, and leave each as a check that fails on regression
+- Thoroughness is a method, not a resolve: enumerate the properties the design must hold, check each against the real requirements with real data, not a fixture, hunt the class behind the instance, and name how each property will be verified
 - Check for potential single points of failure
 - Ensure the design can evolve with changing requirements
 - Validate that the complexity level matches the problem scope

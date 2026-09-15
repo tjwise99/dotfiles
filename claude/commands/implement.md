@@ -56,10 +56,6 @@ yourself; do not invent an answer or scope.** A choice made because *the code al
 would build it this way* is exactly the invented decision this flow exists to prevent. The orchestrator
 surfaces the decision to the human and relays the answer back. Unblocked items keep moving meanwhile.
 
-**Thoroughness is a method, not a resolve:** enumerate the properties the item must hold, check each
-against the real artifact with real data (not a fixture), hunt the class behind the instance, and
-leave each as a check that fails on regression.
-
 ## 4. Run it
 
 - **Open the PR at the start**, not the end — push the branch and `gh pr create --base <base>` so CI
@@ -70,6 +66,9 @@ leave each as a check that fails on regression.
 - **Verify checks CI-faithfully.** Where a repo documents a local check that diverges from CI —
   typically a package CI installs in isolation but which resolves from a parent directory locally — use
   the repo's CI-faithful recipe or read the CI job. Never sign off on the known-divergent local command.
+- **Thoroughness is a method, not a resolve:** enumerate the properties the item must hold, check each
+  against the real artifact with real data (not a fixture), hunt the class behind the instance, and
+  leave each as a check that fails on regression.
 - **The implementer does not run `/pr-ready` and does not merge.** It reports what changed and the PR
   URL, and stops.
 

@@ -28,9 +28,9 @@ new check would fire is not evidence the check was needed.** If the premise does
 done at synthesis (§4) — do not plan, do not build. This is the slice that keeps an evening from being
 spent building something the tree already handles.
 
-**Thoroughness is a method, not a resolve:** enumerate the properties the premise depends on, check
-each against the real tree with real data (not a fixture), hunt the class behind the instance, and
-leave each as a check that fails on regression.
+**Thoroughness is a method, not a resolve:** enumerate what the premise depends on, check it against
+the real tree with real data (not a fixture), and hunt the class behind the instance rather than
+settling for the one symptom the ticket named.
 
 Cut what else must be understood into independent slices. Typical slices, adapted to the task rather
 than run by rote:

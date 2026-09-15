@@ -13,7 +13,7 @@ one designated place that proves it** — and whether a reader can find that pla
 
 **Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
 each against the real artifact with real data (not a fixture), hunt the class behind the instance, and
-leave each as a check that fails on regression.
+designate a durable check that fails on regression for each.
 
 ## Design principles
 

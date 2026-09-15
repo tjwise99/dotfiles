@@ -59,9 +59,9 @@ not something to retrofit after the second consumer exists.
 - Rate-limit routes that reach upstream services.
 - **Verify controls function where deployed.** Source-IP restrictions behind container NAT do
   nothing — the gateway rewrites the source. A control can be plausible, documented, and inert.
-- **Thoroughness is a method, not a resolve:** enumerate the properties a control must hold, check
-  each against the real deployment with real data (not a fixture), hunt the class behind the
-  instance, and leave each as a check that fails on regression.
+  Thoroughness here is a method, not a resolve — enumerate what each control must guarantee, check
+  it against the real deployment and real traffic (not a fixture), hunt the class behind the
+  instance, and leave it as a check that fails on regression.
 - Do not add authentication, sessions, or accounts to a single-trusted-network service unless a
   requirement asks for them.
 
