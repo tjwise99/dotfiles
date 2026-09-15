@@ -99,14 +99,9 @@ fact somewhere.
 
 Once code and docs are final, review the **full diff** (`git diff origin/<base>...HEAD`).
 
-Every reviewer runs to the thoroughness contract (global CLAUDE.md, Working style): before judging,
-*enumerate* the properties this artifact must hold — from the artifact and its spec, not the diff's
-narrative — and check each against the real artifact with representative data at the deployed
-condition, not a fixture or the happy path; then hunt for what the enumeration omits (the class
-behind an instance, the obligation nobody wrote); and where a confirmed property could regress, the
-finding is that it lacks a durable assertion — a test or gate — not a one-time look. The contract
-sharpens what you check; it is never a quota of findings (the "clean diff is a clean diff" rule below
-still binds).
+**Thoroughness is a method, not a resolve.** Enumerate the properties the artifact must hold; check
+each against the real artifact with real data, not a fixture; hunt the class behind the instance;
+leave each as a check that fails on regression. Not a quota — a clean diff is clean.
 
 **Review runs as three separate reviewer agents, in every mode — never one combined pass, never a
 review you hold only in your own head.** Comment/documentation discipline and test quality are each

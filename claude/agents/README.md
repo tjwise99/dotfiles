@@ -82,6 +82,10 @@ reviewed.**
 - **`independent-reviewer` catches it at the output.** Fresh context, reviews against the spec, has no
   edit tools so it cannot become a second author.
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
+each against the real artifact with real data (not a fixture), hunt the class behind the instance,
+and leave each as a check that fails on regression.
+
 Use `code-monkey` when the design is settled. Do *not* use it for exploration or debugging with an
 unknown cause — it will halt immediately, and correctly.
 

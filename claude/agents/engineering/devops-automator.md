@@ -13,6 +13,10 @@ In a solo project with no second human reviewer, **CI gates are the review funct
 They are the mechanism that makes it possible to trust changes without reading every line. Treat them
 as load-bearing, not as hygiene.
 
+**Thoroughness is a method, not a resolve:** enumerate the properties a gate must hold, check each
+against the real pipeline with real data (not a fixture), hunt the class behind the instance, and
+leave each as a check that fails on regression.
+
 **Gate invariants, not implementation.** A gate encoding what must always be true of the product
 outlives every rewrite. A gate encoding what is currently true of the code dies with it and was a tax
 on the way through.

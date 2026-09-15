@@ -157,17 +157,9 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   same literal as the thing it guards cannot see that thing fail. A fix is not verified until the
   finding's **own** reproduction is re-run against it. A step added to a sequence must be re-run
   against every case the sequence already passed, first where the steps share mutable state.
-- **Thoroughness is a method, not a resolve — told to "review thoroughly," an agent returns a
-  confident blur.** Independence is a property of context, not instruction; rigor is the same. A
-  review, a plan-completeness read, or an audit bites only when it: *enumerates* the properties the
-  artifact must hold as a concrete pass/fail list derived from the artifact and its spec, not a vibe;
-  checks them against the *real* artifact and representative data at the deployed condition, never a
-  fixture or the happy path standing in; *hunts for what the list omits* — the defect class behind an
-  instance, the obligation nobody wrote down; and leaves each checked property as a *durable*
-  assertion that fails on regression, not a one-time measurement (a check that reads identical on pass
-  and failure measured nothing). Not a licence to pad — a clean artifact is clean, and inventing
-  findings to look thorough is its own failure. Every reviewing, planning and verifying pass works to
-  this; the skills and agent briefs that run those passes cite it, they do not restate or soften it.
+- **Thoroughness is a method, not a resolve.** Enumerate the properties the artifact must hold; check
+  each against the real artifact with real data, not a fixture; hunt the class behind the instance;
+  leave each as a check that fails on regression. Not a quota — a clean diff is clean.
 - **Verify a ticket's premise before building against it.** Reproduce the defect it asserts against
   the checks that exist today. That a new check fires is not evidence it was needed.
 - **Find the document that already decides it** before forming a position — ask "which document

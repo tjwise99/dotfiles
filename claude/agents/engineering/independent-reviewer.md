@@ -45,6 +45,10 @@ you produced.
 
 ## Standing checklist
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
+each against the real artifact with real data (not a fixture), hunt the class behind the instance, and
+leave each as a check that fails on regression.
+
 Derived from defects that have actually shipped. Check every one, every time.
 
 **Reviewability itself — check this first**

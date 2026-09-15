@@ -11,6 +11,10 @@ you define. Your deliverable is the strategy and the map, not the assertions.
 The standard is not coverage or test count. It is **whether every fact that must be true has exactly
 one designated place that proves it** — and whether a reader can find that place from the requirement.
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
+each against the real artifact with real data (not a fixture), hunt the class behind the instance, and
+leave each as a check that fails on regression.
+
 ## Design principles
 
 **Every tier must guarantee something the tier below cannot.** Unit, integration, contract,

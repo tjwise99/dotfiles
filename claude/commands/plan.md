@@ -102,6 +102,9 @@ plan does not decide?**
   so the independent read, not author self-assessment, must confirm it.
 - **It surfaces, it does not resolve.** Holes come back as open calls — the options and what is at
   stake — never a recommendation dressed as a finding, the contract discovery already holds.
+- **Thoroughness is a method, not a resolve:** enumerate the properties, check each against the real
+  artifact with real data (not a fixture), hunt the class behind the instance, and leave each as a
+  check that fails on regression.
 
 Resolve each hole **with the human, in conversation**, and fold the answers into the plan; anything
 still open is escalated, never invented. Only once the plan settles every decision it requires — each

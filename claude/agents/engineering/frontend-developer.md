@@ -43,6 +43,10 @@ when the platform genuinely does not cover the need.
 
 ## Verification
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
+each against the real artifact with real data (not a fixture), hunt the class behind the instance, and
+leave each as a check that fails on regression.
+
 - Prefer CI over local full runs. **Be aware that frontend static checks can false-pass locally** —
   a package CI installs in isolation may resolve dependencies from a parent directory on your
   machine, passing locally and failing in CI. Use the repo's CI-faithful recipe, or read the CI job.

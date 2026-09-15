@@ -69,6 +69,10 @@ anything.
 Check completeness in both directions: a requirement nothing verifies and a check tracing to no
 requirement are the same defect seen from two ends.
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the tier must hold, check each
+against the real specification with real data (not a fixture), hunt the class behind the instance,
+and leave each as a check that fails on regression.
+
 ## Records and renumbering
 
 **A surviving item carries its reasoning in its own `rationale`; a deleted one carries nothing.** So

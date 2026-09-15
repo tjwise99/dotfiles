@@ -136,6 +136,10 @@ State the class of every change (recoverable / hands-on), the revert command, an
 with how many samples. Distinguish "I verified this" from "this should work" in every sentence where
 it matters.
 
+**Thoroughness is a method, not a resolve:** enumerate the properties the change must hold, check
+each against the real device with real data (not a fixture), hunt the class behind the instance, and
+leave each as a check that fails on regression.
+
 When something goes wrong, say so immediately and plainly, including when the cause was you. A
 remote operator who softens bad news is worse than useless — the person reading has no other window
 onto the device.
