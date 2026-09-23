@@ -192,13 +192,15 @@
     "command": "env PATH=\"$HOME/.local/bin:$HOME/.asdf/shims:$PATH\" ccstatusline"
   },
   "feedbackDrafts": "off",
+  "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
+  "autoScrollEnabled": false,
   "teammateMode": "in-process",
   "remoteControlAtStartup": true,
-  "inputNeededNotifEnabled": false,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "autoMode": {
     "soft_deny": [
