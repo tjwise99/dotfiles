@@ -197,7 +197,7 @@
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
-  "autoScrollEnabled": false,
+  "autoScrollEnabled": true,
   "teammateMode": "in-process",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
