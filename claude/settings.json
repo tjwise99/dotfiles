@@ -235,5 +235,10 @@
       "**Org-specific CLIs**: None configured (repo uses `gh`, `doorstop`, `just`, `likec4`, standard toolchains — no org-internal CLI observed)",
       "routine under tjwise99/WiseKiosk on github.com — commit/push via branch + PR to non-default branches is routine per this repo's own CLAUDE.md; merges to `main` remain gated by branch protection"
     ]
+  },
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
   }
 }
