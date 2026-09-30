@@ -175,8 +175,6 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
 - **When you delete a mechanism, grep the whole tree for its name.** A justfile `[doc()]`, a workflow
   step's `name:`, `--help` text — operator-facing docs live outside `docs/`, so a prose sweep misses
   them by construction.
-- **An unattributed claim in a handoff is agent opinion, not owner ruling.** Owner decisions carry
-  "(owner, <date>)" or a direct quote; a bare imperative among them is something a session made up.
 - **Never write a bare `#N`, and never use a number as a name.** GitHub draws issues and PRs from one
   counter, so `#66` and `#69` differ in kind but not in shape. Write **`PR #66`** and **`#69 tree
   rebuild`** — number *and* name. Same for any renumberable ID: `SRS026 backend-unreachable state`,
