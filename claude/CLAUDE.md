@@ -161,7 +161,14 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   review supplements the owner's read; it never replaces it. The owner approves only what they can
   actually judge, and an unreviewable diff gets either a rubber stamp they will regret or a rejection
   — so split before asking for review, by concern, each piece standing on its own with its own body.
-  Size is measured against the human reader, not against how many reviewers the diff has had.
+  Size is measured against the human reader, not against how many reviewers the diff has had. The
+  explicit form: a ticket gets an integration branch off the default branch, named for the ticket;
+  each piece of sub-work is its own PR *into that branch*, small enough to read in one sitting, merged
+  there in order; the integration branch is proven as a whole and lands on the default branch as one
+  PR that closes the ticket. Never a stack of sibling PRs into the default branch for one ticket. The
+  split is by *reviewability*, not by kind of work: a change the owner can read in one sitting is one
+  PR, code, tests and docs together — never one PR for code, one for tests, one for docs. Most tickets
+  are one PR; the integration branch is for the ticket that genuinely cannot be read whole.
 - **Prove the loop before hardening it (user instruction, 2026-10-02).** Build the smallest thing that
   runs end to end on the real target and run it once, so it is known which code is load-bearing before
   any of it is polished — the same reason TDD writes the test first: the test names the MVP, and more
