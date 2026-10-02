@@ -157,6 +157,23 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   same literal as the thing it guards cannot see that thing fail. A fix is not verified until the
   finding's **own** reproduction is re-run against it. A step added to a sequence must be re-run
   against every case the sequence already passed, first where the steps share mutable state.
+- **A diff the user cannot gauge in one sitting is not ready (user instruction, 2026-10-02).** Agent
+  review supplements the owner's read; it never replaces it. The owner approves only what they can
+  actually judge, and an unreviewable diff gets either a rubber stamp they will regret or a rejection
+  — so split before asking for review, by concern, each piece standing on its own with its own body.
+  Size is measured against the human reader, not against how many reviewers the diff has had.
+- **Prove the loop before hardening it (user instruction, 2026-10-02).** Build the smallest thing that
+  runs end to end on the real target and run it once, so it is known which code is load-bearing before
+  any of it is polished — the same reason TDD writes the test first: the test names the MVP, and more
+  is added against a measured need. This is not licence for lazy code or lazy tests: input validation,
+  defensive handling and the tests that pin a real contract are expected from the first commit. What
+  it forbids is spending the night on edge cases inside scaffolding — a guard's heredoc parser, a
+  missing-file path in a tool that may not survive the week — before the loop those tools serve has
+  run once. Effort follows what a piece does and how long it will live. State a size budget at approval
+  (lines, files) so growth is visible, and let every reviewer's first question be *what can be deleted*,
+  before *what is wrong*. Generality nobody needs is the thing this rule exists to stop. Corollary
+  (user, 2026-10-02): prefer a structure that makes a regression impossible over a guard that parses
+  for it — one entry point and a one-line grep, never a scanner that grows its own parser.
 - **Thoroughness is a method, not a resolve.** Enumerate the properties the artifact must hold; check
   each against the real artifact with real data, not a fixture; hunt the class behind the instance;
   leave each as a check that fails on regression. Not a quota — a clean diff is clean.
