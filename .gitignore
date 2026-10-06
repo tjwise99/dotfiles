@@ -23,3 +23,7 @@ __pycache__/
 *.pyc
 *.bak
 *.bak-*
+
+# Claude Code's per-host download cache of claude.ai skills. Each host fetches it
+# itself and stamps manifest.json with its own time, so tracking it conflicts.
+claude/skills/synced/
