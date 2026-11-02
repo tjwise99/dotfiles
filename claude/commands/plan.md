@@ -66,11 +66,15 @@ holes, so approval of a plan the author only *feels* is complete is where invent
     keeps getting skipped: name the **three reviewers** (a content reviewer, a comment/documentation-
     discipline reviewer, and a test-quality reviewer using the `testing-architect` agent — `/pr-ready`
     §6 fixes this split, cite it rather than re-deriving it), name the **implementer teammate(s) that
-    stay alive to receive their findings**, and state the **channel** —
-    each reviewer takes findings *straight to the implementer* by `SendMessage`; they settle mechanical
-    findings between themselves; anything that touches a contract, a shared value, an abstraction, or the
-    plan itself escalates to the human. A plan that does not name this leaves the implementer with no
-    defined way to get its review feedback, which is the exact failure this step exists to prevent.
+    stay alive to receive their findings**, and state the **channel** — each reviewer takes findings
+    *straight to the implementer* by `SendMessage`; they settle between themselves any mechanical or
+    readability finding, restructures included, whose fix changes no interface, contract, shared value,
+    abstraction, or decision the plan made, the implementer returning each fix to the raising reviewer
+    for a re-read; a finding whose class is likely to recur also carries a recommendation for a tool
+    that would check it automatically, which goes to the human to ticket or take in scope; any
+    ambiguity, any design decision, anything that touches a contract, a shared value, an abstraction, or
+    the plan itself escalates to the human. A plan that does not name this leaves the implementer with
+    no defined way to get its review feedback, which is the exact failure this step exists to prevent.
     **On a TDD-paired item, name where a test-quality finding on a `test-first`-authored test goes** —
     not to `code-monkey`, which cannot edit tests. If the finding says the test wrongly encodes or omits
     a spec'd contract, it is a requirement question and escalates to the human; if it is mechanical
@@ -86,7 +90,12 @@ holes, so approval of a plan the author only *feels* is complete is where invent
     suspect, feeding the implementer teammate(s) `/implement` leaves running.
   - **The ticket-specific criteria** the review must verify — the checks particular to *this* change (a
     contract it must not break, an observable it must preserve, an edge case discovery surfaced), on top
-    of `/pr-ready`'s generic checklist.
+    of `/pr-ready`'s generic checklist. **They are a floor beneath the content reviewer's two questions
+    (`/pr-ready` §6), never its mandate.** **Each criterion cites an authority outside this plan** — the
+    ticket, a contract discovery found in the tree, an edge case discovery surfaced. An item whose
+    honest source is "the plan decided it" is a ruling, not a criterion, and stays out: the reviewer
+    already checks rulings against the plan itself, and §2's contracts restated here turn the content
+    review into a compliance audit.
 
   These review params are approved with the plan in §5; `/pr-ready` consumes them rather than
   re-deciding the briefing row or re-deriving the loop.
@@ -107,15 +116,15 @@ plan does not decide?**
   open? Every observable the plan does not pin to an authority, every choice handed to implementer
   discretion, anything settled only by *the code already does it* or *I would build it this way* —
   those are open decisions, not made ones. Default to unsettled when unsure.
-- **The review params (§3) are in scope for this read, not just implementer-facing holes.** The
-  feedback path is an orchestration decision the implementer does not build, so the adversarial
-  question above would walk past a half-specified one — check it explicitly: are all three reviewers
-  named,
-  the live implementer teammate(s) named, the channel and the escalation boundary stated? A missing or
-  vague feedback path is the failure §3 exists to prevent, and the author's own §3 is where it hides —
-  so the independent read, not author self-assessment, must confirm it. **Confirm the TDD pairing the
-  same way:** does every work-item with a test surface name a `test-first` teammate ahead of its
-  implementer, and does every item that omits one carry an explicit recorded skip? A silent omission
+- **The review params (§3) are in scope for this read, not just implementer-facing holes.** The feedback
+  path is an orchestration decision the implementer does not build, so the adversarial question above
+  would walk past a half-specified one — check it explicitly: are all three reviewers named, the live
+  implementer teammate(s) named, the channel and the escalation boundary stated? Does every
+  ticket-specific criterion cite an authority outside the plan, or is any of them a ruling restated? A
+  missing or vague feedback path is the failure §3 exists to prevent, and the author's own §3 is where
+  it hides — so the independent read, not author self-assessment, must confirm it. **Confirm the TDD
+  pairing the same way:** does every work-item with a test surface name a `test-first` teammate ahead of
+  its implementer, and does every item that omits one carry an explicit recorded skip? A silent omission
   reads identically to a decision, which is exactly how test-first coverage lapses unnoticed.
 - **It surfaces, it does not resolve.** Holes come back as open calls — the options and what is at
   stake — never a recommendation dressed as a finding, the contract discovery already holds.
@@ -142,8 +151,9 @@ step a clean yes on a complete plan rather than a prompt to adjudicate what the 
   CI job, a requirement or tree change, a numeric threshold, a repo setting, or a scope extension into
   shared code — and the mechanism prose stays short beneath it. A decision left sitting among file
   names and flag values gets approved without being seen.
-- For a ticket, post the approved approach and resolved decisions back with `gh issue comment` so the
-  record outlives the session.
+- For a ticket, post the approved plan itself back with `gh issue comment` — the work-items with their
+  scope boundaries, contracts and proofs, the resolved decisions, and the review params — so the record
+  outlives the session; the content reviewer reads the ticket with this plan attached.
 - **The plan is not a repo file.** It lives as the plan-mode contract (ExitPlanMode), the `gh issue
   comment` record, and the brief you hand each implementer from this context — `/implement` reads it
   from that brief, not from disk. Do not write a `PLAN.md` into the tree; orchestrator mode denies it,

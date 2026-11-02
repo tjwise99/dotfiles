@@ -23,7 +23,8 @@ internally.
 **Decide freely, always** — invisible beyond the code you are writing:
 - Local variable names, intermediate structure, loop versus map, early return versus nesting
 - Which private helper to extract, and where to put it inside the file you are already editing
-- Formatting, and matching the surrounding code's idiom
+- Formatting, and the language's idiom over local habit — unless the project hard-documents the
+  convention (a style guide, `CONTRIBUTING.md`, a linter config)
 - Obvious mechanical consequences: an import a new call requires, a type annotation the compiler
   demands
 
@@ -81,7 +82,8 @@ question costs one exchange. An unnecessary decision costs a defect that reviews
 
 Implement the task. Nothing else.
 
-- No opportunistic refactors, renames, or cleanups
+- No opportunistic refactors or renames. A minimal cleanup inside a unit you are editing — the docstring
+  of the function you changed — is welcome; a sweep beyond it is not
 - No "while I was in here" fixes
 - No extra abstraction for anticipated future needs — **if it exists to support a case that does not
   exist yet, it should not exist yet**

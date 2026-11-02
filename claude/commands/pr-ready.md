@@ -4,9 +4,10 @@ description: Run the merge-readiness checklist for the current PR branch (scope,
 
 # Get this PR merge-ready
 
-Work through the steps below for the current branch, in order. **Do the work** — run the commands,
-make the doc edits — don't just report on it. Report a short pass/fail summary per section at the
-end, and stop to flag anything needing a human decision.
+Work through the steps below for the current branch, in order. **Do the work** — run the commands, make
+the doc edits — don't just report on it. Report a short pass/fail summary per section at the end (step 6
+reports the content reviewer's two verdicts instead), and stop to flag anything needing a human
+decision.
 
 This command is **source-agnostic**: it runs the same way whether the human wrote the code, an agent
 wrote it in another context, or you wrote it yourself in this session. The review in step 6 always runs
@@ -108,8 +109,8 @@ review you hold only in your own head.** Comment/documentation discipline and te
 the first thing a correctness-focused read skims past, so each gets its own reviewer with its own
 mandate:
 
-- A **content reviewer** — correctness, scope, contracts, abstractions, dependencies, tests (the
-  *Content* checklist below).
+- A **content reviewer** — answers two questions, separately: is the code good, and did we build the
+  right thing (the *Content reviewer* section below).
 - A **comment & documentation-discipline reviewer** — comment and citation hygiene in the code *and*
   the state of the §4 documentation sweep (the *Documentation discipline* checklist below).
 - A **test-quality reviewer** (the `testing-architect` agent, spawned review-only — no edit tools,
@@ -123,19 +124,22 @@ when you could read the diff yourself is deliberate: each lens is one that other
 **If the plan supplied review params** (the `/work-ticket` flow settles them in `/plan` §3) **use them,
 do not re-derive them — before you choose or spawn anything.** The plan already names the three
 reviewers, the implementer teammate(s) that stay alive to receive findings, the feedback channel, the
-briefing row, and the ticket-specific criteria; apply that and fold its criteria into the checklists.
-Deriving your own reviewer or loop here is exactly how the plan's pinned-down review loop gets silently
-replaced.
+briefing row, and the ticket-specific criteria; apply that, and add its criteria to each brief as a
+floor beneath the reviewer's mandate — never in place of it. Deriving your own reviewer or loop here is
+exactly how the plan's pinned-down review loop gets silently replaced.
 
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
 a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **all
 three reviewers** as teammates too, and give each the diff range, the spec, and its mandate — not your
-account of the work. The test-quality teammate is spawned review-only (no edit tools), the same
-restriction the `independent-reviewer` teammates carry by design. Each reviewer takes its findings
-**straight to the implementer** by `SendMessage`; they
-settle mechanical findings between themselves and you neither sit in that loop nor re-dispatch fixes.
-What reaches **you** is only what must: an escalation (below) or a short readiness digest.
+account of the work. The content reviewer's mandate is the two questions below, the first quoted
+verbatim — not a list of the plan's rulings to confirm; its spec is the ticket with the approved plan
+attached. The test-quality teammate is spawned review-only (no edit tools), the same restriction the
+`independent-reviewer` teammates carry by design. Each reviewer takes its findings **straight to the
+implementer** by `SendMessage`; they settle loop findings (below) between themselves and you neither
+sit in that loop nor re-dispatch fixes. What reaches **you** is only what must: an escalation (below), a
+tool recommendation, or a short readiness digest carrying the content reviewer's final two verdicts
+word for word, noting any *send back* that was reworked.
 
 **One carve-out, on a TDD-paired item: a test-quality finding on a `test-first`-authored test does not
 go to the `code-monkey` implementer** — it cannot edit tests, and `test-first` is gone by review time.
@@ -143,13 +147,20 @@ If the finding questions whether the test correctly encodes or omits a spec'd co
 you like any contract finding; if it is mechanical test repair, spawn `test-writer-fixer` to apply it.
 This is the routing `/plan` §3 already names for the pairing — apply it, do not re-derive it.
 
-**The peer loop is bounded to what the plan already settles.** Mechanical findings — a rename, a
-missing null check, a doc fix, a comment that states a reason instead of a mechanism, a test that
-asserts nothing — the reviewer and implementer resolve directly. **Everything else escalates to you,
-and you take it to the human: any ambiguity, any design decision, any finding that questions a contract,
-a shared value, an abstraction, or the plan itself.** Neither teammate resolves such a finding between
+**The peer loop is bounded to fixes that change no interface, contract, shared value, abstraction, or
+decision the plan made.** Within that bound the reviewer and implementer resolve directly any
+mechanical finding — a local rename, a missing null check, a doc fix, a comment that states a reason
+instead of a mechanism, a test that asserts nothing — and **any readability finding, restructures
+included**, the implementer returning each fix to the raising reviewer for a re-read. A finding whose
+fix would cross the bound is a plan finding and escalates. A finding
+whose class is likely to recur also carries a recommendation for a tool that would check it
+automatically — a linter rule, a formatter, a gate — and that recommendation comes to you for the human,
+who decides whether it becomes a ticket or lands in scope. **Everything else escalates to you, and you
+take it to the human: any ambiguity, any design decision, any finding that questions a contract, a
+shared value, an abstraction, or the plan itself.** Neither teammate resolves such a finding between
 themselves and neither invents an answer — that is the exact defect the review exists to catch. Keep a
-running digest on the shared task list so the human can watch the exchange without being its switchboard.
+running digest on the shared task list so the human can watch the exchange without being its
+switchboard.
 
 **Brief each reviewer by who wrote the code** — it does not change *whether* they are spawned (always
 three, always fresh context) but *what they are told to distrust*:
@@ -163,11 +174,68 @@ three, always fresh context) but *what they are told to distrust*:
 In every case: **verify prior claims, don't trust them.** An implementer's self-report is a
 starting point, never evidence.
 
-**Content reviewer — check for:**
+**Content reviewer — two questions, answered separately:**
+
+1. **Is the code good?** *Would a senior engineer intimately familiar with this language and this
+   project accept this change as it stands, with an explicit focus on human readability?*
+2. **Did we build the right thing?** Against the ticket, read with the approved plan attached to it
+   (`/plan` §5 posts it there) — a ticket's scope often moves during planning. Where the ticket and the
+   plan disagree, report it: the plan's recorded, approved decisions govern, and a divergence the plan
+   does not record escalates.
+
+Both are answered, each with its own verdict, and neither stands in for the other. In the thoroughness
+paragraph above, *the properties the artifact must hold* are, for the first question, the properties
+that engineer holds code to — not the plan's decisions.
+
+Brief it with:
+
+- **Both questions, the first quoted verbatim.**
+- **The ticket with the approved plan attached** — the authority for the second question. With no
+  plan (the human wrote the code), the ticket alone.
+- **The ticket-specific criteria**, each citing an authority outside the plan (`/plan` §3). The plan's
+  own rulings are checked under the second question, from the plan itself; restated as criteria they
+  turn the brief into a compliance audit, the failure this section exists to stop.
+- **The method and checks below, copied in** — whichever agent reviews, the bar travels in the brief,
+  not in that agent's definition.
+
+It reviews by:
+
+- **Reading the ticket and plan first**, so its expectation of what should exist comes from intent
+  rather than from the code — that is what catches an omission.
+- **Paraphrasing each changed unit as its next maintainer would.** For each unit the change adds or
+  alters, say in one sentence what it does; the paraphrases go in the reviewer's report file, not the
+  digest, as the evidence the read happened. Anything that had to be read twice to say is a finding,
+  named with the misreading it invites — *"the next editor takes `retry` for idempotent and calls it
+  twice"* — not "this is unclear." Prompts for that read, not a list to tick: names that say what the
+  thing is in this project's vocabulary; control flow that reads top to bottom; one thing per unit at
+  one level of abstraction; the construct a fluent writer of the language reaches for, not clever or
+  needlessly general code; no checks for states the types or callers already rule out — handling at a
+  real boundary is expected, not noise.
+- **Holding findings to what the change introduced or left harder to read.** Pre-existing debt in a
+  unit the change touches may be fixed when the fix is minimal — tidying the docstring of the function
+  being changed is encouraged; rewriting every docstring in the file is not. "Works, but restructure
+  it" is a legitimate blocking finding when the restructure is what makes the change maintainable; it is
+  settled in the peer loop when its fix changes no interface, contract, shared value, abstraction, or
+  decision the plan made, and escalates as a plan finding when it would.
+- **Naming the tool when a finding's class is likely to recur** — a linter rule, a formatter, a gate
+  that would catch it automatically. The recommendation goes to the human, who decides whether it
+  becomes a ticket or lands in scope.
+- **Reporting a ruling that produced code that engineer would reject as a finding against the plan**,
+  which escalates like any plan finding. "The plan said to" settles the second question, never the
+  first.
+- **Ending with both verdicts.** For the first, *accept as-is*, *accept after the listed fixes*, or
+  *send back*, argued from the code; a *send back* is reworked in the peer loop. For the second,
+  whether the change builds what the ticket and plan ask, with any gap or excess listed; a gap the plan
+  already settles is fixed in the loop, one that questions the plan or the ticket escalates.
+
+**What that engineer also catches** — standing checks in service of the questions, none a substitute
+for them:
 
 - **Correctness** against the stated intent.
-- **Scope discipline** — nothing beyond the ticket; no drive-by refactors.
-- **Idiom match** — naming and structure consistent with surrounding code.
+- **Scope discipline** — nothing beyond the ticket; no drive-by refactors. A minimal cleanup inside a
+  unit the change touches is not one.
+- **Idiom** — the language's idiom wins over local habit unless the project hard-documents the
+  convention (a style guide, `CONTRIBUTING.md`, a linter config).
 - **Shared-contract consistency** — any value that must agree across a boundary is defined once or
   tested for agreement, never kept in sync by a comment.
 - **Abstraction with no second consumer** — new extension points, registries, or indirection built
@@ -179,11 +247,14 @@ starting point, never evidence.
 
 **Comment & documentation-discipline reviewer — check for:**
 
-- **Comment density is an absolute bar, not calibrated to surrounding code** — minimal, mechanism-only
-  inline comments, no narrative blocks. Existing sibling comments are legacy density to trim when
-  touched, never the standard to match; a reviewer who calibrates to neighbours passes what the owner
+- **Comment density is an absolute bar, not calibrated to surrounding code** — minimal: a comment
+  appears only where the code cannot be read on its own without it, where it states a mechanism, or
+  where it is the language's or tool's own documentation standard (a docstring, godoc, JSDoc). No
+  narrative blocks. Existing sibling comments are legacy density to trim within the unit the change
+  touches, never the standard to match; a reviewer who calibrates to neighbours passes what the owner
   rejects.
-- **Comments state mechanism, not reason.** What the code does or how it does it stays; a statement
+- **Comments state mechanism, not reason.** How the code does something it cannot show on its own
+  stays; a statement
   of why, of history, or of evaluative judgment belongs in whichever doc the repo's map assigns it,
   with the comment citing that home instead.
 - **A citation cites rather than restates.** Strip the identifier from the sentence — if any
@@ -231,11 +302,12 @@ escalates to you, and mechanical test repair goes to a `test-writer-fixer` teamm
 
 **Running standalone (no orchestrator mode):**
 
-- **Mechanical fixes** — a rename, a missing null check, a doc correction, a comment reworded to state
-  mechanism — apply them and say you did.
+- **Mechanical fixes** — a local rename, a missing null check, a doc correction, a comment reworded to
+  state mechanism — apply them and say you did.
 - **A fix touching what a finding was about** — a boundary contract, a shared value, an abstraction the
   content reviewer questioned, a doc-map placement or decision record the discipline reviewer flagged,
-  or a test the test-quality reviewer found to be coverage-padding or built on deleted defensive code —
+  a readability restructure the content reviewer asked for, or a test the test-quality reviewer found
+  to be coverage-padding or built on deleted defensive code —
   **goes back to the reviewer that raised it for a second pass** on that fix. This is the class of
   defect the review existed to catch; re-introducing it while patching is the specific risk. Size is
   not the test here; subject matter is.

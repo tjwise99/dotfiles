@@ -42,8 +42,13 @@ So it need not re-derive context:
 - Ticket number and summary; the **base branch** — have it `git switch -c <branch> <base>` first (in
   its own worktree for the parallel case).
 - Its **work-item(s)** from the plan: what changes, the **scope boundary** (ticket-only, no drive-by
-  changes), the contract it must honour, and how it is proven.
-- Repo conventions — match surrounding idiom, comment density, naming.
+  changes; a minimal cleanup inside a unit it touches, such as the docstring of the function it edits,
+  is welcome, a sweep beyond it is not), the contract it must honour, and how it is proven.
+- Repo conventions — the language's idiom wins over local habit unless the project hard-documents the
+  convention (a style guide, `CONTRIBUTING.md`, a linter config); names in the project's vocabulary;
+  comments minimal: a comment appears only where the code cannot be read on its own without it, where
+  it states a mechanism, or where it is the language's or tool's own documentation standard (a
+  docstring, godoc, JSDoc).
 - **For a TDD-paired item:** brief the `test-first` teammate with the item's contracts to encode and
   the instruction to **halt on any assertion the plan does not determine rather than invent it**; brief
   the `code-monkey` implementer that those failing tests are its acceptance criteria — make them green,
@@ -54,11 +59,12 @@ So it need not re-derive context:
 - The **escalation rule** (§3) and the return contract: **report what changed and the commit/PR refs
   in ≤10 lines; write anything longer to a file.** Fat reports re-pollute the context this delegation
   protects.
-- The **review feedback loop the plan named**: it stays alive after implementing, receives the
-  three reviewers' findings **directly by `SendMessage`**, resolves mechanical ones with the reviewer
-  that
-  raised them, and escalates anything touching a contract, shared value, abstraction, or the plan (§3)
-  rather than patching it. Consumed in the `/pr-ready` review pass.
+- The **review feedback loop the plan named**: it stays alive after implementing, receives the three
+  reviewers' findings **directly by `SendMessage`**, resolves any mechanical or readability finding,
+  restructures included, whose fix changes no interface, contract, shared value, abstraction, or
+  decision the plan made, with the reviewer that raised it, returning each fix to that reviewer for a
+  re-read, and escalates any ambiguity, any design decision, anything touching a contract, shared value,
+  abstraction, or the plan (§3) rather than patching it. Consumed in the `/pr-ready` review pass.
 
 ## 3. Escalate, never invent
 

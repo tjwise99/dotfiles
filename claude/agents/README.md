@@ -19,7 +19,7 @@ which `tools/check-manifest.py` then enforces in both directions.
 
 | Agent | Model | Use for |
 |---|---|---|
-| **independent-reviewer** | opus | Adversarial review of a diff against its specification, in a context that did not write it. Reports findings; **no edit tools by design** |
+| **independent-reviewer** | opus | Adversarial review of a diff, in a context that did not write it: would a senior engineer fluent in the language and project accept it, readability first, and did it build the right thing? Reports findings; **no edit tools by design** |
 | **code-monkey** | sonnet | Implementing a settled specification **without making design decisions** — halts and asks when the spec is ambiguous rather than inventing plausibly |
 | **test-first** | sonnet | Writing the **failing tests that specify a task, before any code exists** — the RED to code-monkey's GREEN. Halts and asks rather than inventing a contract; **never writes production code** |
 | **software-architect** | opus | Turning vague requirements into concrete architecture and decision records |
@@ -80,8 +80,9 @@ reviewed.**
   Ambiguity becomes a halt and a question, not a plausible invention. It is also a **spec quality
   test**: frequent halts mean the specification was incomplete, which a helpful agent otherwise hides
   by filling gaps well.
-- **`independent-reviewer` catches it at the output.** Fresh context, reviews against the spec, has no
-  edit tools so it cannot become a second author.
+- **`independent-reviewer` catches it at the output.** Fresh context, answers both "good code?",
+  readability first, and "right thing?" — the spec settles the second, never the first — and has no edit
+  tools so it cannot become a second author.
 
 **Thoroughness is a method, not a resolve:** enumerate the properties the artifact must hold, check
 each against the real artifact with real data (not a fixture), hunt the class behind the instance,
