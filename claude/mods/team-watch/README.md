@@ -22,8 +22,8 @@ must see goes through SendMessage.
 
 ## Where it loads
 
-`~/.claude/skills/` is linked to this repo's `claude/skills/`, and Claude Code auto-loads a plugin
-found in a skills folder. No setting enables it; deleting the folder removes it.
+`CLAUDE_CODE_PLUGIN_DIRS` in `claude/settings.json` names this folder. Remove the entry to disable
+it; sessions already running keep their copy until restarted.
 
 ## Logs
 

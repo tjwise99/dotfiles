@@ -8,6 +8,8 @@ session — lives here instead, where it costs nothing until someone opens it.
 
 `CLAUDE.md`, `settings.json`, `agents/`, `skills/` and `commands/` are symlinked into `~/.claude/`.
 The scripts below are invoked by absolute path from `settings.json` and are not linked anywhere.
+`mods/` is not linked either: each mod loads because `settings.json` names its folder in
+`CLAUDE_CODE_PLUGIN_DIRS`.
 
 ## Hooks
 
@@ -120,8 +122,11 @@ GitHub work goes through `gh`, browser automation through the Playwright CLI.
 
 ## Mods
 
-`skills/team-watch/` is a hooks-module plugin, not a skill: Claude Code auto-loads a plugin found in a
-skills folder. It repairs agent-team message delivery and idle-notification spam; its own
+A mod is a Claude Code plugin with a hooks module, kept in `mods/<name>/` and enabled by listing that
+folder in `CLAUDE_CODE_PLUGIN_DIRS` in `settings.json` (several folders are separated by `:`).
+Removing the entry disables it; a running session picks up the change only after a restart.
+
+`mods/team-watch/` repairs agent-team message delivery and idle-notification spam; its own
 `README.md` says what it changes, where it logs and how to test it.
 
 ## Agents and skills
