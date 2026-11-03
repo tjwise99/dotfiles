@@ -118,6 +118,12 @@ GitHub work goes through `gh`, browser automation through the Playwright CLI.
       claude mcp add-json playwright \
         '{"type":"stdio","command":"'"$(asdf which npx)"'","args":["-y","@playwright/mcp@latest"],"env":{}}'
 
+## Mods
+
+`skills/team-watch/` is a hooks-module plugin, not a skill: Claude Code auto-loads a plugin found in a
+skills folder. It repairs agent-team message delivery and idle-notification spam; its own
+`README.md` says what it changes, where it logs and how to test it.
+
 ## Agents and skills
 
 `agents/README.md` holds the agent inventory, which `tools/check-manifest.py` enforces against the
