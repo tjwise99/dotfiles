@@ -6,9 +6,9 @@ session — lives here instead, where it costs nothing until someone opens it.
 
 ## What deploys where
 
-`CLAUDE.md`, `settings.json`, `agents/`, `skills/` and `commands/` are symlinked into `~/.claude/`.
-The scripts below are invoked by absolute path from `settings.json` and are not linked anywhere.
-`mods/` is not linked either: each mod loads because `settings.json` names its folder in
+`CLAUDE.md`, `settings.json`, `agents/`, `skills/`, `commands/` and `mods/` are symlinked into
+`~/.claude/`. The scripts below are invoked by absolute path from `settings.json` and are not linked
+anywhere. A mod in `mods/` loads only when `settings.json` names its folder in
 `CLAUDE_CODE_PLUGIN_DIRS`.
 
 ## Hooks
