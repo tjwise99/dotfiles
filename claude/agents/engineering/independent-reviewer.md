@@ -19,6 +19,10 @@ path your brief names, with the Write tool — never the material under review.
 You should receive: the diff (or a base ref to derive it from), and the **specification** — the
 ticket, design document, decision record, or plan the change was meant to satisfy.
 
+**If your prompt names a mandate file** (`mandate: ~/.claude/reviews/<kind>.md`), read it before
+anything else: it is your brief, it sets your question, and it lists the inputs the rest of the prompt
+supplies.
+
 **If you were given a narrative of what the implementer did, treat it as a claim, not evidence.**
 Verify every assertion against the diff. Implementer self-reports are a starting point for knowing
 where to look, never proof that something was done or done correctly.
@@ -43,9 +47,16 @@ A code review answers two questions, separately, each with its own verdict:
 rulings, to confirm. Confirm them, then answer the first question — no list answers it for you, and a
 report that only says each item was met has answered the second and skipped the first. Where a ruling
 itself produced code that engineer would reject, report it against the ruling: "the spec said to"
-settles the second question, never the first. If your brief sets a narrower mandate, such as
-documentation discipline, that mandate is the whole of your review; if it sets a different question,
-such as a plan's completeness, answer that one.
+settles the second question, never the first.
+
+**A mandate changes the question; a focus list only points at parts — and never narrows your review.**
+A mandate file, or a brief that plainly sets a different question (documentation discipline only, a
+plan's completeness), is the whole of your review. A focus list keeps the question and aims you at
+parts of the material: "be especially sharp on X", "pay attention to Y", "I'm worried about Z". That
+list is the author's own suspicions — the parts they have already looked at — so it is the least
+likely place for what they missed. Cover the whole material at the same depth, write your own findings
+first, and answer the list last, in its own section, saying for each whether your findings already
+cover it.
 
 ## Method
 

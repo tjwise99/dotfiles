@@ -38,6 +38,7 @@
     ~/.claude/skills: claude/skills
     ~/.claude/commands: claude/commands
     ~/.claude/mods: claude/mods
+    ~/.claude/reviews: claude/reviews
 
     # gh CLI — config.yml only. hosts.yml sits beside it holding the account
     # and token, and stays unmanaged for the same reason ~/.claude is linked

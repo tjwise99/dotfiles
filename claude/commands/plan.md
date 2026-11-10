@@ -86,14 +86,15 @@ unneeded work enter.
     here**; that table stays the single definition of the briefing logic, and the plan only records the
     row. For the `/work-ticket` flow the row is already fixed: code is written by a subagent from a plan
     this thread wrote, and orchestrator mode runs the review as a reviewer–implementer team regardless —
-    so the three reviewers are fresh-context teammates (e.g. two `independent-reviewer` teammates — one
-    briefed for content and one for documentation discipline — plus a `testing-architect` teammate
-    briefed for test quality and spawned review-only, no edit tools), told to treat the plan itself as
-    suspect, feeding the implementer teammate(s) `/implement` leaves running.
+    so the row is `authorship: agent-from-lead-plan` and the three reviewers are fresh-context
+    teammates (e.g. two `independent-reviewer` teammates on the `pr-content` and `pr-docs-discipline`
+    mandates, plus a `testing-architect` teammate on `pr-test-quality`, spawned review-only, no edit
+    tools), feeding the implementer teammate(s) `/implement` leaves running.
   - **The ticket-specific criteria** the review must verify — the checks particular to *this* change (a
     contract it must not break, an observable it must preserve, an edge case discovery surfaced), on top
     of `/pr-ready`'s generic checklist. **They are a floor beneath the content reviewer's two questions
-    (`/pr-ready` §6), never its mandate.** **Each criterion cites an authority outside this plan** — the
+    (`~/.claude/reviews/pr-content.md`), never its mandate**, and reach the reviewers in this plan, not
+    restated in a spawn prompt. **Each criterion cites an authority outside this plan** — the
     ticket, a contract discovery found in the tree, an edge case discovery surfaced. An item whose
     honest source is "the plan decided it" is a ruling, not a criterion, and stays out: the reviewer
     already checks rulings against the plan itself, and §2's contracts restated here turn the content
@@ -111,61 +112,32 @@ the implementer to build that the plan does not decide?** The **overbuild read**
 *lean*: **what does this plan specify that the ticket does not need?** The two pull in opposite
 directions, which is why they are separate reviewers and not one brief.
 
-- **Delegate both to fresh contexts.** Hand each reviewer (e.g. `independent-reviewer`) the ticket, the
-  discovery brief, the drafted plan, and its own read's question and bullets below copied into the
-  brief — **not your account of why it is complete or lean.** Briefed with the inputs alone, a reviewer
-  falls back to its own code-review checklist, which asks neither question. An author cannot find its
-  own holes or its own excess; independence is a property of context, not of instruction. Orchestrator
-  mode makes these subagents regardless. This is the pr-ready review pattern, moved one level up — the
-  same reliability, applied to the plan instead of the diff.
-- **Run them as a pair, not in sequence.** Name both so they cross-examine directly: a completeness
-  hole in an item the overbuild read would cut is moot if the cut stands, and a cut that would open a
-  hole goes to the completeness reviewer to confirm. Where they still disagree, both positions go to
-  the human.
+- **Delegate both to fresh contexts, and do not write their briefs.** Each read's question and method
+  live in a mandate file the reviewer reads itself — `~/.claude/reviews/plan-completeness.md` and
+  `~/.claude/reviews/plan-overbuild.md`. The spawn prompt is the mandate path and the inputs that file
+  lists, one per line, and nothing else:
 
-**The completeness read:**
+  ```
+  mandate: ~/.claude/reviews/plan-completeness.md
+  ticket: <issue number or task text>
+  discovery: <path to the /discover brief>
+  plan: <path to the drafted plan>
+  pair: <the other reviewer's name>
+  report: <path, unless the harness assigns a deliverable>
+  ```
 
-- **One adversarial question.** What will the implementer have to invent because the plan left it
-  open? Every observable the plan does not pin to an authority, every choice handed to implementer
-  discretion, anything settled only by *the code already does it* or *I would build it this way* —
-  those are open decisions, not made ones. Default to unsettled when unsure.
-- **The review params (§3) are in scope for this read, not just implementer-facing holes.** The feedback
-  path is an orchestration decision the implementer does not build, so the adversarial question above
-  would walk past a half-specified one — check it explicitly: are all three reviewers named, the live
-  implementer teammate(s) named, the channel and the escalation boundary stated? Does every
-  ticket-specific criterion cite an authority outside the plan, or is any of them a ruling restated? A
-  missing or vague feedback path is the failure §3 exists to prevent, and the author's own §3 is where
-  it hides — so the independent read, not author self-assessment, must confirm it. **Confirm the TDD
-  pairing the same way:** does every work-item with a test surface name a `test-first` teammate ahead of
-  its implementer, and does every item that omits one carry an explicit recorded skip? A silent omission
-  reads identically to a decision, which is exactly how test-first coverage lapses unnoticed.
-- **Thoroughness is a method, not a resolve:** enumerate the properties the plan must settle, check
-  each against the real plan text and the ticket's intent, not a fixture, hunt the class behind the
-  instance, and flag where the plan does not yet name how a property will be proven durably.
-
-**The overbuild read:**
-
-- **One adversarial question.** What could this plan drop and still close the ticket? Ask it of every
-  work-item, abstraction, option and proof; for each, name what the ticket needs that would break
-  without it. If nothing would, it is a cut.
-- **Engineering nobody asked for** — an abstraction with one caller, configuration or extension points
-  no requirement names, a general mechanism where the ticket needs one case, hardening of scaffolding
-  before the loop it serves has run once.
-- **Tests that prove the same thing twice** — one contract pinned several ways (unit, integration and
-  snapshot tests of the same behaviour; a case per input variant where one case settles the contract),
-  tests of the tooling rather than the change, and tests of behaviour no contract in the plan names.
-  One proof per contract, able to fail on the wrong behaviour; anything beyond that is a cut. Each of
-  these is its own contract, not a repeat of one: a changed boundary or failure path, the real-thing
-  check that backs a test double, and the seeded-defect and valid-variant cases that prove a check can
-  fail.
-- **An authority licenses the what, not the how.** An authority outside the plan — the ticket, a
-  contract discovery found in the tree, a decision the human answered in discovery — protects what an
-  item must *do*, never, on its own, how it is built: a ticket asking for a configurable timeout does
-  not license a layered config loader.
-
-**Both reads surface, they do not resolve.** Holes and cuts come back as open calls — the options and
-what is at stake — never a recommendation dressed as a finding, the contract discovery already holds.
-A cut changes scope, so the human makes it.
+  **No framing, no emphasis, no focus list** — not "be especially sharp on X", not your account of why
+  the plan is complete or lean. A list of what to look at is a list of what you already suspected:
+  it aims the adversarial read at the parts you have already examined and waves the rest through. An
+  author cannot find its own holes or its own excess; independence is a property of context, and the
+  spawn prompt is context. Orchestrator mode makes these subagents regardless.
+- **Run them as a pair, not in sequence.** Name both so they cross-examine directly, as their mandates
+  describe. Where they still disagree, both positions go to the human.
+- **Your suspicions go in after the blind pass, not before.** If you have them, write them to the
+  scratch tree before you spawn — so they are on record and cannot be rewritten to match the result —
+  and send them to each reviewer only once its report exists, asking for each whether its report
+  already covers it. A suspicion the blind pass missed is a finding about the review as well as the
+  plan; say so to the human.
 
 Resolve each hole and cut **with the human, in conversation**, and fold the answers into the plan;
 anything still open is escalated, never invented. Only once the plan settles every decision it
