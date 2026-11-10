@@ -165,7 +165,7 @@ which it reads itself; the spawn prompt is the mandate path and the inputs that 
 line, and nothing else:
 
 ```
-mandate: ~/.claude/reviews/pr-content.md
+mandate: /home/<you>/.claude/reviews/pr-content.md
 diff: origin/<base>...HEAD   (in <repo path>)
 ticket: <issue number or task text, or omit>
 plan: <path, when the approved plan is not on the ticket>

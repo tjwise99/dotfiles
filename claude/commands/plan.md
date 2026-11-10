@@ -119,7 +119,7 @@ directions, which is why they are separate reviewers and not one brief.
   lists, one per line, and nothing else:
 
   ```
-  mandate: ~/.claude/reviews/plan-completeness.md
+  mandate: /home/<you>/.claude/reviews/plan-completeness.md
   ticket: <issue number or task text>
   discovery: <path to the /discover brief>
   plan: <path to the drafted plan>
