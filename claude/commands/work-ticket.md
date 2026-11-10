@@ -60,7 +60,7 @@ review, the documentation sweep, memory housekeeping, and PR hygiene.
 **Point it at the plan's review params** — the three reviewers, the live implementer teammate(s), the
 feedback channel, the briefing row, and the ticket-specific criteria were all settled in step 2.
 `/pr-ready` **consumes them, it does not re-decide the briefing row or re-derive the feedback loop**;
-the briefing table it holds is the menu the plan already selected from. Do not re-derive the answer
+the authorship table it holds is the menu the plan already selected from. Do not re-derive the answer
 here — that is how the review loop the plan pinned down gets replaced with an improvised one.
 
 Relay its verdict.

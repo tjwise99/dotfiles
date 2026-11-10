@@ -32,6 +32,12 @@ context is worth more than the tokens.
   scratch and deliverable trees are write-allowed (their `Edit()` allow-rule covers the Write tool),
   so the agent writes with the Write tool. `ls` the path and `grep` the file to confirm a ruling
   landed — never the agent's status list, which can report a write that never happened.
+- **A reviewer's brief is its inputs and its question — never your focus.** "Be especially sharp on
+  X" aims an adversarial read at your own suspicions, which is where you have already looked; what it
+  waves through is everything else. A review a command defines is spawned with its mandate file
+  (`~/.claude/reviews/`) and input paths, nothing more; an ad hoc review gets the artifact, the spec and
+  the question. Write your suspicions down before you spawn and send them only once the reviewer's
+  report exists, asking whether it covered each.
 - **Name an agent only when you want a teammate.** With agent-teams on, a *named* subagent becomes a
   teammate (peer `SendMessage` mesh, a full instance); an *unnamed* one is an isolated subagent that
   returns its result (cheaper, reliable). Name the implementer and the reviewers of a live team so

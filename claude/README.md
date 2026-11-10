@@ -6,9 +6,9 @@ session — lives here instead, where it costs nothing until someone opens it.
 
 ## What deploys where
 
-`CLAUDE.md`, `settings.json`, `agents/`, `skills/`, `commands/` and `mods/` are symlinked into
-`~/.claude/`. The scripts below are invoked by absolute path from `settings.json` and are not linked
-anywhere. A mod in `mods/` loads only when `settings.json` names its folder in
+`CLAUDE.md`, `settings.json`, `agents/`, `skills/`, `commands/`, `mods/` and `reviews/` are
+symlinked into `~/.claude/`. The scripts below are invoked by absolute path from `settings.json` and
+are not linked anywhere. A mod in `mods/` loads only when `settings.json` names its folder in
 `CLAUDE_CODE_PLUGIN_DIRS`.
 
 ## Hooks
@@ -128,6 +128,24 @@ Removing the entry disables it; a running session picks up the change only after
 
 `mods/team-watch/` repairs agent-team message delivery and idle-notification spam; its own
 `README.md` says what it changes, where it logs and how to test it.
+
+## Review mandates
+
+`reviews/` holds one brief per review a command runs — `/plan`'s completeness and overbuild reads,
+`/pr-ready`'s content, documentation-discipline and test-quality reviewers. The reviewer reads its own
+mandate; the lead's spawn prompt carries only the mandate path and input paths.
+
+**They exist because a lead-written brief steers the review toward the lead's own suspicions.** A
+lead that copies a review's question into the brief adds "be especially sharp on X" with it — a list
+of what the author has already examined — and the review waves through what is not on the list. An
+instruction telling the author not to steer cannot fix this, because the author does not see a focus
+list as steering; taking the brief out of the author's hands does. The author's suspicions still
+count, sent only once the blind report exists.
+
+The bar lives in a mandate file rather than an agent definition so any agent can hold it —
+`testing-architect` runs the test-quality mandate. `independent-reviewer` separately treats a focus
+list in any brief, mandate or not, as the author's suspicions rather than its scope, which covers
+reviews spawned ad hoc.
 
 ## Agents and skills
 

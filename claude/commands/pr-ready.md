@@ -110,13 +110,13 @@ the first thing a correctness-focused read skims past, so each gets its own revi
 mandate:
 
 - A **content reviewer** — answers two questions, separately: is the code good, and did we build the
-  right thing (the *Content reviewer* section below).
+  right thing. Mandate: `~/.claude/reviews/pr-content.md`.
 - A **comment & documentation-discipline reviewer** — comment and citation hygiene in the code *and*
-  the state of the §4 documentation sweep (the *Documentation discipline* checklist below).
+  the state of the §4 documentation sweep. Mandate: `~/.claude/reviews/pr-docs-discipline.md`.
 - A **test-quality reviewer** (the `testing-architect` agent, spawned review-only — no edit tools,
   the same restriction `independent-reviewer` carries by design) — whether the diff's tests
-  meaningfully verify behaviour rather than merely execute lines for coverage (the *Test quality*
-  checklist below).
+  meaningfully verify behaviour rather than merely execute lines for coverage. Mandate:
+  `~/.claude/reviews/pr-test-quality.md`.
 
 All three read the same diff on disjoint mandates and report independently. Spawning three agents even
 when you could read the diff yourself is deliberate: each lens is one that otherwise vanishes.
@@ -124,22 +124,20 @@ when you could read the diff yourself is deliberate: each lens is one that other
 **If the plan supplied review params** (the `/work-ticket` flow settles them in `/plan` §3) **use them,
 do not re-derive them — before you choose or spawn anything.** The plan already names the three
 reviewers, the implementer teammate(s) that stay alive to receive findings, the feedback channel, the
-briefing row, and the ticket-specific criteria; apply that, and add its criteria to each brief as a
-floor beneath the reviewer's mandate — never in place of it. Deriving your own reviewer or loop here is
-exactly how the plan's pinned-down review loop gets silently replaced.
+briefing row, and the ticket-specific criteria; apply that. The criteria reach the reviewers in the
+plan they read, as a floor beneath each mandate — never restate them in a spawn prompt. Deriving your
+own reviewer or loop here is exactly how the plan's pinned-down review loop gets silently replaced.
 
 **If orchestrator mode is on** (the `/work-ticket` flow leaves it on through this step), you cannot
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
 a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **all
-three reviewers** as teammates too, and give each the diff range, the spec, and its mandate — not your
-account of the work. The content reviewer's mandate is the two questions below, the first quoted
-verbatim — not a list of the plan's rulings to confirm; its spec is the ticket with the approved plan
-attached. The test-quality teammate is spawned review-only (no edit tools), the same restriction the
-`independent-reviewer` teammates carry by design. Each reviewer takes its findings **straight to the
-implementer** by `SendMessage`; they settle loop findings (below) between themselves and you neither
-sit in that loop nor re-dispatch fixes. What reaches **you** is only what must: an escalation (below), a
-tool recommendation, or a short readiness digest carrying the content reviewer's final two verdicts
-word for word, noting any *send back* that was reworked.
+three reviewers** as teammates too, each with the spawn prompt below — its mandate file and inputs,
+not your account of the work. The test-quality teammate is spawned review-only (no edit tools), the
+same restriction the `independent-reviewer` teammates carry by design. Each reviewer takes its
+findings **straight to the implementer** by `SendMessage`; they settle loop findings (below) between
+themselves and you neither sit in that loop nor re-dispatch fixes. What reaches **you** is only what
+must: an escalation (below), a tool recommendation, or a short readiness digest carrying the content
+reviewer's final two verdicts word for word, noting any *send back* that was reworked.
 
 **One carve-out, on a TDD-paired item: a test-quality finding on a `test-first`-authored test does not
 go to the `code-monkey` implementer** — it cannot edit tests, and `test-first` is gone by review time.
@@ -162,131 +160,44 @@ themselves and neither invents an answer — that is the exact defect the review
 running digest on the shared task list so the human can watch the exchange without being its
 switchboard.
 
-**Brief each reviewer by who wrote the code** — it does not change *whether* they are spawned (always
-three, always fresh context) but *what they are told to distrust*:
+**Do not write the reviewers' briefs.** Each reviewer's question and method live in its mandate file,
+which it reads itself; the spawn prompt is the mandate path and the inputs that file lists, one per
+line, and nothing else:
 
-| Who wrote it | What the reviewers are briefed to distrust |
+```
+mandate: /home/<you>/.claude/reviews/pr-content.md
+diff: origin/<base>...HEAD   (in <repo path>)
+ticket: <issue number or task text, or omit>
+plan: <path, when the approved plan is not on the ticket>
+authorship: human | agent-from-lead-plan | lead
+send-findings-to: <implementer teammate name, when the review runs as a team>
+report: <path, unless the harness assigns a deliverable>
+```
+
+Write the mandate path with `~` expanded — the reviewer's Read tool takes only absolute paths.
+
+**No framing, no emphasis, no focus list** — not "be especially sharp on X", not your account of the
+work, not the plan's rulings restated as criteria. A list of what to look at is a list of what you
+already suspected: it aims the review at the parts you have already examined and waves the rest
+through. The spawn prompt is context, and independence is a property of context.
+
+**`authorship` is the briefing row** — who wrote the code decides what the reviewers distrust, and
+each mandate spells out what its value means:
+
+| Who wrote it | `authorship:` |
 |---|---|
-| **The human**, or an agent in a session you had no part in | Verify against the ticket's stated intent; no plan to treat as suspect |
-| **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) | Treat the **plan itself as suspect too** — it shares your blind spots; verify against the ticket's intent, not just the plan |
-| **You, in this session** | The reviewers are your only independent read — give them the diff and the spec, *not* your account of what you did |
+| **The human**, or an agent in a session you had no part in | `human` |
+| **An agent in another context, from a plan you wrote** (e.g. the `/work-ticket` flow) — the plan shares your blind spots, so it is suspect too | `agent-from-lead-plan` |
+| **You, in this session** — the reviewers are your only independent read | `lead` |
 
-In every case: **verify prior claims, don't trust them.** An implementer's self-report is a
-starting point, never evidence.
+**Your suspicions go in after the blind pass, not before.** If you have them, write them to the
+scratch tree before you spawn — so they are on record and cannot be rewritten to match the result —
+and send them to a reviewer only once its report exists, asking for each whether its report already
+covers it. A suspicion the blind pass missed is a finding about the review as well as the diff; say so
+to the human.
 
-**Content reviewer — two questions, answered separately:**
-
-1. **Is the code good?** *Would a senior engineer intimately familiar with this language and this
-   project accept this change as it stands, with an explicit focus on human readability?*
-2. **Did we build the right thing?** Against the ticket, read with the approved plan attached to it
-   (`/plan` §5 posts it there) — a ticket's scope often moves during planning. Where the ticket and the
-   plan disagree, report it: the plan's recorded, approved decisions govern, and a divergence the plan
-   does not record escalates.
-
-Both are answered, each with its own verdict, and neither stands in for the other. In the thoroughness
-paragraph above, *the properties the artifact must hold* are, for the first question, the properties
-that engineer holds code to — not the plan's decisions.
-
-Brief it with:
-
-- **Both questions, the first quoted verbatim.**
-- **The ticket with the approved plan attached** — the authority for the second question. With no
-  plan (the human wrote the code), the ticket alone.
-- **The ticket-specific criteria**, each citing an authority outside the plan (`/plan` §3). The plan's
-  own rulings are checked under the second question, from the plan itself; restated as criteria they
-  turn the brief into a compliance audit, the failure this section exists to stop.
-- **The method and checks below, copied in** — whichever agent reviews, the bar travels in the brief,
-  not in that agent's definition.
-
-It reviews by:
-
-- **Reading the ticket and plan first**, so its expectation of what should exist comes from intent
-  rather than from the code — that is what catches an omission.
-- **Paraphrasing each changed unit as its next maintainer would.** For each unit the change adds or
-  alters, say in one sentence what it does; the paraphrases go in the reviewer's report file, not the
-  digest, as the evidence the read happened. Anything that had to be read twice to say is a finding,
-  named with the misreading it invites — *"the next editor takes `retry` for idempotent and calls it
-  twice"* — not "this is unclear." Prompts for that read, not a list to tick: names that say what the
-  thing is in this project's vocabulary; control flow that reads top to bottom; one thing per unit at
-  one level of abstraction; the construct a fluent writer of the language reaches for, not clever or
-  needlessly general code; no checks for states the types or callers already rule out — handling at a
-  real boundary is expected, not noise.
-- **Holding findings to what the change introduced or left harder to read.** Pre-existing debt in a
-  unit the change touches may be fixed when the fix is minimal — tidying the docstring of the function
-  being changed is encouraged; rewriting every docstring in the file is not. "Works, but restructure
-  it" is a legitimate blocking finding when the restructure is what makes the change maintainable; it is
-  settled in the peer loop when its fix changes no interface, contract, shared value, abstraction, or
-  decision the plan made, and escalates as a plan finding when it would.
-- **Naming the tool when a finding's class is likely to recur** — a linter rule, a formatter, a gate
-  that would catch it automatically. The recommendation goes to the human, who decides whether it
-  becomes a ticket or lands in scope.
-- **Reporting a ruling that produced code that engineer would reject as a finding against the plan**,
-  which escalates like any plan finding. "The plan said to" settles the second question, never the
-  first.
-- **Ending with both verdicts.** For the first, *accept as-is*, *accept after the listed fixes*, or
-  *send back*, argued from the code; a *send back* is reworked in the peer loop. For the second,
-  whether the change builds what the ticket and plan ask, with any gap or excess listed; a gap the plan
-  already settles is fixed in the loop, one that questions the plan or the ticket escalates.
-
-**What that engineer also catches** — standing checks in service of the questions, none a substitute
-for them:
-
-- **Correctness** against the stated intent.
-- **Scope discipline** — nothing beyond the ticket; no drive-by refactors. A minimal cleanup inside a
-  unit the change touches is not one.
-- **Idiom** — the language's idiom wins over local habit unless the project hard-documents the
-  convention (a style guide, `CONTRIBUTING.md`, a linter config).
-- **Shared-contract consistency** — any value that must agree across a boundary is defined once or
-  tested for agreement, never kept in sync by a comment.
-- **Abstraction with no second consumer** — new extension points, registries, or indirection built
-  for a case that does not exist yet.
-- **A new dependency does work the standard library cannot reasonably do.** Ask it once per added
-  dependency, at the moment it is cheapest to answer; nothing downstream will.
-- **Orphaned references** — deletions leave nothing dangling. Grep for the removed names.
-- **Tests that assert something.** A new test that cannot fail is a false signal.
-
-**Comment & documentation-discipline reviewer — check for:**
-
-- **Comment density is an absolute bar, not calibrated to surrounding code** — minimal: a comment
-  appears only where the code cannot be read on its own without it, where it states a mechanism, or
-  where it is the language's or tool's own documentation standard (a docstring, godoc, JSDoc). No
-  narrative blocks. Existing sibling comments are legacy density to trim within the unit the change
-  touches, never the standard to match; a reviewer who calibrates to neighbours passes what the owner
-  rejects.
-- **Comments state mechanism, not reason.** How the code does something it cannot show on its own
-  stays; a statement
-  of why, of history, or of evaluative judgment belongs in whichever doc the repo's map assigns it,
-  with the comment citing that home instead.
-- **A citation cites rather than restates.** Strip the identifier from the sentence — if any
-  assertion still stands without it, the comment restated the source rather than pointing at it, and
-  the repo now holds the same fact twice.
-- **The §4 documentation sweep landed** — every doc the change affects updated, each fact in the one
-  home the repo's doc map assigns it, no restatement across docs.
-- **No point-in-time numbers** — coverage percentages, test counts, file counts; document the
-  mechanism a reader re-derives the current number from, not a figure that rots.
-- **No temporal phrasing** — "now", "currently", "no longer", "previously", "recently"; state the
-  timeless fact.
-- **A decision with a genuinely rejected alternative has a decision record**, not a prose paragraph
-  buried in a history file.
-
-**Test-quality reviewer (testing-architect) — check for:**
-
-- **Tests assert behaviour, not execution.** A test that runs a code path but carries no assertion
-  capable of failing on a wrong result is coverage padding, not verification — name it as such.
-- **Coverage-padding patterns** — an assertion on a trivial invariant (a function returned *something*,
-  a mock was called), a snapshot test with no reviewed expectation, or a test shaped to move a number
-  rather than pin a fact.
-- **Defensive or error-handling code deleted to make a diff coverable**, rather than exercised by a
-  test that reaches it. This is the specific inversion the reviewer exists to catch: the code got
-  easier to test by getting worse, not the tests got better.
-- **Boundary and failure-path coverage** — a changed boundary or a changed failure path (empty input,
-  timeout, malformed data) has a test able to fail on the wrong behaviour, not only exercise the happy
-  path.
-- **Test doubles stand on a backed contract** — a mock's behaviour is proven to match the real thing
-  somewhere, or the diff introduces an unbacked assumption.
-
-Lean on CI for the gate exactly as in step 3 — cite `gh pr checks <n>` rather than re-running the
-suite. Reserve local runs for a targeted check of a specific concern the diff raises.
+Lean on CI for the gate exactly as in step 3 — the mandates tell each reviewer to cite
+`gh pr checks <n>` rather than re-running the suite.
 
 ### Applying findings
 
