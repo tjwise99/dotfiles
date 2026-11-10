@@ -42,9 +42,8 @@ row, and the ticket-specific criteria — so
 how an implementer gets its review feedback is decided here, not improvised at `/pr-ready`. It gates on
 plan-mode approval before any code. **The plan is not proposed for approval while any decision — from
 discovery, or a hole or cut from the plan's paired completeness and overbuild reads — is still
-open.** Do not plan inline; `/plan` owns
-it, carrying the base branch confirmed in step 1. `/plan` posts the approved plan itself back to the
-ticket, where the content reviewer reads it.
+open.** Do not plan inline; `/plan` owns it, carrying the base branch confirmed in step 1. `/plan`
+posts the approved plan itself back to the ticket, where the content reviewer reads it.
 
 ## 3. Implement
 

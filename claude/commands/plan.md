@@ -112,10 +112,12 @@ the implementer to build that the plan does not decide?** The **overbuild read**
 directions, which is why they are separate reviewers and not one brief.
 
 - **Delegate both to fresh contexts.** Hand each reviewer (e.g. `independent-reviewer`) the ticket, the
-  discovery brief, and the drafted plan — **not your account of why it is complete or lean.** An author
-  cannot find its own holes or its own excess; independence is a property of context, not of
-  instruction. Orchestrator mode makes these subagents regardless. This is the pr-ready review pattern,
-  moved one level up — the same reliability, applied to the plan instead of the diff.
+  discovery brief, the drafted plan, and its own read's question and bullets below copied into the
+  brief — **not your account of why it is complete or lean.** Briefed with the inputs alone, a reviewer
+  falls back to its own code-review checklist, which asks neither question. An author cannot find its
+  own holes or its own excess; independence is a property of context, not of instruction. Orchestrator
+  mode makes these subagents regardless. This is the pr-ready review pattern, moved one level up — the
+  same reliability, applied to the plan instead of the diff.
 - **Run them as a pair, not in sequence.** Name both so they cross-examine directly: a completeness
   hole in an item the overbuild read would cut is moot if the cut stands, and a cut that would open a
   hole goes to the completeness reviewer to confirm. Where they still disagree, both positions go to
@@ -152,19 +154,24 @@ directions, which is why they are separate reviewers and not one brief.
 - **Tests that prove the same thing twice** — one contract pinned several ways (unit, integration and
   snapshot tests of the same behaviour; a case per input variant where one case settles the contract),
   tests of the tooling rather than the change, and tests of behaviour no contract in the plan names.
-  One proof per contract, able to fail on the wrong behaviour; anything beyond that is a cut.
-- **Need, not size.** An item that cites an authority outside the plan — the ticket, a contract
-  discovery found in the tree — is not overbuilt for being thorough, and a changed boundary or failure
-  path is its own contract, not a variant of the happy path.
+  One proof per contract, able to fail on the wrong behaviour; anything beyond that is a cut. Each of
+  these is its own contract, not a repeat of one: a changed boundary or failure path, the real-thing
+  check that backs a test double, and the seeded-defect and valid-variant cases that prove a check can
+  fail.
+- **An authority licenses the what, not the how.** An authority outside the plan — the ticket, a
+  contract discovery found in the tree, a decision the human answered in discovery — protects what an
+  item must *do*, never, on its own, how it is built: a ticket asking for a configurable timeout does
+  not license a layered config loader.
 
 **Both reads surface, they do not resolve.** Holes and cuts come back as open calls — the options and
 what is at stake — never a recommendation dressed as a finding, the contract discovery already holds.
 A cut changes scope, so the human makes it.
 
 Resolve each hole and cut **with the human, in conversation**, and fold the answers into the plan;
-anything still open is escalated, never invented. Only once the plan settles every decision it requires — each
-cited to an authority or answered by the human — does it go to approval. That is what keeps the next
-step a clean yes on a complete plan rather than a prompt to adjudicate what the plan skipped.
+anything still open is escalated, never invented. Only once the plan settles every decision it
+requires — each cited to an authority or answered by the human — and every cut is answered by the
+human does it go to approval. That is what keeps the next step a clean yes on a complete, lean plan
+rather than a prompt to adjudicate what the plan skipped or overbuilt.
 
 ## 5. Approve, then record
 
