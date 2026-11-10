@@ -20,12 +20,20 @@ surfaces, marked as author-raised.
 - `ticket:` — the issue (read it with `gh issue view`, comments included), or the task text. Absent
   when the human wrote the code with no ticket.
 - `plan:` — path to the approved plan, when it is not on the ticket.
-- `authorship:` — who wrote the code: `human`, `agent-from-lead-plan`, or `lead`. Whoever wrote it,
-  **verify prior claims, don't trust them** — "docs updated" in a self-report is a claim to check.
+- `authorship:` — who wrote the code: `human`, `agent-from-lead-plan`, or `lead` (see below).
 - `send-findings-to:` — the implementer teammate, when the review runs as a team. Absent standalone.
 - `report:` — where to write your report, unless the harness names a deliverable file instead.
 
+**What `authorship` tells you to distrust.** `human`: verify against the ticket's stated intent; there
+is no plan to treat as suspect. `agent-from-lead-plan`: treat **the plan itself as suspect too** — it
+shares the lead's blind spots — and verify against the ticket's intent, not just the plan. `lead`: you
+are the only independent read of work the lead did. In every case, **verify prior claims, don't trust
+them** — "docs updated" in a self-report is a claim to check.
+
 ## Your mandate
+
+**The plan's ticket-specific criteria are a floor beneath this mandate**, never in place of it. They
+are in the plan's review params; confirm each that falls in your lens, then do the whole walk below.
 
 Comment hygiene in the code, and the state of the documentation sweep — every doc the change affects.
 Find the repo's doc map first (`CONTRIBUTING.md`, `CLAUDE.md`, `docs/README.md`), so you know the one
@@ -55,6 +63,8 @@ Check for:
   timeless fact.
 - **A decision with a genuinely rejected alternative has a decision record**, not a prose paragraph
   buried in a history file.
+
+Lean on CI for the gate — read `gh pr checks <n>` rather than re-running the suite.
 
 ## Where findings go
 

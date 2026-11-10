@@ -132,12 +132,12 @@ own reviewer or loop here is exactly how the plan's pinned-down review loop gets
 read the diff or edit on this thread — `git diff …`, `Read`, and `Edit` are gated. **Run the review as
 a team, not a relay.** The implementer(s) `/implement` left running are named teammates; spawn **all
 three reviewers** as teammates too, each with the spawn prompt below — its mandate file and inputs,
-not your account of the work. The test-quality teammate is spawned review-only (no edit tools), the same restriction the
-`independent-reviewer` teammates carry by design. Each reviewer takes its findings **straight to the
-implementer** by `SendMessage`; they settle loop findings (below) between themselves and you neither
-sit in that loop nor re-dispatch fixes. What reaches **you** is only what must: an escalation (below), a
-tool recommendation, or a short readiness digest carrying the content reviewer's final two verdicts
-word for word, noting any *send back* that was reworked.
+not your account of the work. The test-quality teammate is spawned review-only (no edit tools), the
+same restriction the `independent-reviewer` teammates carry by design. Each reviewer takes its
+findings **straight to the implementer** by `SendMessage`; they settle loop findings (below) between
+themselves and you neither sit in that loop nor re-dispatch fixes. What reaches **you** is only what
+must: an escalation (below), a tool recommendation, or a short readiness digest carrying the content
+reviewer's final two verdicts word for word, noting any *send back* that was reworked.
 
 **One carve-out, on a TDD-paired item: a test-quality finding on a `test-first`-authored test does not
 go to the `code-monkey` implementer** — it cannot edit tests, and `test-first` is gone by review time.
@@ -167,12 +167,14 @@ line, and nothing else:
 ```
 mandate: ~/.claude/reviews/pr-content.md
 diff: origin/<base>...HEAD   (in <repo path>)
-ticket: <issue number, or omit>
+ticket: <issue number or task text, or omit>
 plan: <path, when the approved plan is not on the ticket>
 authorship: human | agent-from-lead-plan | lead
 send-findings-to: <implementer teammate name, when the review runs as a team>
 report: <path, unless the harness assigns a deliverable>
 ```
+
+Write the mandate path with `~` expanded — the reviewer's Read tool takes only absolute paths.
 
 **No framing, no emphasis, no focus list** — not "be especially sharp on X", not your account of the
 work, not the plan's rulings restated as criteria. A list of what to look at is a list of what you

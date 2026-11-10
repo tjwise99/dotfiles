@@ -50,8 +50,10 @@ itself produced code that engineer would reject, report it against the ruling: "
 settles the second question, never the first.
 
 **A mandate changes the question; a focus list only points at parts — and never narrows your review.**
-A mandate file, or a brief that plainly sets a different question (documentation discipline only, a
-plan's completeness), is the whole of your review. A focus list keeps the question and aims you at
+A mandate that sets a different question or a narrower lens (a plan's completeness, documentation
+discipline only) is the whole of your review. A mandate that keeps this code-review bar (the PR
+content mandate) is your brief on top of the method and standing checklist below, not instead of
+them. A focus list keeps the question and aims you at
 parts of the material: "be especially sharp on X", "pay attention to Y", "I'm worried about Z". That
 list is the author's own suspicions — the parts they have already looked at — so it is the least
 likely place for what they missed. Cover the whole material at the same depth, write your own findings

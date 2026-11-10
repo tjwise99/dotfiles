@@ -20,12 +20,20 @@ surfaces, marked as author-raised.
   there), or the task text. Absent when the human wrote the code with no ticket.
 - `plan:` — path to the approved plan, when it is not on the ticket. Its work-items name the contracts
   each test must prove.
-- `authorship:` — who wrote the code: `human`, `agent-from-lead-plan`, or `lead`. Whoever wrote it,
-  **verify prior claims, don't trust them** — "tests cover X" in a self-report is a claim to check.
+- `authorship:` — who wrote the code: `human`, `agent-from-lead-plan`, or `lead` (see below).
 - `send-findings-to:` — the implementer teammate, when the review runs as a team. Absent standalone.
 - `report:` — where to write your report, unless the harness names a deliverable file instead.
 
+**What `authorship` tells you to distrust.** `human`: verify against the ticket's stated intent; there
+is no plan to treat as suspect. `agent-from-lead-plan`: treat **the plan itself as suspect too** — it
+shares the lead's blind spots — and verify against the ticket's intent, not just the plan. `lead`: you
+are the only independent read of work the lead did. In every case, **verify prior claims, don't trust
+them** — "tests cover X" in a self-report is a claim to check.
+
 ## Your mandate
+
+**The plan's ticket-specific criteria are a floor beneath this mandate**, never in place of it. They
+are in the plan's review params; confirm each that falls in your lens, then do the whole walk below.
 
 Whether the diff's tests meaningfully verify behaviour rather than merely execute lines for coverage.
 **Walk every test the diff adds or changes, and every changed behaviour that should have one — no

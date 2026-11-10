@@ -82,10 +82,11 @@ unneeded work enter.
     a spec'd contract, it is a requirement question and escalates to the human; if it is mechanical
     post-code test repair, it belongs to `test-writer-fixer` (the after-code test agent). `test-first`
     is gone by review time, so it is never the owner.
-  - **The briefing row** — which row of `/pr-ready` §6's briefing table applies, **cited, not restated
-    here**; that table stays the single definition of the briefing logic, and the plan only records the
-    row. For the `/work-ticket` flow the row is already fixed: code is written by a subagent from a plan
-    this thread wrote, and orchestrator mode runs the review as a reviewer–implementer team regardless —
+  - **The briefing row** — which row of `/pr-ready` §6's authorship table applies, recorded as its
+    `authorship:` value, **cited, not restated here**; each review mandate defines what that value tells
+    its reviewer to distrust, and the plan only records the row. For the `/work-ticket` flow the row
+    is already fixed: code is written by a subagent from a plan this thread wrote, and orchestrator
+    mode runs the review as a reviewer–implementer team regardless —
     so the row is `authorship: agent-from-lead-plan` and the three reviewers are fresh-context
     teammates (e.g. two `independent-reviewer` teammates on the `pr-content` and `pr-docs-discipline`
     mandates, plus a `testing-architect` teammate on `pr-test-quality`, spawned review-only, no edit
@@ -125,6 +126,8 @@ directions, which is why they are separate reviewers and not one brief.
   pair: <the other reviewer's name>
   report: <path, unless the harness assigns a deliverable>
   ```
+
+  Write the mandate path with `~` expanded — the reviewer's Read tool takes only absolute paths.
 
   **No framing, no emphasis, no focus list** — not "be especially sharp on X", not your account of why
   the plan is complete or lean. A list of what to look at is a list of what you already suspected:
