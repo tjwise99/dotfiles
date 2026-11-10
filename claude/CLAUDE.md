@@ -157,8 +157,11 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   claim you tested. Not "it would pass" — ran, with the output. A correct 404 against one host once
   became "this machine cannot be rebuilt" in a handoff; the check was right, the sentence wasn't, and
   the sentence is what gets acted on.
-- **Prove a check can fail before trusting it.** Seed the defect *and* the spelled-differently-but-
-  valid variant, since a gate that catches the defect may also reject legal input. Confirm the seed
+- **Prove a check can fail before trusting it.** A test written first and watched failing (TDD red)
+  already is that proof — write tests first, and don't break working code afterwards to re-prove
+  them. Seeding is for a check written after the thing it guards (a gate, a hook, a grep, a test
+  added to existing code): seed the defect *and* the spelled-differently-but-valid variant, since a
+  gate that catches the defect may also reject legal input. Confirm the seed
   landed — one that silently fails to apply looks exactly like a working check. A guard keyed on the
   same literal as the thing it guards cannot see that thing fail. A fix is not verified until the
   finding's **own** reproduction is re-run against it. A step added to a sequence must be re-run

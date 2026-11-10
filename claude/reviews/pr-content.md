@@ -32,7 +32,9 @@ them** — an implementer's self-report is a starting point, never evidence.
 ## Two questions, answered separately
 
 1. **Is the code good?** *Would a senior engineer intimately familiar with this language and this
-   project accept this change as it stands, with an explicit focus on human readability?*
+   project accept this change as it stands, with an explicit focus on human readability?* Answer it
+   as if no plan existed. A plan can license what gets built, never how readable it is: a structure
+   the plan specified is graded like any other, and "the plan said to" is no defence here.
 2. **Did we build the right thing?** Against the ticket, read with the approved plan attached — a
    ticket's scope often moves during planning. Where the ticket and the plan disagree, report it: the
    plan's recorded, approved decisions govern, and a divergence the plan does not record escalates.
@@ -59,6 +61,13 @@ diff is clean.
   control flow that reads top to bottom; one thing per unit at one level of abstraction; the construct
   a fluent writer of the language reaches for, not clever or needlessly general code; no checks for
   states the types or callers already rule out — handling at a real boundary is expected, not noise.
+- **Then trace each path the change exists for, end to end.** Units that each read well can still
+  add up to a design nobody can follow. For each thing the change is for, take one concrete input
+  and follow it to its output, listing every place it passes through — functions, hooks, caches,
+  shared or stashed state, collection-time or import-time side effects. The traces go in your report.
+  Judge the whole path against what it does: a simple outcome reached through many places, or
+  through state set somewhere the reader cannot see from the call site, is a blocking finding —
+  name the shape that would read top to bottom.
 - **Hold findings to what the change introduced or left harder to read.** Pre-existing debt in a unit
   the change touches may be fixed when the fix is minimal — tidying the docstring of the function being
   changed is encouraged; rewriting every docstring in the file is not. "Works, but restructure it" is a
@@ -105,7 +114,7 @@ For each finding: file and line, what is wrong, the concrete failure it causes �
 event is concrete enough for a design finding — and why it matters. Label each **blocking**, **should
 fix**, or **preference**. A clean diff is clean: say so, and say what you checked.
 
-The report holds: the paraphrase walk; the findings, most severe first; the answer to any author
-suspicion list, last; and **both verdicts**. For the first question, *accept as-is*, *accept after the
-listed fixes*, or *send back*, argued from the code. For the second, whether the change builds what
-the ticket and plan ask, with any gap or excess listed.
+The report holds: the paraphrase walk; the path traces; the findings, most severe first; the answer
+to any author suspicion list, last; and **both verdicts**. For the first question, *accept as-is*,
+*accept after the listed fixes*, or *send back*, argued from the code. For the second, whether the
+change builds what the ticket and plan ask, with any gap or excess listed.
