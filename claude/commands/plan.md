@@ -167,11 +167,16 @@ directions, which is why they are separate reviewers and not one brief.
 what is at stake — never a recommendation dressed as a finding, the contract discovery already holds.
 A cut changes scope, so the human makes it.
 
-Resolve each hole and cut **with the human, in conversation**, and fold the answers into the plan;
-anything still open is escalated, never invented. Only once the plan settles every decision it
-requires — each cited to an authority or answered by the human — and every cut is answered by the
-human does it go to approval. That is what keeps the next step a clean yes on a complete, lean plan
-rather than a prompt to adjudicate what the plan skipped or overbuilt.
+**The reads are a cycle, not a gate — the loop `/pr-ready` runs on a diff.** Resolve each hole and cut
+**with the human, in conversation**, and fold the answers into the plan. Then the revised plan goes back
+to **both** reviewers — the same teammates, so they hold their earlier findings — for a **full re-read
+of the whole revised plan** against the ticket, not a check of the parts you point them at. Every
+settlement is new plan text and gets both questions: a hole settled by adding behaviour is where
+overbuild enters, and a cut can open a hole. Repeat until a round returns no new hole and no new cut;
+stop sooner only when a round's findings come solely from the previous round's settlements and the
+human calls it. Anything still open is escalated, never invented. Only then does the plan go to
+approval — a clean yes on a complete, lean plan rather than a prompt to adjudicate what the plan
+skipped or overbuilt.
 
 ## 5. Approve, then record
 
