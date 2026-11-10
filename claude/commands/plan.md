@@ -142,11 +142,18 @@ directions, which is why they are separate reviewers and not one brief.
   already covers it. A suspicion the blind pass missed is a finding about the review as well as the
   plan; say so to the human.
 
-Resolve each hole and cut **with the human, in conversation**, and fold the answers into the plan;
-anything still open is escalated, never invented. Only once the plan settles every decision it
-requires — each cited to an authority or answered by the human — and every cut is answered by the
-human does it go to approval. That is what keeps the next step a clean yes on a complete, lean plan
-rather than a prompt to adjudicate what the plan skipped or overbuilt.
+**The reads are a cycle, not a gate.** Resolve each hole and cut **with the human, in conversation**, and
+fold the answers into the plan. Then the revised plan goes back to **both** reviewers — the same named
+teammates, so they hold their earlier findings — for a **full re-read of the whole revised plan**
+against the ticket, not a check of the parts you point them at. Where `/pr-ready` sends a fix back for
+a pass scoped to that fix, a plan gets the whole re-read: it is small, and every settlement is new plan
+text that can move the other axis — a hole settled by adding behaviour is where overbuild enters, and a
+cut can open a hole. Repeat until a round comes back empty: no hole or cut the human has not already
+answered. The one earlier stop: a round whose findings all come from the previous round's settlements,
+once the human has answered them and calls it. A settlement one reviewer keeps reopening is a
+disagreement — both positions go to the human. Anything still open is escalated, never invented. Only
+then does the plan go to approval — a clean yes on a complete, lean plan rather than a prompt to
+adjudicate what the plan skipped or overbuilt.
 
 ## 5. Approve, then record
 

@@ -51,6 +51,10 @@ the two of you pull in opposite directions on purpose.
    how it is built: a ticket asking for a configurable timeout does not license a layered config
    loader.
 
+**Later rounds.** After the human answers your findings, the revised plan comes back to you. Re-walk
+the whole revised plan, not only what changed — every settlement is new plan text — and report only
+what the human has not already answered. An empty round is the result that ends the cycle.
+
 ## Cross-examination
 
 Send your cuts to `pair` and take its holes, by `SendMessage`. A cut that would open a hole goes to the

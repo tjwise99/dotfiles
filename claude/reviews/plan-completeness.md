@@ -50,6 +50,10 @@ two of you pull in opposite directions on purpose.
    text and the ticket's intent, hunt the class behind each hole you find, and flag where the plan
    does not yet name how a property will be proven durably.
 
+**Later rounds.** After the human answers your findings, the revised plan comes back to you. Re-walk
+the whole revised plan, not only what changed — every settlement is new plan text — and report only
+what the human has not already answered. An empty round is the result that ends the cycle.
+
 ## Cross-examination
 
 Send your holes to `pair` and take its cuts, by `SendMessage`. A hole in an item the overbuild read
