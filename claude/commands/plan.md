@@ -1,5 +1,5 @@
 ---
-description: Turn a discovery brief into a scoped, approved plan — decomposed into work-items, with the implementation shape and PR ownership decided, reviewed for completeness by an independent read, then gated by plan-mode approval before any code.
+description: Turn a discovery brief into a scoped, approved plan — decomposed into work-items, with the implementation shape and PR ownership decided, reviewed for completeness and overbuild by paired independent reads, then gated by plan-mode approval before any code.
 argument-hint: <issue-number | task description>  (run /discover first)
 ---
 
@@ -11,8 +11,10 @@ answered decisions. Plan *from that brief*; do not re-run discovery.
 **Enter plan mode.** The plan is a contract, not a sketch: it fixes scope, so the implementer builds
 exactly this and escalates anything outside it rather than inventing. Runs in orchestrator mode —
 delegate any reading still needed; do not open files here. **The plan does not go to approval until an
-independent read confirms it settles every decision it requires** (§4) — an author cannot see its own
-holes, so approval of a plan the author only *feels* is complete is where invented decisions enter.
+independent read confirms it settles every decision it requires, and a second confirms it specifies
+nothing the ticket does not need** (§4) — an author cannot see its own holes or its own excess, so
+approval of a plan the author only *feels* is complete and lean is where invented decisions and
+unneeded work enter.
 
 ## 1. Ground the plan in discovery
 
@@ -100,18 +102,27 @@ holes, so approval of a plan the author only *feels* is complete is where invent
   These review params are approved with the plan in §5; `/pr-ready` consumes them rather than
   re-deciding the briefing row or re-deriving the loop.
 
-## 4. Review the plan for completeness
+## 4. Review the plan: completeness and overbuild
 
-Before approval, the plan gets an independent read — the move `/pr-ready` runs on the diff, one level
-up and an order of magnitude cheaper, because no code exists yet. Its target is not whether the plan
-is *good* but whether it is *whole*: **what does this plan require the implementer to build that the
-plan does not decide?**
+Before approval, the plan gets two independent reads, run as a pair — the move `/pr-ready` runs on the
+diff, one level up and an order of magnitude cheaper, because no code exists yet. Neither asks whether
+the plan is *good*. The **completeness read** asks whether it is *whole*: **what does this plan require
+the implementer to build that the plan does not decide?** The **overbuild read** asks whether it is
+*lean*: **what does this plan specify that the ticket does not need?** The two pull in opposite
+directions, which is why they are separate reviewers and not one brief.
 
-- **Delegate it to a fresh context.** Hand a reviewer (e.g. `independent-reviewer`) the ticket, the
-  discovery brief, and the drafted plan — **not your account of why it is complete.** An author cannot
-  find its own holes; independence is a property of context, not of instruction. Orchestrator mode
-  makes this a subagent regardless. This is the pr-ready review pattern, moved one level up — the same
-  reliability, applied to the plan instead of the diff.
+- **Delegate both to fresh contexts.** Hand each reviewer (e.g. `independent-reviewer`) the ticket, the
+  discovery brief, and the drafted plan — **not your account of why it is complete or lean.** An author
+  cannot find its own holes or its own excess; independence is a property of context, not of
+  instruction. Orchestrator mode makes these subagents regardless. This is the pr-ready review pattern,
+  moved one level up — the same reliability, applied to the plan instead of the diff.
+- **Run them as a pair, not in sequence.** Name both so they cross-examine directly: a completeness
+  hole in an item the overbuild read would cut is moot if the cut stands, and a cut that would open a
+  hole goes to the completeness reviewer to confirm. Where they still disagree, both positions go to
+  the human.
+
+**The completeness read:**
+
 - **One adversarial question.** What will the implementer have to invent because the plan left it
   open? Every observable the plan does not pin to an authority, every choice handed to implementer
   discretion, anything settled only by *the code already does it* or *I would build it this way* —
@@ -126,22 +137,40 @@ plan does not decide?**
   pairing the same way:** does every work-item with a test surface name a `test-first` teammate ahead of
   its implementer, and does every item that omits one carry an explicit recorded skip? A silent omission
   reads identically to a decision, which is exactly how test-first coverage lapses unnoticed.
-- **It surfaces, it does not resolve.** Holes come back as open calls — the options and what is at
-  stake — never a recommendation dressed as a finding, the contract discovery already holds.
 - **Thoroughness is a method, not a resolve:** enumerate the properties the plan must settle, check
   each against the real plan text and the ticket's intent, not a fixture, hunt the class behind the
   instance, and flag where the plan does not yet name how a property will be proven durably.
 
-Resolve each hole **with the human, in conversation**, and fold the answers into the plan; anything
-still open is escalated, never invented. Only once the plan settles every decision it requires — each
+**The overbuild read:**
+
+- **One adversarial question.** What could this plan drop and still close the ticket? Ask it of every
+  work-item, abstraction, option and proof; for each, name what the ticket needs that would break
+  without it. If nothing would, it is a cut.
+- **Engineering nobody asked for** — an abstraction with one caller, configuration or extension points
+  no requirement names, a general mechanism where the ticket needs one case, hardening of scaffolding
+  before the loop it serves has run once.
+- **Tests that prove the same thing twice** — one contract pinned several ways (unit, integration and
+  snapshot tests of the same behaviour; a case per input variant where one case settles the contract),
+  tests of the tooling rather than the change, and tests of behaviour no contract in the plan names.
+  One proof per contract, able to fail on the wrong behaviour; anything beyond that is a cut.
+- **Need, not size.** An item that cites an authority outside the plan — the ticket, a contract
+  discovery found in the tree — is not overbuilt for being thorough, and a changed boundary or failure
+  path is its own contract, not a variant of the happy path.
+
+**Both reads surface, they do not resolve.** Holes and cuts come back as open calls — the options and
+what is at stake — never a recommendation dressed as a finding, the contract discovery already holds.
+A cut changes scope, so the human makes it.
+
+Resolve each hole and cut **with the human, in conversation**, and fold the answers into the plan;
+anything still open is escalated, never invented. Only once the plan settles every decision it requires — each
 cited to an authority or answered by the human — does it go to approval. That is what keeps the next
 step a clean yes on a complete plan rather than a prompt to adjudicate what the plan skipped.
 
 ## 5. Approve, then record
 
 - **Do not propose the plan while any question is open.** The `ExitPlanMode` call *is* the proposal —
-  it must not fire until every open decision from discovery (§1) and every hole the completeness read
-  turned up (§4) has been answered by the human, review params (§3) included. Plan-mode entry fires no
+  it must not fire until every open decision from discovery (§1) and every hole or cut the §4 reads
+  turned up has been answered by the human, review params (§3) included. Plan-mode entry fires no
   hook, so this cannot be gated mechanically; it holds as an instruction, and an unanswered decision
   blocks the proposal, no exceptions. Presenting a plan with an "open question" or "TBD" still in it is
   the failure this step exists to prevent.

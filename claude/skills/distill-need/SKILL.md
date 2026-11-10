@@ -2,17 +2,16 @@
 name: distill-need
 description: >-
   Turn a proposed check, requirement or ticket bullet into the one need it serves, or strike it.
-  Three tests in order: whose need is it (the unit under verification, the application it hosts,
-  or the verification tier itself); is the text a want or a list of mechanisms in different
-  clothes; does the size derived from the surviving scope fit the budget. Invoke before writing a
-  requirement, before briefing an implementer, when a tree item "feels like a listicle", when a
-  budget is blown by 2x, or when a ticket names a mechanism ("run tool X") instead of a need.
+  Two tests in order: whose need is it (the unit under verification, the application it hosts,
+  or the verification tier itself); and is the text a want or a list of mechanisms in different
+  clothes. Invoke before writing a requirement, before briefing an implementer, when a tree item
+  "feels like a listicle", or when a ticket names a mechanism ("run tool X") instead of a need.
 ---
 
 # Distill the need
 
 A check, a requirement or a ticket bullet earns its place only by the need it serves. Most bad
-items fail one of three tests, in this order. Apply them in writing, before anything is built.
+items fail one of two tests, in this order. Apply them in writing, before anything is built.
 
 ## 1. Whose need is it? (the subject test)
 
@@ -50,16 +49,8 @@ own integrity) is a gate, not a test item — back to test 1.
 Mechanisms named by a ticket ("run `tool-x verify`") are proposals, not needs. Find the need they
 serve, then ask whether the unit's own facilities already answer it before adding a dependency.
 
-## 3. Does the size follow from the scope? (the budget test)
-
-Derive the size from the surviving scope before building: list the pieces, estimate each, sum.
-If the sum is near or over the budget, the scope is wrong — cut before building, never report
-afterwards. A diff that lands at twice the budget is a defect in the brief. Write the derivation
-into the brief as a table (piece, subject, disposition, estimated lines) so the overrun, when it
-comes, points at the line that was wrong.
-
 ## Output
 
 A table: item or check → subject → disposition (built as a need / built as a gate / recorded only /
-struck), the one-sentence need with its decomposition, and the derived size against the budget.
-Nothing is briefed to an implementer until this table exists.
+struck), and the one-sentence need with its decomposition. Nothing is briefed to an implementer
+until this table exists.

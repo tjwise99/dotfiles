@@ -176,11 +176,11 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   defensive handling and the tests that pin a real contract are expected from the first commit. What
   it forbids is spending the night on edge cases inside scaffolding — a guard's heredoc parser, a
   missing-file path in a tool that may not survive the week — before the loop those tools serve has
-  run once. Effort follows what a piece does and how long it will live. State a size budget at approval
-  (lines, files) so growth is visible, and let every reviewer's first question be *what can be deleted*,
-  before *what is wrong*. Generality nobody needs is the thing this rule exists to stop. Corollary
-  (user, 2026-10-02): prefer a structure that makes a regression impossible over a guard that parses
-  for it — one entry point and a one-line grep, never a scanner that grows its own parser.
+  run once. Effort follows what a piece does and how long it will live. Let every reviewer's first
+  question be *what can be deleted*, before *what is wrong*. Generality nobody needs is the thing this
+  rule exists to stop. Corollary (user, 2026-10-02): prefer a structure that makes a regression
+  impossible over a guard that parses for it — one entry point and a one-line grep, never a scanner
+  that grows its own parser.
 - **Thoroughness is a method, not a resolve.** Enumerate the properties the artifact must hold; check
   each against the real artifact with real data, not a fixture; hunt the class behind the instance;
   leave each as a check that fails on regression. Not a quota — a clean diff is clean.

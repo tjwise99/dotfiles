@@ -41,7 +41,8 @@ teammate(s) that stay alive to receive their findings, the feedback channel betw
 row, and the ticket-specific criteria — so
 how an implementer gets its review feedback is decided here, not improvised at `/pr-ready`. It gates on
 plan-mode approval before any code. **The plan is not proposed for approval while any decision — from
-discovery or from the plan's own completeness read — is still open.** Do not plan inline; `/plan` owns
+discovery, or a hole or cut from the plan's paired completeness and overbuild reads — is still
+open.** Do not plan inline; `/plan` owns
 it, carrying the base branch confirmed in step 1. `/plan` posts the approved plan itself back to the
 ticket, where the content reviewer reads it.
 
