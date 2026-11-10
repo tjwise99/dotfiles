@@ -70,6 +70,10 @@
     # committed.
     ~/.config/nvim: nvim
 
+    # IPython — the startup file only. profile_default also holds history.sqlite
+    # and security/, which must not be tracked. 00-debugpy.py documents itself.
+    ~/.ipython/profile_default/startup/00-debugpy.py: ipython/startup/00-debugpy.py
+
     # Toolchain
     ~/.tool-versions: asdf/tool-versions
 
