@@ -140,14 +140,14 @@ stale.
 
 ## The glyph hazard
 
-`polybar.ini.tmpl` contains 22 private-use-area characters — the Nerd Font
+`polybar.ini.tmpl` contains private-use-area characters — the Nerd Font
 icons. They live in two ranges: `U+E000`–`U+F8FF` and `U+F0000`+ (Material
 Design). **Some editors and tooling strip them silently.** A stripped glyph
 renders as nothing, produces no error in any log, and looks identical to a
 working bar minus one icon.
 
 `render.py` refuses to write `config.ini` unless the rendered output contains
-exactly `EXPECTED_GLYPHS` (22). If you intentionally add or remove an icon,
+exactly `EXPECTED_GLYPHS`. If you intentionally add or remove an icon,
 update that constant. To check a file by hand:
 
 ```sh

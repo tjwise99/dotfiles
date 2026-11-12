@@ -21,7 +21,7 @@ font-0 = JetBrainsMono Nerd Font:size=11;3
 font-1 = JetBrainsMono Nerd Font:size=12;3
 
 modules-left = i3
-modules-right = tray fs-root fs-home load memory network-eth network-wifi pulseaudio battery date
+modules-right = tray fs-root fs-home load memory network-eth network-wifi bluetooth pulseaudio battery date
 
 [module/i3]
 type = internal/i3
@@ -114,6 +114,13 @@ ramp-signal-0 = %{F@glyph@}%{T2}󰤟%{T-}%{F-}
 ramp-signal-1 = %{F@glyph@}%{T2}󰤢%{T-}%{F-}
 ramp-signal-2 = %{F@glyph@}%{T2}󰤥%{T-}%{F-}
 ramp-signal-3 = %{F@glyph@}%{T2}󰤨%{T-}%{F-}
+
+[module/bluetooth]
+type = custom/script
+exec = ~/.config/polybar/bluetooth.sh '%{F@glyph@}%{T2}󰂲%{T-}%{F-}' '%{F@glyph@}%{T2}󰂯%{T-}%{F-}' '%{F@glyph@}%{T2}󰂱%{T-}%{F-}'
+interval = 5
+format = %{A1:alacritty -e bluetui:}<label>%{A}
+label = %output%
 
 [module/network-eth]
 type = internal/network
