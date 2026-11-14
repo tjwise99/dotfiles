@@ -197,6 +197,13 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   the checks that exist today. That a new check fires is not evidence it was needed.
 - **Find the document that already decides it** before forming a position — ask "which document
   decides this?" and read that one, not the one the task handed you.
+- **An ADR records one decision this repo makes.** Each section is a choice the repo made, with the
+  alternatives it rejected. Another repo appears only as the interface this repo relies on, in one
+  sentence — never an inventory of its contents. Implementation mechanics (file handling, naming
+  schemes, hook wiring) belong on the ticket that builds them, not in the ADR. A title that does not
+  fit half the content is two ADRs. Brief an ADR writer with the decisions it records, never the
+  design's component list: reviewers check against the brief, so a component-list brief yields an
+  architecture tour that passes review.
 - **Search the repo before escalating — a repo-answerable question is never the human's to answer.**
   A convention, precedent, prior commit, sibling file, or existing gate that settles it *is* the
   answer: find it and apply it. Escalate only a genuine fork that nothing in the tree decides.

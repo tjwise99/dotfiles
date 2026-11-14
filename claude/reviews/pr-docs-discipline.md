@@ -61,6 +61,10 @@ Check for:
   mechanism a reader re-derives the current number from, not a figure that rots.
 - **No temporal phrasing** — "now", "currently", "no longer", "previously", "recently"; state the
   timeless fact.
+- **Every reference to a state, version or comparison point identifies the same thing six months from
+  now.** Banned words are only the symptom. The test is meaning. A reference that depends on when it is
+  read ("the baseline", "the current design", "the old host", "today's build") must be anchored to a
+  commit, a revision or a name. A Revisions or changelog line is history by design and is exempt.
 - **A decision with a genuinely rejected alternative has a decision record**, not a prose paragraph
   buried in a history file.
 
