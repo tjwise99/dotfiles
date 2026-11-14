@@ -54,6 +54,13 @@ Check for:
   path.
 - **Test doubles stand on a backed contract** — a mock's behaviour is proven to match the real thing
   somewhere, or the diff introduces an unbacked assumption.
+- **Each test sits at the level of what it tests.** A test of shared machinery (a framework, a
+  library, a generator, a host, an I/O edge) is written against that machinery, over its real
+  configuration or a toy, in that machinery's own test file — never through one consumer that happens
+  to use it. A test in a consumer's suite (one algorithm, one service, one plugin) tests only that
+  consumer. A consumer test that really exercises the shared machinery is misplaced: move it to the
+  machinery's tests, generalised, or delete it if the machinery's tests already cover it. Shared
+  fixtures live in a shared conftest/helper, never in one consumer's test file.
 - **Every new test file is wired into the run and CI.** Read `gh pr checks <n>` rather than re-running
   the suite; run a targeted local check only for a specific concern the diff raises.
 
