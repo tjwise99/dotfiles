@@ -60,7 +60,11 @@ Check for:
   to use it. A test in a consumer's suite (one algorithm, one service, one plugin) tests only that
   consumer. A consumer test that really exercises the shared machinery is misplaced: move it to the
   machinery's tests, generalised, or delete it if the machinery's tests already cover it. Shared
-  fixtures live in a shared conftest/helper, never in one consumer's test file.
+  fixtures live in a shared conftest/helper, never in one consumer's test file. A shared fixture
+  holds plumbing, or data generated from the system's own contract, never one component's, sensor's
+  or algorithm's literal values; two files using the same specific data does not make it shared.
+  Shared tests range over everything the contract declares, so the next component is covered without
+  anyone adding a fixture.
 - **Every new test file is wired into the run and CI.** Read `gh pr checks <n>` rather than re-running
   the suite; run a targeted local check only for a specific concern the diff raises.
 
