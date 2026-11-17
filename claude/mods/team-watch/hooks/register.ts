@@ -249,6 +249,11 @@ export const register: Register = on => {
     if (r.deny !== undefined || !(await isTeammate($, e.agentId))) return r
     const agentId = e.agentId as string
     lastActivity = Date.now()
+    if (e.tool === 'SendMessage' && typeof e.message === 'object' && e.message.type === 'shutdown_response' && e.message.approve) {
+      spokeThisTurn.add(agentId)
+      silentStoppers.delete(agentId)
+      log($, 'SHUTDOWN-APPROVED', agentId)
+    }
     parked.delete(agentId)
     const res: { backgroundTaskId?: unknown } = r.result ?? {}
     if (e.tool === 'Bash' && typeof res.backgroundTaskId === 'string') {

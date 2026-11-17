@@ -14,7 +14,7 @@ harness behaviour that makes a lead either deaf to its team or flooded by it.
 "Moving" means a teammate mid-turn, a teammate waiting on its own background command, a completion
 notice not yet picked up, or a message sent to a teammate that has not started its turn. A teammate
 waiting on a peer therefore never reads as quiet. A turn that ended with a message to anyone (lead or
-peer) is not silent.
+peer), or with approval of a `shutdown_request`, is not silent.
 
 Swallowing idle notifications also drops a teammate's final reply text, which reached the lead only
 inside them. The mod adds one line to every teammate's system prompt saying that anything the lead
@@ -38,8 +38,10 @@ threshold, so a live test of every path takes minutes. Load a copy for one sessi
 
 ## Known gaps
 
-- A clean shutdown (`shutdown_request` approved mid-turn) is expected not to be named as a silent
-  stop; that path is reasoned, not yet seen live.
+- A teammate's `shutdown_approved` reply and the harness's `teammate_terminated` notice are not
+  swallowed: they never reach `session.receive` (idle notifications do), so the lead still reads them.
+  Approval is recognised from the teammate's own `SendMessage` `shutdown_response` call at
+  `tool.call`. The delivery route of the two notices is not yet identified.
 - State is in memory: if the hooks module reloads mid-session, held messages and tracked background
   commands are forgotten.
 - If the harness ever delivers a held message mid-turn on its own, the teammate sees it twice.
