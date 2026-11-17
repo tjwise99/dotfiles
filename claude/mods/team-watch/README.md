@@ -39,9 +39,11 @@ threshold, so a live test of every path takes minutes. Load a copy for one sessi
 ## Known gaps
 
 - A teammate's `shutdown_approved` reply and the harness's `teammate_terminated` notice are not
-  swallowed: they never reach `session.receive` (idle notifications do), so the lead still reads them.
-  Approval is recognised from the teammate's own `SendMessage` `shutdown_response` call at
-  `tool.call`. The delivery route of the two notices is not yet identified.
+  swallowed: the session logs show no `session.receive` entry for them (idle notifications have
+  one), and the lead still reads them. The delivery route of the two notices is not yet identified.
+- Approval of a `shutdown_request` is recognised from the teammate's own `SendMessage`
+  `shutdown_response` call at `tool.call`. That path is not yet seen live: it was exercised only by
+  the test kit's synthetic call. An approval whose delivery fails still counts as spoken.
 - State is in memory: if the hooks module reloads mid-session, held messages and tracked background
   commands are forgotten.
 - If the harness ever delivers a held message mid-turn on its own, the teammate sees it twice.
