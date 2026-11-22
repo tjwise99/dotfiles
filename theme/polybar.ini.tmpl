@@ -21,7 +21,7 @@ font-0 = JetBrainsMono Nerd Font:size=11;3
 font-1 = JetBrainsMono Nerd Font:size=12;3
 
 modules-left = i3
-modules-right = tray fs-root fs-home load memory network-eth network-wifi bluetooth pulseaudio cpu-governor battery date
+modules-right = tray fs-root fs-home cpu-governor load memory network-eth network-wifi bluetooth pulseaudio battery date
 
 [module/i3]
 type = internal/i3
@@ -124,10 +124,11 @@ label = %output%
 
 [module/cpu-governor]
 type = custom/script
-exec = cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-interval = 5
+; Icon is the governor; the text is the fastest core's current clock.
+exec = case $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor) in performance) i=󰓅 ;; *) i=󰾆 ;; esac; echo "%{F@glyph@}%{T2}$i %{T-}%{F-}$(awk '$1 > m { m = $1 } END { printf "%.1f", m / 1000000 }' /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq) GHz"
+interval = 2
 format = %{A1:auto-cpufreq-gtk:}<label>%{A}
-label = %{F@glyph@}%{T2}󰓅%{T-}%{F-} %output%
+label = %output%
 
 [module/network-eth]
 type = internal/network

@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 THEME = pathlib.Path.home() / ".config/theme"
-EXPECTED_GLYPHS = 26
+EXPECTED_GLYPHS = 27
 
 TARGETS = [
     ("polybar.ini.tmpl", pathlib.Path.home() / ".config/polybar/config.ini"),
