@@ -3,7 +3,8 @@ import type { Register, EngineInterface, AgentInfo } from 'claude-code'
 const TICK_MS = 5_000
 const BUSY = new Set(['pending', 'running', 'waiting'])
 const IDLE_PREFIX = '{"type":"idle_notification"'
-const LEAD = new Set(['team-lead', 'main'])
+const LEAD_NAME = 'team-lead'
+const LEAD = new Set([LEAD_NAME, 'main'])
 
 type Bg = { agentId: string; command: string; startedAt: number }
 type Parked = { since: number; task: string; outputFile: string }
@@ -13,8 +14,9 @@ type Timer = ReturnType<EngineInterface['clock']['every']>
 let wakeAfterMs = 30_000
 let stallAfterMs = 10 * 60_000
 
-const heldForMidTurn = new Map<string, string[]>()
-const injected = new Map<string, string[]>()
+type Held = { from: string; text: string }
+const heldForMidTurn = new Map<string, Held[]>()
+const injected = new Map<string, Held[]>()
 const inTransit = new Set<string>()
 const bgRunning = new Map<string, Bg>()
 const parked = new Map<string, Parked>()
@@ -51,6 +53,10 @@ async function teammates($: EngineInterface): Promise<AgentInfo[] | undefined> {
 
 async function isTeammate($: EngineInterface, id: string | undefined) {
   return id !== undefined && (await teammates($) ?? []).some(a => a.id === id)
+}
+
+function senderName(team: AgentInfo[], agentId: string | undefined) {
+  return agentId === undefined ? LEAD_NAME : (team.find(a => a.id === agentId)?.name ?? agentId)
 }
 
 function markBusy() {
@@ -188,7 +194,7 @@ export const register: Register = on => {
       parked.delete(agentId)
       injected.delete(agentId)
       spokeThisTurn.delete(agentId)
-      const held = (heldForMidTurn.get(agentId) ?? []).filter(t => !e.text.includes(t))
+      const held = (heldForMidTurn.get(agentId) ?? []).filter(h => !e.text.includes(h.text))
       if (held.length) heldForMidTurn.set(agentId, held)
       else heldForMidTurn.delete(agentId)
       markBusy()
@@ -223,7 +229,9 @@ export const register: Register = on => {
   })
 
   on('session.send', async ($, e, next) => {
-    const target = (await teammates($))?.find(a => a.name === e.to || a.id === e.to)
+    const team = (await teammates($)) ?? []
+    const target = team.find(a => a.name === e.to || a.id === e.to)
+    const from = senderName(team, e.agentId)
     if (target) inTransit.add(target.id)
     const sent = await next(e)
     log($, 'SEND', { from: e.agentId ?? 'main', to: e.to, delivered: sent.isDelivered, text: e.text.slice(0, 60) })
@@ -237,8 +245,8 @@ export const register: Register = on => {
     }
     if (target === undefined) return sent
     markBusy()
-    if (e.agentId === undefined && (target.status === 'running' || target.status === 'pending')) {
-      heldForMidTurn.set(target.id, [...(heldForMidTurn.get(target.id) ?? []), e.text])
+    if (e.agentId !== target.id && (target.status === 'running' || target.status === 'pending')) {
+      heldForMidTurn.set(target.id, [...(heldForMidTurn.get(target.id) ?? []), { from, text: e.text }])
       log($, 'HELD-FOR-MIDTURN', target.id)
     }
     return sent
@@ -265,7 +273,7 @@ export const register: Register = on => {
     heldForMidTurn.delete(agentId)
     injected.set(agentId, [...(injected.get(agentId) ?? []), ...held])
     log($, 'INJECT', agentId, e.tool)
-    const note = held.map(t => `Message from team-lead, delivered mid-turn (if it arrives again after your turn, it is a duplicate):\n${t}`)
+    const note = held.map(h => `Message from ${h.from}, delivered mid-turn (if it arrives again after your turn, it is a duplicate):\n${h.text}`)
     return { ...r, context: [...(r.context ?? []), ...note] }
   })
 
@@ -278,9 +286,13 @@ export const register: Register = on => {
     }
 
     const sent = injected.get(e.agentId) ?? []
-    const dup = e.origin.kind === 'coordinator' ? sent.find(t => e.text.trim() === t.trim()) : undefined
+    const origin = e.origin
+    const stamped = 'teammate' in origin ? origin.teammate : undefined
+    const dup = origin.kind === 'coordinator' || origin.kind === 'peer'
+      ? sent.find(h => e.text.trim() === h.text.trim() && (stamped === undefined || stamped === h.from))
+      : undefined
     if (dup !== undefined) {
-      injected.set(e.agentId, sent.filter(t => t !== dup))
+      injected.set(e.agentId, sent.filter(h => h !== dup))
       inTransit.delete(e.agentId)
       log($, 'CONSUME-DUP', e.agentId)
       return { consumed: 'team-watch: already delivered mid-turn' }

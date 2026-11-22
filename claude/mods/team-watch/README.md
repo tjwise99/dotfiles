@@ -5,7 +5,7 @@ harness behaviour that makes a lead either deaf to its team or flooded by it.
 
 | Harness behaviour | What the mod does |
 |---|---|
-| A lead's SendMessage to a busy teammate is held until the teammate's turn ends (anthropics/claude-code issue #99111 mid-turn delivery) | Adds the message to the teammate's next tool result as context; drops the harness's later duplicate |
+| A SendMessage from the lead or another teammate to a busy teammate is held until the teammate's turn ends (anthropics/claude-code issue #99111 mid-turn delivery) | Adds the message to the teammate's next tool result as context; drops the harness's later duplicate |
 | Every teammate turn end sends the lead an idle notification, which wakes it and stays in its context | Swallows idle notifications before they are queued |
 | A background command finishing while its teammate is idle never starts the teammate's turn | Nudges the teammate 30 s after the completion notice if it has not run |
 | A teammate that stops, fails or is killed without reporting is never surfaced | When nothing in the team is moving, sends the lead one line naming every teammate that stopped without telling anyone |
@@ -48,3 +48,7 @@ threshold, so a live test of every path takes minutes. Load a copy for one sessi
   commands are forgotten.
 - If the harness ever delivers a held message mid-turn on its own, the teammate sees it twice.
 - Timing windows of one `$.agent.list()` call can misread a just-spawned teammate.
+- `turn.start` drops a held message when the turn's text contains it as a substring. A short
+  message that appears in the turn text by chance is dropped from the hold, so the harness delivers
+  it once the turn ends instead. A message the harness re-wraps or escapes misses the match and is
+  delivered twice.
