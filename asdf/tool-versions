@@ -1,5 +1,5 @@
 nodejs 24.18.0
 rust 1.97.1
 golang 1.26.5
-uv 0.12.3
+uv 0.13.9
 neovim v0.11.3
