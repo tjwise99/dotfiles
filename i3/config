@@ -209,6 +209,9 @@ exec --no-startup-id opencloud
 
 for_window [class="Gsimplecal"] move position 1682 875
 
+# auto-cpufreq-gtk sets a fixed size, which i3 floats by default
+for_window [class="Auto-cpufreq-gtk"] floating disable
+
 # Set colors from Xresources
 # Change 'color7' and 'color2' to whatever colors you want i3 to use 
 # from the generated scheme.

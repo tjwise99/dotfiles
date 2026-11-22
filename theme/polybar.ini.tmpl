@@ -21,7 +21,7 @@ font-0 = JetBrainsMono Nerd Font:size=11;3
 font-1 = JetBrainsMono Nerd Font:size=12;3
 
 modules-left = i3
-modules-right = tray fs-root fs-home load memory network-eth network-wifi bluetooth pulseaudio battery date
+modules-right = tray fs-root fs-home load memory network-eth network-wifi bluetooth pulseaudio cpu-governor battery date
 
 [module/i3]
 type = internal/i3
@@ -121,6 +121,13 @@ exec = ~/.config/polybar/bluetooth.sh '%{F@glyph@}%{T2}󰂲%{T-}%{F-}' '%{F@glyp
 interval = 5
 format = %{A1:alacritty -e bluetui:}<label>%{A}
 label = %output%
+
+[module/cpu-governor]
+type = custom/script
+exec = cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+interval = 5
+format = %{A1:auto-cpufreq-gtk:}<label>%{A}
+label = %{F@glyph@}%{T2}󰓅%{T-}%{F-} %output%
 
 [module/network-eth]
 type = internal/network
