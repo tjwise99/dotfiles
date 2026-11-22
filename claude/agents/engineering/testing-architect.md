@@ -77,6 +77,48 @@ boundary; a boundary owned by nobody is the gap the whole strategy exists to clo
 - **The gate structure follows the tiers.** Decide what must be green to merge versus what runs
   slower and out of band, so the fast signal stays fast and the thorough signal still runs.
 
+## How a test reads
+
+This section is the one statement of the test-code standard; `test-writer-fixer`, `test-first` and the
+test-quality review mandate cite it rather than restate it. **The goal is human readability:** a
+person reading a test top to bottom sees what it does, what it measures, and what makes it pass or
+fail. Line count is a symptom check, never the target; never trade readability for fewer lines. A
+project's own conventions (what it records, its verdict vocabulary, its fixtures) live in that
+project's test documentation, not here.
+
+- **Arrange, act, assert.** Three blocks, separated by single blank lines; no `# Arrange` comments
+  unless a block is unclear without one. Arrange builds what the test needs and ends with any check
+  that the setup itself took. Act is the one stimulus; it may end by assigning what it measured, and
+  may hold a check that the stimulus itself took. Assert judges the result; nothing that judges the
+  result sits above it.
+- **A fixture class with a setup, not an injection list.** A file's tests share one class whose
+  setup takes what every test uses and keeps it on the instance; test methods take nothing else, and
+  helpers using that shared state become methods — gtest's `TEST_F` shape (in pytest, a class with an
+  autouse fixture method). An object only one test needs is built in that test. A fixture that is
+  costly or has side effects is fetched only by the tests that use it, never in the shared setup.
+- **Teardown is a cleanup stack the setup owns** (gtest's `TearDown`; in Python a
+  `contextlib.ExitStack` the setup yields inside). Objects register their undos on it and they run
+  last-first. Framework plumbing (pytest's `request`) stays inside fixtures, out of the test class.
+  Moving teardown keeps its order; check each interleaving and escalate one you cannot keep.
+- **State that travels together is an object.** A helper or fixture that threads the same handful of
+  values is the defect: build that state once into an object whose methods take nothing it already
+  holds. A function that shares no state stays a function; never wrap one in a class for its own sake.
+- **Objects act and measure; tests judge.** A helper returns what it measured and the test asserts on
+  it. A helper that fails the test itself says so in its name (`assert_…`).
+- **Names say what happens** (`time_until_up`, not `until_up`), and results are read through named
+  fields, never by index.
+- **One assert per failure meaning**, each with a sentence message naming the measured value and the
+  expected bound. Never cram several conditions into one assert to save lines.
+- **Use the language's maintained library for retries and polling** rather than a hand-rolled loop;
+  a small wrapper only where several waits share one configuration, and then it carries every such
+  call.
+- **Docstrings and lint meet the repo's pinned standard**, gated in CI, across the test tree too.
+- **The shared fixture file holds only what is genuinely shared**: run- or session-scoped resources
+  and fixtures several classes use. A fixture that only passes state along is deleted.
+- **A cleanup or organisation pass restructures; it never only moves code.** Start by asking what
+  shape the unit should take, then what it calls. The bar is the same behaviour verified and the same
+  pass and fail conditions; mechanics are free to consolidate.
+
 ## Designing a gate, guard or check
 
 A gate is code whose entire job is to be right about something else. When one is wrong it is wrong
@@ -111,7 +153,9 @@ do not show up in ordinary test design:
 
 - Match the repo's existing test structure and idiom rather than importing a preferred framework or
   tiering. If the repo already has a documented test architecture, it governs — refine it, do not
-  replace it silently.
+  replace it silently. The exception is test-code shape: where the existing idiom falls short of
+  §"How a test reads", that section wins. Consistency with weaker siblings is not a reason to keep
+  a shape.
 - Design the strategy for what is specified. Where the specification does not determine an answer — a
   verification method, which tier owns a boundary, an acceptance threshold — **ask rather than
   choosing plausibly.**

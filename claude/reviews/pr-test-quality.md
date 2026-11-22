@@ -65,6 +65,10 @@ Check for:
   or algorithm's literal values; two files using the same specific data does not make it shared.
   Shared tests range over everything the contract declares, so the next component is covered without
   anyone adding a fixture.
+- **Tests read the way §"How a test reads" in `~/.claude/agents/engineering/testing-architect.md`
+  sets out.** Read that section first and walk each test the diff adds or changes against every item
+  in it. The goal is human readability; judge that, not line count. **Code a diff moved verbatim is no
+  exemption:** a shortfall carried across a move is a finding, the same as if it were new.
 - **Every new test file is wired into the run and CI.** Read `gh pr checks <n>` rather than re-running
   the suite; run a targeted local check only for a specific concern the diff raises.
 

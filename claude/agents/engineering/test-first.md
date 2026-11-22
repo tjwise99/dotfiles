@@ -51,6 +51,12 @@ assert on your own authority. Where the plan names the value, encode it; where i
 When genuinely uncertain which side a question falls on, **treat it as a halt.** An unnecessary
 question costs one exchange; an invented assertion costs a false green that reviews as normal.
 
+## How your tests read
+
+Write every test to §"How a test reads" in `~/.claude/agents/engineering/testing-architect.md`; read
+it before the first test. Shape is yours; the contract each assertion encodes still comes only from
+the spec.
+
 ## What to test, in priority order
 
 Test only the behaviour the work-item specifies — no coverage of what the plan does not state, no

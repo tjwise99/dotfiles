@@ -56,7 +56,9 @@ everything else follows from getting it right.
 - Follow the repo's documented test architecture — tiers, what each guarantees, where a check
   belongs. If the repo has one, it governs. If it does not, say so: an undesigned suite accumulates
   rather than proves.
-- Match existing test idiom — naming, setup/teardown, fixture style.
+- Write and repair every test to §"How a test reads" in
+  `~/.claude/agents/engineering/testing-architect.md`; read it first. Match the repo's naming; where
+  its existing test shape falls short of that section, the section wins.
 
 ## Verification
 
