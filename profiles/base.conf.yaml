@@ -124,7 +124,7 @@
     - plugin: uv
       url: https://github.com/asdf-community/asdf-uv.git
       versions:
-        - 0.12.3
+        - 0.13.9
 
     # Pinned behind current stable (v0.12.x) on purpose: nvim/lazy-lock.json is
     # the plugin set this config was actually running against, and that set was
