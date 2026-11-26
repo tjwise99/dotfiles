@@ -63,8 +63,8 @@ alone. `{"running":[row],"next":[row],"plan":[row],"unplaceable":{job: why},"ale
   first resource (`schedule.json` `resources` maps a resource to a lane, else the resource is its own lane) and
   its planned start and end from `start` and `end`. A job with a record (running, done, failed) keeps it.
 - an alert LATE on a job on the chart marks it late from the "planned end HH:MM" in its text; STALLED sets its
-  progress time from "since HH:MM", so the chart's own late and no-recent-update marks show. IDLE alerts,
-  `next` and `unplaceable` are carried in the data but not drawn; any other alert kind is a data defect.
+  progress time from "since HH:MM", so the chart's own late and no-recent-update marks show. IDLE alerts
+  and `unplaceable` are carried in the data but not drawn; every `plan` row not yet started is listed under the chart as "Next work" (order, job, resource, planned start, and what it waits on: the job's `waits_on` and any resource a running row holds); any other alert kind is a data defect.
 Not to be confused with `plan.json`, the sprint-plan reference.
 
 ## needs-owner.json (the strip above the tabs and the Needs you tab)
@@ -98,10 +98,23 @@ plain; there is no markup. Each section object takes an optional `title` and `su
   by layer, same states as `board`.
 
 ## results.json (Results tab)
-A list of cards: `{"id","title","outcome","why","record","result","accepted_by"}`. `outcome` uses the same
-words as a job's `outcome.result`, or "waiting". `result` is drawn only when `accepted_by` names the
-reviewer who accepted it; with `result` but no `accepted_by` the card reads "Pending review.", and with no
-`result`, "Pending."
+Either a list of cards, or `{"cards":[...], "sections":[...]}`. A card: `{"id","title","outcome","why","record","result","accepted_by"}`
+plus the optional context fields below. `outcome` uses the same words as a job's `outcome.result`, or "waiting" or "running". `result` is
+drawn only when `accepted_by` names the reviewer who accepted it; with `result` but no `accepted_by` the card reads "Pending review.",
+and with no `result`, "Pending."
+
+Optional card fields, each drawn only when present, so a card loses none of the context its writer holds:
+- `design`: [["Question","..."],["Change","..."],["Measure","..."],["Fails if","..."],["Cost","..."]]. What the item set out to do, as
+  label and text pairs in the order drawn; the labels are the writer's.
+- `decided`: what was decided because of the outcome. Drawn in the outcome box with `why` and `record`.
+- `review`: the reviewer's verdict in words, with its source. Drawn under the result.
+- `draft_result`: a result no reviewer has accepted yet. Drawn under "Pending review." as "Draft, not accepted.", so the claim is
+  visible and never asserted. Used only while `accepted_by` is absent.
+- `baseline`, `note`, `source`: the figure it is set against, a caveat, the files or records it rests on.
+- `metrics`: [{"label","before","after"}]. Two bars on one scale; `after` null reads "now pending".
+
+`sections` (optional, below the cards): [{"title","paragraphs":[...],"bullets":[...],"table":{"head":[...],"rows":[[...]]}}], each part
+optional. Free reading that belongs beside the results but to no single card, such as a comparison against the goals.
 
 ## log.json (Log tab)
 `{"events":[{"at":"YYYY-MM-DD HH:MM","what","source"}]}`. Shown newest first. Append with

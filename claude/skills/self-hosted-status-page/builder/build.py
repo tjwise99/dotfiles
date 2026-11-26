@@ -41,7 +41,11 @@ def md_tables(path):
     return out
 
 
-data = {"cards": load("results.json") or [], "built_at": time.strftime("%H:%M")}
+_res = load("results.json") or []
+if isinstance(_res, dict):
+    data = {"cards": _res.get("cards") or [], "result_sections": _res.get("sections") or [], "built_at": time.strftime("%H:%M")}
+else:
+    data = {"cards": _res, "result_sections": [], "built_at": time.strftime("%H:%M")}
 sched = load("schedule.json")
 if sched:
     data["gantt"] = sched
@@ -114,7 +118,7 @@ for j in (sched or {}).get("jobs", []):
     if r and r not in VOCAB:
         defect("schedule.json", f"job {j.get('id')} has result {r!r}, not in the vocabulary")
 for c in data["cards"]:
-    if c.get("outcome") and c["outcome"] not in VOCAB | {"waiting"}:
+    if c.get("outcome") and c["outcome"] not in VOCAB | {"waiting", "running"}:
         defect("results.json", f"card {c.get('id')} has outcome {c['outcome']!r}, not in the vocabulary")
 for r in (data["plan_out"] or {}).get("alerts", []):
     if r.get("kind") not in ("LATE", "STALLED", "IDLE"):
@@ -189,7 +193,7 @@ def render_check(theme):
     if len(re.findall(r'<main id="[^"]+" class="tab"', dom)) != len(re.findall(r'<main id="[^"]+" class="tab"', page)):
         bad.append("tab count differs after render")
     if data.get("gantt"):
-        g = re.search(r'<div id="gantt"[^>]*>(.*?)</div>\s*<div id="holds-wrap"', dom, re.S)
+        g = re.search(r'<div id="gantt"[^>]*>(.*?)</div>\s*<div id="next-wrap"', dom, re.S)
         if not g or len(re.sub(r"<[^>]+>", "", g.group(1)).strip()) < 50:
             bad.append("schedule chart is empty")
     mbg = re.search(r"THEMEBG rgb\((\d+), (\d+), (\d+)\)", r.stderr)

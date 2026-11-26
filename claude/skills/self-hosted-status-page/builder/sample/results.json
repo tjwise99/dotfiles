@@ -1,32 +1,84 @@
-[
- {
-  "id": "J1",
-  "title": "Build the image",
-  "outcome": "passed",
-  "why": "built in 65 minutes",
-  "record": "build-0001",
-  "result": "The image builds from a clean tree.",
-  "accepted_by": "reviewer"
- },
- {
-  "id": "J2",
-  "title": "Suite on the rig",
-  "outcome": "failed",
-  "why": "check 4 of 12 failed",
-  "record": "run-0002",
-  "result": "Eleven of twelve checks passed; check 4 failed on a timeout.",
-  "accepted_by": "reviewer"
- },
- {
-  "id": "J4",
-  "title": "Rerun the suite",
-  "outcome": "waiting"
- },
- {
-  "id": "J3",
-  "title": "Soak run",
-  "outcome": "passed",
-  "result": "No restart in 6 hours.",
-  "record": "run-0003"
- }
-]
+{
+ "cards": [
+  {
+   "id": "J1",
+   "title": "Build the image",
+   "outcome": "passed",
+   "why": "built in 65 minutes",
+   "record": "build-0001",
+   "result": "The image builds from a clean tree.",
+   "accepted_by": "reviewer",
+   "design": [
+    [
+     "Question",
+     "Does the image build from a clean tree?"
+    ],
+    [
+     "Fails if",
+     "The build needs a cached step."
+    ]
+   ],
+   "decided": "Kept as the base for J2.",
+   "review": "Accepted; the build log was read end to end.",
+   "baseline": "Previous build 71 minutes",
+   "note": "One build on one host.",
+   "source": "build-0001",
+   "metrics": [
+    {
+     "label": "Build minutes",
+     "before": 71,
+     "after": 65
+    }
+   ]
+  },
+  {
+   "id": "J2",
+   "title": "Suite on the rig",
+   "outcome": "failed",
+   "why": "check 4 of 12 failed",
+   "record": "run-0002",
+   "result": "Eleven of twelve checks passed; check 4 failed on a timeout.",
+   "accepted_by": "reviewer"
+  },
+  {
+   "id": "J4",
+   "title": "Rerun the suite",
+   "outcome": "waiting"
+  },
+  {
+   "id": "J3",
+   "title": "Soak run",
+   "outcome": "passed",
+   "record": "run-0003",
+   "draft_result": "No restart in 6 hours; the reviewer has not read the log yet."
+  }
+ ],
+ "sections": [
+  {
+   "title": "Against the goals",
+   "paragraphs": [
+    "The build is faster; the suite is not."
+   ],
+   "bullets": [
+    "Build: 65 minutes against 71.",
+    "Suite: one check fails."
+   ],
+   "table": {
+    "head": [
+     "Goal",
+     "Now"
+    ],
+    "rows": [
+     [
+      "Build time",
+      "65 min"
+     ],
+     [
+      "Suite",
+      "11 of 12"
+     ]
+    ]
+   }
+  }
+ ]
+}

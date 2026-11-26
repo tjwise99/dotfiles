@@ -76,10 +76,10 @@ table.board td{border:1px solid var(--line);width:30%}table.board th.r{width:10%
 .pg.done{border-left-color:var(--good)}.pg.running{border-left-color:var(--c-a)}.pg.next{border-left-color:var(--warn)}.pg.queued{border-left-color:var(--line)}.pg.failed{border-left-color:var(--bad)}
 .pg .st{display:grid;gap:2px;justify-items:end;align-content:start}.pg.done .pill{color:var(--good)}.pg.running .pill{color:var(--c-a)}.pg.next .pill{color:var(--warn)}.pg.queued .pill{color:var(--muted)}.pg.failed .pill,.pg.stopped .pill{color:var(--bad)}
 .mt{display:grid;grid-template-columns:130px 1fr auto;gap:8px;align-items:center;margin-top:4px;font-size:.85rem}.bars{display:grid;gap:2px}.bars i{display:block;height:7px;border-radius:2px}.b0{background:var(--muted);opacity:.55}.b1{background:var(--c-a)}
-ul.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}ul.tl li{display:flex;gap:12px;padding:3px 0 3px 12px}ul.tl li.warn{color:var(--warn)}ul.tl li.done{color:var(--good)}ul.tl li.running{color:var(--c-a)}
+ul.nextw{list-style:none;padding-left:0}ul.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}ul.tl li{display:flex;gap:12px;padding:3px 0 3px 12px}ul.tl li.warn{color:var(--warn)}ul.tl li.done{color:var(--good)}ul.tl li.running{color:var(--c-a)}
 @media (max-width:640px){.pg{grid-template-columns:1fr}.pg .st{justify-items:start}.mt{grid-template-columns:1fr}}
 .pill.bank{color:var(--good);margin-left:8px}.cardsx{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}.xc{background:var(--panel);border:1px solid var(--line);border-left-width:5px;padding:12px 14px;display:grid;gap:6px;align-content:start;font-size:.92rem}.xc p{margin:0;max-width:none}.xc header{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline}.xc h3{font-size:1.05rem}.xc.done{border-left-color:var(--good)}.xc.running{border-left-color:var(--c-a)}.xc.next{border-left-color:var(--warn)}.xc.queued{border-left-color:var(--line)}.xc .m{font-family:var(--mono);color:var(--muted)}
-.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}.ba>span{background:var(--bg);border:1px solid var(--line);padding:6px 8px;font-size:.85rem}.ba small{display:block;color:var(--muted)}.ba .ar{border:0;background:none;padding:0}.xc .res{border-top:1px solid var(--line);padding-top:6px}
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}.ba>span{background:var(--bg);border:1px solid var(--line);padding:6px 8px;font-size:.85rem}.ba small{display:block;color:var(--muted)}.ba .ar{border:0;background:none;padding:0}.xc .res{border-top:1px solid var(--line);padding-top:6px}.xc .dz{color:var(--muted);font-size:.88rem}.xc .dz b{color:var(--fg)}
 .gbox{overflow-x:auto;border:1px solid var(--line);background:var(--panel)}.gsvg{display:block;width:100%;min-width:900px;height:auto}.gt{paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
 .gt{fill:var(--fg);font:12px var(--body)}.gt.q{fill:var(--muted)}.gt.gh{font-weight:600;fill:var(--muted)}.gs{font-size:11px}.gs.done{fill:var(--good)}.gs.running{fill:var(--c-a)}.gs.failed{fill:var(--bad)}.gs.waiting{fill:var(--muted)}.gs.cut{fill:var(--warn)}.gs.late{fill:var(--bad)}.gprog{fill:var(--c-a)}.ga.late,.gb.late .gp{stroke:var(--bad)}
 .gp{fill:none;stroke:var(--muted);stroke-width:1.5}.ga.done{fill:var(--good)}.ga.running{fill:url(#pr);stroke:var(--c-a);stroke-width:1.5}.ga.failed{fill:var(--bad)}.ga.cut{fill:url(#pc);stroke:var(--warn);stroke-width:1.5}.ga.waiting{fill:none}
@@ -123,6 +123,7 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <main id="schedule" class="tab" data-name="Schedule">
 <p class="asof"><span id="wnote"></span> Planned against actual; late and stale marks come from the viewer's clock.</p>
 <section><div id="gantt"></div>
+<div id="next-wrap" hidden><h3>Next work</h3><p class="sub">Every planned job not yet started, in the plan's order, with its resource, planned start and what it waits on.</p><ul class="nextw" id="nextw"></ul></div>
 <div id="holds-wrap" hidden><h3>Holds</h3><p class="sub">Times a resource is kept idle on purpose, with the reason.</p><ul id="holds"></ul></div></section>
 </main>
 <main id="needsyou" class="tab" data-name="Needs you" hidden>
@@ -131,6 +132,7 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <main id="results" class="tab" data-name="Results" hidden>
 <p class="asof">Each experiment or work item and its outcome. A result is shown only once a reviewer has accepted it.</p>
 <section><div class="cardsx" id="cards"></div><p class="sub" id="cards-none" hidden>No results.json cards in the data directory; this tab stays empty until its writer produces some.</p></section>
+<div id="res-sections"></div>
 </main>
 <main id="plan" class="tab" data-name="Plan" hidden>
 <p class="asof" id="plan-asof"></p>
@@ -163,6 +165,8 @@ const outcomeOf=j=>{const r=j.outcome&&j.outcome.result;if(r&&OUT[r])return OUT[
 document.getElementById("built").textContent=D.built_at||"";
 if(D.gantt&&D.gantt.jobs){ganttChart(document.getElementById("gantt"),D.gantt,{updated:D.gantt_updated,date:D.gantt.date});
  const wn=document.getElementById("wnote");if(D.gantt.window_note)wn.textContent=D.gantt.window_note}
+(function nextwork(){const u=document.getElementById("nextw"),P=D.plan_out,N=P&&P.plan;if(!u||!N||!N.length)return;document.getElementById("next-wrap").hidden=false;const by={};((D.gantt&&D.gantt.jobs)||[]).forEach(j=>by[j.id]=j);const o=OUT.waiting,busy={};(P.running||[]).forEach(r=>(r.resources||[]).forEach(x=>busy[x]=busy[x]||r.job));
+ N.forEach((r,i)=>{const s=String(r.start||""),day=s.slice(0,10),at=s.slice(11,16)||"?",j=by[r.job],res=r.resources||[],w=((j&&j.waits_on)||[]).concat(res.filter(x=>busy[x]).map(x=>x+" ("+busy[x]+")"));u.append(el("li",{},el("span",{class:"m"},(i+1)+". "),el("b",{},(j&&j.name)||r.job)," ",el("span",{class:"oc o-"+o.c},o.m+" "+o.l)," ",el("span",{class:"m"},(res.join(", ")||"no resource")+" · planned start "+(D.gantt&&D.gantt.date&&day&&day!==D.gantt.date?day.slice(5)+" ":"")+at+(w.length?" · waits on "+w.join(", "):""))))})})();
 (function holds(){const u=document.getElementById("holds"),H=D.gantt&&D.gantt.idle_reasons;if(!u||!H||!H.length)return;document.getElementById("holds-wrap").hidden=false;H.forEach(x=>u.append(el("li",{},el("b",{},"⏸ "+x.resource+" "+x.from+"-"+x.to+": "),x.why)))})();
 (function counts(){const c={},hc=document.getElementById("hcount");for(const j of (D.gantt&&D.gantt.jobs)||[]){const o=outcomeOf(j);c[o.l]=(c[o.l]||0)+1}
  const parts=Object.entries(c).map(([k,v])=>el("span",{},v+" "+k.toLowerCase()));parts.forEach((p,i)=>{if(i)hc.append("  ·  ");hc.append(p)})})();
@@ -212,9 +216,17 @@ function hbars(host,rows,opt){const W=920,L=opt.L||190,H=opt.H||34,T=8,h=T+rows.
   s.append(host);if((C.notes||[]).length)s.append(el("ul",{},...C.notes.map(n=>el("li",{},n))))});
  const K=P.stack;if(K&&(K.rows||[]).length){const s=sec(K,"What runs, and what to do with it");legend(s,K.legend);const st=el("div",{class:"stack"});
   K.rows.forEach(r=>{const d=el("div");(r.items||[]).forEach(i=>{const p=el("span",{class:"pc "+i.state},el("b",{},i.name));if(i.note)p.append(el("small",{},i.note));d.append(p)});st.append(el("div",{class:"row"},el("span",{},r.layer),d))});s.append(st)}})();
-(function cards(){const h=document.getElementById("cards");if(!(D.cards||[]).length)document.getElementById("cards-none").hidden=false;for(const c of D.cards||[]){const o=OUT[c.outcome]||OUT.waiting,row=(k,v)=>v?el("p",{class:"res"},el("b",{},k+" "),v):null;
+(function cards(){const h=document.getElementById("cards");if(!(D.cards||[]).length)document.getElementById("cards-none").hidden=false;for(const c of D.cards||[]){const o=OUT[c.outcome]||OUT.waiting,row=(k,v,cl)=>v?el("p",{class:cl||"res"},el("b",{},k+" "),v):null;
+ const des=(c.design||[]).filter(p=>p&&p[1]).map(p=>row(p[0]+".",p[1],"dz")),mx=m=>Math.max(m.before||0,m.after||0)||1,w=(v,m)=>(100*v/mx(m)).toFixed(1)+"%";
  h.append(el("article",{class:"xc "+o.c},el("header",{},el("span",{class:"m"},c.id||""),el("h3",{},c.title||""),el("span",{class:"oc o-"+o.c},o.m+" "+o.l)),
-  c.why?el("div",{class:"fbox"},el("b",{},o.m+" "+o.l.toUpperCase()+": "+c.why),el("span",{},"Record: "+(c.record||"-"))):null,row("Result.",c.result&&c.accepted_by?c.result+" (accepted by "+c.accepted_by+")":c.result?"Pending review.":"Pending.")))}})();
+  ...des,
+  c.why?el("div",{class:"fbox"},el("b",{},o.m+" "+o.l.toUpperCase()+": "+c.why),el("span",{},"Record: "+(c.record||"-")),c.decided?el("span",{},"Decided: "+c.decided):null):(c.record||c.decided?el("p",{class:"sub"},(c.record?"Record: "+c.record:"")+(c.record&&c.decided?"   ":"")+(c.decided?"Decided: "+c.decided:"")):null),
+  row("Result.",c.result&&c.accepted_by?c.result+" (accepted by "+c.accepted_by+")":c.result||c.draft_result?"Pending review.":"Pending."),
+  !(c.result&&c.accepted_by)&&c.draft_result?row("Draft, not accepted.",c.draft_result,"dz"):null,
+  row("Review.",c.review,"dz"),
+  ...(c.metrics||[]).map(m=>el("div",{class:"mt"},el("span",{},m.label),el("div",{class:"bars"},el("i",{class:"b0",style:"width:"+w(m.before,m)},""),m.after==null?null:el("i",{class:"b1",style:"width:"+w(m.after,m)},"")),el("span",{class:"m"},"was "+m.before+(m.after==null?" · now pending":" · now "+m.after)))),
+  row("Baseline.",c.baseline,"dz"),row("Note.",c.note,"dz"),row("Sources.",c.source,"dz")))}
+ const S=document.getElementById("res-sections");for(const s of D.result_sections||[]){const d=el("section",{},el("h2",{},s.title||""));for(const p of s.paragraphs||[])d.append(el("p",{},p));if((s.bullets||[]).length)d.append(el("ul",{},...s.bullets.map(b=>el("li",{},b))));if(s.table&&(s.table.rows||[]).length){const tb=el("table");if((s.table.head||[]).length)tb.append(el("tr",{},...s.table.head.map(x=>el("th",{},x))));s.table.rows.forEach(r=>tb.append(el("tr",{},...r.map(x=>el("td",{},x)))));d.append(el("div",{class:"scroll"},tb))}S.append(d)}})();
 const isPr=r=>String(r.kind).toLowerCase()==="pr";
 (function tickets(){const T=(D.issue_tracking&&D.issue_tracking.items)||[],t=document.getElementById("ttable");document.getElementById("tcount").textContent=T.length?T.length+" items":"No issue-tracking.json items in the data directory; this tab stays empty until its writer produces some.";
  t.append(el("tr",{},...["Item","Name","State","Waits on"].map(c=>el("th",{},c))));
