@@ -105,6 +105,8 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 .needs{border:1px solid var(--line2);border-left:4px solid var(--accent);background:var(--panel);margin:8px 0;padding:0 12px}.needs summary{cursor:pointer;font-weight:600;padding:5px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.needs.none summary{font-weight:400;color:var(--muted);cursor:default}.needs ul{margin:0;padding:0 0 6px 18px;font-size:.9em}.needs li{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0}.needs .dl{color:var(--muted)}
 .hcount{font-weight:600}.hcount .hp{color:var(--good)}.hcount .hf{color:var(--bad)}.hcount .hv{color:var(--warn)}
 %%GANTTCSS%%
+%%EXTCSS%%
+.banner{border:2px solid var(--bad);border-left-width:10px;background:color-mix(in srgb,var(--bad) 10%,var(--panel));padding:8px 12px;font-size:.92rem}.banner[hidden]{display:none}.banner b{color:var(--bad)}.banner ul{margin:4px 0 0}.logl{list-style:none;padding:0;margin:0;display:grid;gap:0;max-width:none;border-top:1px solid var(--line)}.logl li{display:grid;grid-template-columns:150px 1fr;gap:4px 14px;padding:8px 0;border-bottom:1px solid var(--line)}.logl .m{font-family:var(--mono);color:var(--muted)}.logl small{display:block;color:var(--muted)}tr.sup td{color:var(--muted);text-decoration:line-through}tr.sup td:last-child{text-decoration:none}
 .pg b{font-weight:600}.pg .m{font-family:var(--mono);font-size:.85rem;color:var(--muted)}.pg small{color:var(--muted)}
 @media (max-width:640px){.pg{grid-template-columns:1fr}}
 </style>
@@ -113,6 +115,8 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <h1>%%TITLE%%</h1>
 <p class="sub">%%SUBTITLE%% Page built <span id="built"></span>.</p>
 <p class="sub hcount" id="hcount"></p>
+<div class="banner" id="stale" role="alert" hidden></div>
+<div class="banner" id="defects" role="status" hidden></div>
 <details class="needs" id="needs"><summary id="needs-sum">Needs you</summary><ul id="needs-body"></ul></details>
 <div class="tabs" role="tablist" id="tabs"></div>
 </header>
@@ -125,8 +129,8 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <section><h2>Needs you</h2><div id="needs-full"></div></section>
 </main>
 <main id="results" class="tab" data-name="Results" hidden>
-<p class="asof">Each experiment or work item and its outcome.</p>
-<section><div class="cardsx" id="cards"></div></section>
+<p class="asof">Each experiment or work item and its outcome. A result is shown only once a reviewer has accepted it.</p>
+<section><div class="cardsx" id="cards"></div><p class="sub" id="cards-none" hidden>No results.json cards in the data directory; this tab stays empty until its writer produces some.</p></section>
 </main>
 <main id="plan" class="tab" data-name="Plan" hidden>
 <p class="asof" id="plan-asof"></p>
@@ -138,6 +142,13 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <main id="team" class="tab" data-name="Team" hidden>
 <section><h2>Roster</h2><div class="scroll"><table id="roster"></table></div><div id="rosterNote"></div></section>
 </main>
+<main id="log" class="tab" data-name="Log" hidden>
+<section><h2>Log</h2><p class="sub">Events, newest first.</p><ul class="logl" id="logl"></ul></section>
+</main>
+<main id="decisions" class="tab" data-name="Decisions" hidden>
+<section><h2>Decisions</h2><p class="sub" id="dsub"></p><div class="scroll"><table id="dtable"></table></div></section>
+</main>
+%%EXTTABS%%
 </div>
 <script>
 const D=%%DATA%%;
@@ -156,14 +167,14 @@ if(D.gantt&&D.gantt.jobs){ganttChart(document.getElementById("gantt"),D.gantt,{u
 (function counts(){const c={},hc=document.getElementById("hcount");for(const j of (D.gantt&&D.gantt.jobs)||[]){const o=outcomeOf(j);c[o.l]=(c[o.l]||0)+1}
  const parts=Object.entries(c).map(([k,v])=>el("span",{},v+" "+k.toLowerCase()));parts.forEach((p,i)=>{if(i)hc.append("  ·  ");hc.append(p)})})();
 (function needs(){const sm=document.getElementById("needs-sum"),ul=document.getElementById("needs-body"),fb=document.getElementById("needs-full");if(!sm)return;const N=D.needs_owner;
- if(!N){sm.textContent="Needs you: list not yet written";if(fb)fb.append(el("p",{class:"sub"},"Waiting for needs-owner.json from the integrator. Nothing is shown here until it exists."));return}
+ if(!N){sm.textContent="Needs you: list not yet written";if(fb)fb.append(el("p",{class:"sub"},"No needs-owner.json in the data directory. Nothing is shown here until its writer produces one."));return}
  const items=(Array.isArray(N)?N:(N.items||[])).slice().sort((a,b)=>(a.order||0)-(b.order||0));const g=(r,...k)=>{for(const x of k)if(r[x]!=null&&r[x]!=="")return r[x];return""};
  if(!items.length){sm.textContent="Nothing needs you";sm.parentNode.classList.add("none");ul.hidden=true}else{const d=items.map(r=>g(r,"deadline")).filter(Boolean);sm.textContent=items.length+" for you"+(d.length?" \u00b7 next "+d[0]:"")+" \u00b7 click to open";
  items.forEach(r=>{const l=g(r,"link","url");ul.append(el("li",{},el("b",{},g(r,"what","title"))," \u2014 ",g(r,"action"),el("span",{class:"dl"}," (by "+g(r,"deadline")+")"),l?el("a",{href:l}," open"):""))})}
  if(fb){if(items.length){const tb=el("table");tb.append(el("tr",{},...["What","Action","Deadline","Why then","If nothing is done","Link"].map(c=>el("th",{},c))));
  items.forEach(r=>{const l=g(r,"link","url");tb.append(el("tr",{},el("td",{},g(r,"what","title")),el("td",{},g(r,"action")),el("td",{},g(r,"deadline")),el("td",{},g(r,"why_then")),el("td",{},g(r,"if_nothing","consequence")),el("td",{},l?el("a",{href:l},"open"):"")))});fb.append(el("div",{class:"scroll"},tb))}else fb.append(el("p",{},"Nothing needs you."));
  if(N.note)fb.append(el("p",{},N.note));
- if(Array.isArray(N.work)&&N.work.length){fb.append(el("h3",{},"Work to the merge into the branch"));const wt=el("table");wt.append(el("tr",{},...["Body","PR","Ticket","State","Waits on"].map(c=>el("th",{},c))));
+ if(Array.isArray(N.work)&&N.work.length){fb.append(el("h3",{},"Work in flight"));const wt=el("table");wt.append(el("tr",{},...["Body","PR","Ticket","State","Waits on"].map(c=>el("th",{},c))));
  N.work.forEach(w=>wt.append(el("tr",{},el("td",{},w.body||""),el("td",{},w.pr!=null?String(w.pr):"none"),el("td",{},w.ticket!=null?String(w.ticket):""),el("td",{},w.state||""),el("td",{},w.waits_on||""))));fb.append(el("div",{class:"scroll"},wt))}
  if(Array.isArray(N.information)&&N.information.length){fb.append(el("h3",{},"For your information (nothing to do)"));N.information.forEach(r=>{fb.append(el("p",{},el("b",{},r.what||"")));if(r.detail)fb.append(el("p",{},r.detail));if(r.source)fb.append(el("p",{class:"sub"},"Source: "+r.source+"."))})}
  fb.append(el("p",{class:"sub"},"Source: needs-owner.json"+(N.source?" ("+N.source+")":"")+(N.updated?", updated "+N.updated:"")+"."))}})();
@@ -201,11 +212,38 @@ function hbars(host,rows,opt){const W=920,L=opt.L||190,H=opt.H||34,T=8,h=T+rows.
   s.append(host);if((C.notes||[]).length)s.append(el("ul",{},...C.notes.map(n=>el("li",{},n))))});
  const K=P.stack;if(K&&(K.rows||[]).length){const s=sec(K,"What runs, and what to do with it");legend(s,K.legend);const st=el("div",{class:"stack"});
   K.rows.forEach(r=>{const d=el("div");(r.items||[]).forEach(i=>{const p=el("span",{class:"pc "+i.state},el("b",{},i.name));if(i.note)p.append(el("small",{},i.note));d.append(p)});st.append(el("div",{class:"row"},el("span",{},r.layer),d))});s.append(st)}})();
-(function cards(){const h=document.getElementById("cards");for(const c of D.cards||[]){const o=OUT[c.outcome]||OUT.waiting,row=(k,v)=>v?el("p",{class:"res"},el("b",{},k+" "),v):null;
+(function cards(){const h=document.getElementById("cards");if(!(D.cards||[]).length)document.getElementById("cards-none").hidden=false;for(const c of D.cards||[]){const o=OUT[c.outcome]||OUT.waiting,row=(k,v)=>v?el("p",{class:"res"},el("b",{},k+" "),v):null;
  h.append(el("article",{class:"xc "+o.c},el("header",{},el("span",{class:"m"},c.id||""),el("h3",{},c.title||""),el("span",{class:"oc o-"+o.c},o.m+" "+o.l)),
-  c.why?el("div",{class:"fbox"},el("b",{},o.m+" "+o.l.toUpperCase()+": "+c.why),el("span",{},"Record: "+(c.record||"-"))):null,row("Result.",c.result||"Pending.")))}})();
-(function tickets(){const T=(D.issue_tracking&&D.issue_tracking.items)||[],t=document.getElementById("ttable");document.getElementById("tcount").textContent=T.length+" items";
+  c.why?el("div",{class:"fbox"},el("b",{},o.m+" "+o.l.toUpperCase()+": "+c.why),el("span",{},"Record: "+(c.record||"-"))):null,row("Result.",c.result&&c.accepted_by?c.result+" (accepted by "+c.accepted_by+")":c.result?"Pending review.":"Pending.")))}})();
+const isPr=r=>String(r.kind).toLowerCase()==="pr";
+(function tickets(){const T=(D.issue_tracking&&D.issue_tracking.items)||[],t=document.getElementById("ttable");document.getElementById("tcount").textContent=T.length?T.length+" items":"No issue-tracking.json items in the data directory; this tab stays empty until its writer produces some.";
  t.append(el("tr",{},...["Item","Name","State","Waits on"].map(c=>el("th",{},c))));
- for(const r of T)t.append(el("tr",{},el("td",{},(r.url?el("a",{href:r.url},(r.kind==="pr"?"PR ":"Issue ")+r.number):(r.kind==="pr"?"PR ":"Issue ")+r.number)),el("td",{},r.name||r.title||""),el("td",{},r.state||""),el("td",{},(r.waits_on||[]).join?(r.waits_on||[]).join(", "):String(r.waits_on||""))))})();
-(function roster(){const t=document.getElementById("roster"),R=D.roster||[];R.forEach((r,i)=>t.append(el("tr",{},...r.map(c=>el(i?"td":"th",{},c)))));if(!R.length)t.replaceWith(el("p",{},"No roster."))})();
+ for(const r of T)t.append(el("tr",{},el("td",{},(r.url?el("a",{href:r.url},(isPr(r)?"PR ":"Issue ")+r.number):(isPr(r)?"PR ":"Issue ")+r.number)),el("td",{},r.name||r.title||""),el("td",{},r.state||""),el("td",{},(r.waits_on||[]).join?(r.waits_on||[]).join(", "):String(r.waits_on||""))))})();
+(function log(){const u=document.getElementById("logl"),L=(D.log&&D.log.events)||[];
+ if(!L.length){u.replaceWith(el("p",{class:"sub"},"No log.json events in the data directory; this tab stays empty until its writer appends one."));return}
+ L.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at))).forEach(e=>u.append(el("li",{},el("span",{class:"m"},e.at||""),el("div",{},e.what||"",e.source?el("small",{},"Source: "+e.source):null))))})();
+(function decisions(){const t=document.getElementById("dtable"),R=(D.decisions&&D.decisions.rows)||[];
+ if(!R.length){t.closest(".scroll").replaceWith(el("p",{class:"sub"},"No decisions.json rows in the data directory; this tab stays empty until its writer produces some."));return}
+ document.getElementById("dsub").textContent="Rows marked superseded are struck through and name the row that replaced them.";
+ t.append(el("tr",{},...["Id","Decision","Who decides","Status","Ruling","Source"].map(c=>el("th",{},c))));
+ R.forEach(r=>t.append(el("tr",{class:r.status==="superseded"?"sup":""},el("td",{},r.id||""),el("td",{},r.decision||""),el("td",{},r.who||""),el("td",{},r.status==="superseded"?"superseded by "+(r.superseded_by||"?"):(r.status||"")),el("td",{},r.ruling||""),el("td",{},r.source||""))))})();
+(function roster(){const t=document.getElementById("roster"),R=D.roster||[];R.forEach((r,i)=>t.append(el("tr",{},...r.map(c=>el(i?"td":"th",{},c)))));if(!R.length)t.replaceWith(el("p",{},"No roster.md table in the data directory; this tab stays empty until its writer produces one."))})();
+(function defects(){const d=D.defects||[],b=document.getElementById("defects");if(!d.length)return;b.hidden=false;
+ b.append(el("b",{},d.length+" data defect"+(d.length>1?"s":"")+": "),"each belongs to the file's writer, who fixes it at the source; the page does not patch it.");
+ const u=el("ul");d.forEach(x=>u.append(el("li",{},x.file+(x.writer?" (writer: "+x.writer+")":" (writer not named in page.json)")+": "+x.what)));b.append(u)})();
+(function stale(){const b=document.getElementById("stale"),built=D.built_at;
+ const show=m=>{b.hidden=false;b.textContent="";b.append(el("b",{},"This page may be out of date. "),m)};
+ const poll=()=>fetch("status.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(s=>{if(!s){b.hidden=true;return}
+  const age=(Date.now()/1000-s.checked)/60;
+  if(s.state==="refused")show("The last rebuild at "+s.at+" was refused ("+s.why+"). Showing the page built "+(s.built||built)+".");
+  else if(age>10)show("The rebuild timer has not run for "+Math.round(age)+" minutes. Showing the page built "+(s.built||built)+".");
+  else b.hidden=true}).catch(()=>{});
+ poll();setInterval(poll,60000)})();
+(function autoReload(){let base=null;const K="statusScroll";
+ try{const y=sessionStorage.getItem(K);if(y!==null){sessionStorage.removeItem(K);setTimeout(()=>window.scrollTo(0,+y||0),100)}}catch(e){}
+ const poll=()=>fetch("version.txt",{cache:"no-store"}).then(r=>r.ok?r.text():null).then(v=>{if(v===null)return;
+  if(base===null){base=v;return}
+  if(v!==base){try{sessionStorage.setItem(K,String(window.scrollY))}catch(e){}location.reload()}}).catch(()=>{});
+ poll();setInterval(poll,30000)})();
+%%EXTJS%%
 </script>

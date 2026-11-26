@@ -1,0 +1,19 @@
+{
+ "events": [
+  {
+   "at": "2026-01-01 09:00",
+   "what": "Build J1 started.",
+   "source": "build-0001"
+  },
+  {
+   "at": "2026-01-01 10:05",
+   "what": "Build J1 passed.",
+   "source": "build-0001"
+  },
+  {
+   "at": "2026-01-01 11:30",
+   "what": "Suite J2 failed at check 4.",
+   "source": "run-0002"
+  }
+ ]
+}

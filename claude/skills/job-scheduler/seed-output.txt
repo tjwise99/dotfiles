@@ -1,0 +1,22 @@
+defect                                           seed    defective  real
+dependencies ignored                             landed  FAILS      passes  Dependencies.test_a_job_starts_only_after_what_it_follows_ends
+a done dependency still blocks                   landed  FAILS      passes  Dependencies.test_a_job_following_a_done_job_starts_now
+any free resource will do                        landed  FAILS      passes  Eligibility.test_never_placed_on_a_resource_it_cannot_use
+only the first alternative is tried              landed  FAILS      passes  Eligibility.test_an_alternative_resource_is_taken_when_free
+an unknown resource is not reported              landed  FAILS      passes  Eligibility.test_a_resource_no_one_provides_is_reported
+one free need is enough                          landed  FAILS      passes  TwoResources.test_a_two_resource_job_waits_for_both
+a second need is never met                       landed  FAILS      passes  TwoResources.test_a_two_resource_job_with_both_free_starts_now
+priority list ignored                            landed  FAILS      passes  Priority.test_priority_list_goes_first
+shortest first lost                              landed  FAILS      passes  Priority.test_shortest_first_without_a_priority
+strict priority: the head job blocks the rest    landed  FAILS      passes  WorkConserving.test_a_free_resource_with_an_eligible_ready_job_is_never_idle
+a running job's resources offered to others      landed  FAILS      passes  WorkConserving.test_a_running_job_keeps_what_it_holds
+late never raised                                landed  FAILS      passes  Late.test_open_job_past_its_planned_end_is_late
+late from any planned end                        landed  FAILS      passes  Late.test_job_inside_its_window_is_not_late
+a done job can be late                           landed  FAILS      passes  Late.test_done_job_is_not_late
+a re-plan hides late                             landed  FAILS      passes  Late.test_moving_the_planned_end_does_not_hide_late
+stall never raised                               landed  FAILS      passes  Stalled.test_running_job_quiet_for_eleven_minutes_is_stalled
+stall with no window                             landed  FAILS      passes  Stalled.test_running_job_quiet_for_three_minutes_is_not_stalled
+idle capacity not reported                       landed  FAILS      passes  AlertPath.test_a_free_resource_with_a_ready_job_is_reported_and_exits_1
+status exits 0 on findings                       landed  FAILS      passes  AlertPath.test_a_free_resource_with_a_ready_job_is_reported_and_exits_1
+clean state not said                             landed  FAILS      passes  AlertPath.test_nothing_to_report_is_clean_and_exits_0
+all seeds landed; every case fails on its defect and passes on the real core

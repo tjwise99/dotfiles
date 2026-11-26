@@ -1,12 +1,31 @@
 # Input files
 
 `builder/build.py --data DIR` reads these files from one flat directory. Each is optional; a missing file
-leaves its tab empty. The `builder/sample/` directory is a complete, valid set. Times are `"HH:MM"` in the
+leaves its tab drawing a sentence that says so. The `builder/sample/` directory is a complete, valid set. Times are `"HH:MM"` in the
 schedule's timezone. Plain GFM and JSON, no frontmatter. The first sentence of each section is the
 owner of that fact; the page restates none of it elsewhere.
 
+## Who writes each file
+A file nobody writes freezes its tab. `page.json` names the writer of each file (`writers`), and a
+defect found in a file is reported against that name. Prefer a script reading records; else the role that
+already owns the fact writes it when it learns it.
+
+| File | Writer |
+|---|---|
+| schedule.json | the scheduler (a script reading the job records, else the role that runs the schedule) |
+| needs-owner.json | the role that coordinates the work, since it knows what is blocked on the owner |
+| issue-tracking.json | `builder/writers/issue-tracking.py` (reads GitHub with `gh`), on a timer or in `SYNC` |
+| results.json | the reviewer: the analyst writes the card, the reviewer writes `accepted_by` |
+| roster.md | the role that spawns the agents, at the moment it spawns or retires one |
+| plan-out.json | `builder/writers/scheduler-out.py`, run by the rebuild when `SCHEDULER_ADAPTER` is set; never typed by hand |
+| plan.json | the planner, once |
+| log.json | whoever acts, through `builder/writers/log-append.py`; never typed by hand |
+| decisions.json | the role that records the owner's rulings |
+| NAME.json (extension) | named in `page.json` by the project that adds the tab |
+
 ## page.json
-`{"title": "...", "subtitle": "..."}`. Header text.
+`{"title": "...", "subtitle": "...", "writers": {"schedule.json": "role or script", ...}}`. Header text
+and the writer of each file.
 
 ## schedule.json (Schedule tab: the gantt chart and the Holds list)
 Top level:
@@ -32,6 +51,22 @@ Each entry of `jobs`:
 - `progress` (running only): {"label","done","total","latest","at"}; `note`; `evidence`.
 Late and stale marks are computed from the viewer's clock, never stored.
 
+## plan-out.json (the Schedule tab's gantt chart: the scheduler as its source)
+Written by `builder/writers/scheduler-out.py` from the job-scheduler skill's `plan --json` and `status --json`
+for one project adapter. Absent when no scheduler is configured; the chart is then drawn from `schedule.json`
+alone. `{"running":[row],"next":[row],"plan":[row],"unplaceable":{job: why},"alerts":[{"kind","text"}]}`, a `row` being
+{"job","resources":[...],"start","end"} with ISO local times. The build merges it into `schedule.json`'s jobs:
+- each `running` row ({"job","resources","start","end"}: the scheduler's start and expected end) keeps a running job
+  on the chart: a job with no `schedule.json` entry is added as running from `start` to `end`, one that has an
+  entry keeps its record and takes `end` as its expected end (the chart's late mark counts from it).
+- each `plan` row of a job that is waiting (or not in `schedule.json`, which adds it) sets the job's lane from its
+  first resource (`schedule.json` `resources` maps a resource to a lane, else the resource is its own lane) and
+  its planned start and end from `start` and `end`. A job with a record (running, done, failed) keeps it.
+- an alert LATE on a job on the chart marks it late from the "planned end HH:MM" in its text; STALLED sets its
+  progress time from "since HH:MM", so the chart's own late and no-recent-update marks show. IDLE alerts,
+  `next` and `unplaceable` are carried in the data but not drawn; any other alert kind is a data defect.
+Not to be confused with `plan.json`, the sprint-plan reference.
+
 ## needs-owner.json (the strip above the tabs and the Needs you tab)
 `{"updated","source","note","items":[...],"work":[...],"information":[...]}`
 - `items`: what the owner must do. Fields `order` (sort key), `what`, `action`, `deadline`, `why_then`,
@@ -41,7 +76,7 @@ Late and stale marks are computed from the viewer's clock, never stored.
 - `information`: {"what","detail","source"}, drawn as "For your information (nothing to do)".
 
 ## issue-tracking.json (Tickets tab)
-`{"updated","items":[{"kind":"issue"|"pr","number","name","state","waits_on":[...],"url"}]}`.
+`{"updated","items":[{"kind":"issue"|"pr" (any case),"number","name","state","waits_on":[...],"url"}]}`.
 
 ## plan.json (Plan tab: the sprint plan reference)
 A reference page that does not change as the day goes on: goals, the findings board, what was ruled out,
@@ -63,13 +98,24 @@ plain; there is no markup. Each section object takes an optional `title` and `su
   by layer, same states as `board`.
 
 ## results.json (Results tab)
-A list of cards: `{"id","title","outcome","why","record","result"}`. `outcome` uses the same words as a
-job's `outcome.result`. A card without `result` reads "Pending."
+A list of cards: `{"id","title","outcome","why","record","result","accepted_by"}`. `outcome` uses the same
+words as a job's `outcome.result`, or "waiting". `result` is drawn only when `accepted_by` names the
+reviewer who accepted it; with `result` but no `accepted_by` the card reads "Pending review.", and with no
+`result`, "Pending."
+
+## log.json (Log tab)
+`{"events":[{"at":"YYYY-MM-DD HH:MM","what","source"}]}`. Shown newest first. Append with
+`builder/writers/log-append.py`.
+
+## decisions.json (Decisions tab)
+`{"rows":[{"id","decision","who","status","ruling","source","superseded_by"}]}`. `status` is open |
+ruled | superseded; a superseded row is struck through and names `superseded_by`.
 
 ## roster.md (Team tab)
 The first GFM table in the file, header row first. Any columns.
 
 ## identity-patterns.txt (not drawn; read with --identity)
 One regular expression per line; `#` starts a comment. If any matches the finished page the build refuses.
-Keep one per project, outside any published tree: addresses, hostnames, network names, serials, machine
-ids, usernames in paths. The builder bakes in no pattern.
+Keep one per project, outside any published tree: hostnames, network names, serials, machine ids. It adds
+to the built-in baseline, which is always on: private IPv4 addresses, MAC addresses, home-directory
+paths. A refusal prints how many patterns matched, never which.

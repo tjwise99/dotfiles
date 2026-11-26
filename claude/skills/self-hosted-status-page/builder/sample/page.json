@@ -1,1 +1,14 @@
-{"title": "Sample status page", "subtitle": "A sample day of work, built from the files in this directory."}
+{
+ "title": "Sample status page",
+ "subtitle": "A sample day of work, built from the files in this directory.",
+ "writers": {
+  "schedule.json": "scheduler",
+  "needs-owner.json": "orchestrator",
+  "issue-tracking.json": "writers/issue-tracking.py",
+  "results.json": "reviewer",
+  "roster.md": "orchestrator",
+  "plan.json": "planner",
+  "log.json": "writers/log-append.py",
+  "decisions.json": "orchestrator"
+ }
+}

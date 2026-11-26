@@ -59,6 +59,7 @@ window.ganttChart = function (host, G, opt) {
       o.s = o.a0 ?? o.p0;
       o.e = o.s == null ? null : o.a1 ?? (k === "running" ? Math.max(now ?? 0, o.p1 ?? 0, o.s) : o.a0 != null ? o.a0 : o.p1 ?? o.s);
       o.late = now == null ? 0 : k === "running" && o.p1 != null ? now - o.p1 : k === "waiting" && o.p0 != null ? now - o.p0 : 0;
+      if (j.late_since && o.late <= 0 && now != null && at(j.late_since) != null) o.late = Math.max(1, now - at(j.late_since)); /* the scheduler's LATE: an open job past its planned end */
       o.at = at((j.progress || {}).at); o.stale = k === "running" && now != null && o.at != null && now - o.at > STALE; o.ahead = now != null && o.at != null && o.at > now + 2;
       o.off = o.a0 != null && o.p0 != null && (Math.abs(o.a0 - o.p0) > DIFF || (o.a1 != null && o.p1 != null && Math.abs(o.a1 - o.p1) > DIFF));
       o.closed = k === "cut" || k === "dropped" || (k !== "running" && k !== "waiting" && (st.whole || o.s == null || o.e < from));

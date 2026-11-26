@@ -1,0 +1,12 @@
+{
+ "resources": {"runner-1": null, "runner-2": "2026-01-15T09:30", "build-lock": null},
+ "priority": ["release-notes"],
+ "jobs": [
+  {"id": "build-main", "needs": [["build-lock"]], "minutes": 40, "state": "running", "holds": ["build-lock"],
+   "ends": "2026-01-15T09:40", "planned_end": "2026-01-15T09:30"},
+  {"id": "test-main", "needs": [["runner-1", "runner-2"], ["build-lock"]], "minutes": 25, "after": ["build-main"], "planned_end": "2026-01-15T10:30"},
+  {"id": "lint", "needs": [["runner-1", "runner-2"]], "minutes": 5, "planned_end": "2026-01-15T09:20"},
+  {"id": "release-notes", "needs": [["runner-1"]], "minutes": 15, "after": ["test-main"], "planned_end": "2026-01-15T11:00"},
+  {"id": "docs-site", "needs": [["runner-2"]], "minutes": 10, "planned_end": "2026-01-15T11:00"}
+ ]
+}

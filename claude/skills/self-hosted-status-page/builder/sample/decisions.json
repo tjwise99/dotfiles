@@ -1,0 +1,27 @@
+{
+ "rows": [
+  {
+   "id": "D1",
+   "decision": "Rerun the suite before the next build.",
+   "who": "owner",
+   "status": "ruled",
+   "ruling": "Yes, once.",
+   "source": "note-1"
+  },
+  {
+   "id": "D2",
+   "decision": "Skip the soak run.",
+   "who": "owner",
+   "status": "superseded",
+   "superseded_by": "D3",
+   "source": "note-2"
+  },
+  {
+   "id": "D3",
+   "decision": "Run the soak run for 6 hours.",
+   "who": "owner",
+   "status": "open",
+   "source": "note-3"
+  }
+ ]
+}
