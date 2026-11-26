@@ -43,6 +43,25 @@ Late and stale marks are computed from the viewer's clock, never stored.
 ## issue-tracking.json (Tickets tab)
 `{"updated","items":[{"kind":"issue"|"pr","number","name","state","waits_on":[...],"url"}]}`.
 
+## plan.json (Plan tab: the sprint plan reference)
+A reference page that does not change as the day goes on: goals, the findings board, what was ruled out,
+where time and bytes go, what runs. Every section is optional; a section with no rows is not drawn. Text is
+plain; there is no markup. Each section object takes an optional `title` and `sub` (a one-line note).
+- `asof`: one sentence at the top of the tab.
+- `goals`: {"rows": [{"label","today","range":[low,high] or null,"unit","note"}]}. A bar scaled to
+  `today` with the supported range marked on it; `range` null reads "?".
+- `board`: {"legend": [[state,text]], "corner": "Goal", "columns": ["Easy", ...], "rows": [{"goal",
+  "cells": [[{"state","name","detail"}, ...] per column]}]}. A chip grid; `state` is ok | test | rule | bad
+  (colour, shape and the legend carry the meaning).
+- `rejected`: {"rows": [["what was checked","why it was ruled out"], ...]}.
+- `charts`: a list of {"title","sub","max","label_width","row_height","foot","notes":[...],"rows":[{"label",
+  "total","segs":[{"name","value","cat","text","label"}]}]}. Each row is a stacked horizontal bar on the
+  scale 0 to `max`; `cat` picks a colour slot c1 to c5 or cx (grey, fixed); `text` is the hover text;
+  `label` is drawn inside the segment (default `name`; false for none, and segments narrower than 60
+  pixels get none).
+- `stack`: {"legend": [[state,text]], "rows": [{"layer","items":[{"state","name","note"}]}]}. Pills grouped
+  by layer, same states as `board`.
+
 ## results.json (Results tab)
 A list of cards: `{"id","title","outcome","why","record","result"}`. `outcome` uses the same words as a
 job's `outcome.result`. A card without `result` reads "Pending."

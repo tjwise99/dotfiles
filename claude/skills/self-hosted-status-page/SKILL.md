@@ -34,11 +34,14 @@ python3 -I <work>/report/build.py --data <work>/data --out <work>/page.html \
 ```
 
 Input formats are in `INPUTS.md` in this skill directory; `builder/sample/` is a valid set that renders.
-Write the inputs (schedule, needs-owner, issue-tracking, results, roster) from whatever the session
+Write the inputs (schedule, needs-owner, issue-tracking, results, plan, roster) from whatever the session
 produces, in those formats, and the page is the same style every time: Schedule gantt with holds, a
-needs-you strip, Results, Tickets, Team, light and dark. Keep `identity-patterns.txt` per project and out
+needs-you strip, Results, Plan (the sprint plan reference), Tickets, Team, light and dark. Keep `identity-patterns.txt` per project and out
 of any published tree. Then set `DATA_DIR`, `SITE_DIR`, `IDENTITY` and run `builder/rebuild-site.sh` from
-the timer below. Add a tab by adding a `<main class="tab" data-name="...">` block and its drawing code to
+the timer below. When the session's own files are not in these formats, write a small adapter in the
+session's work dir (never in the skill) that fills `DATA_DIR`, and point `SYNC` at an executable that runs
+it: the rebuild script runs it before computing the signature, and a failure keeps the old page. Symlinks
+in `DATA_DIR` count toward the signature. Add a tab by adding a `<main class="tab" data-name="...">` block and its drawing code to
 `builder/template.html`; the render check counts tabs itself.
 
 ## Build script contract (build.py)
@@ -83,7 +86,7 @@ sees a half-written page.
 ## Rebuild script (rebuild-site.sh)
 
 `builder/rebuild-site.sh` implements this (config by environment: `DATA_DIR`, `SITE_DIR`, `IDENTITY`,
-`WORK_DIR`); it is `set -euo pipefail` and shellcheck-clean. Steps:
+`WORK_DIR`, `SYNC`); it is `set -euo pipefail` and shellcheck-clean. Steps:
 
 1. `exec 9>"<work>/.rebuild.lock"; flock -n 9 || exit 0`, so runs never overlap.
 2. Signature of the watched files: `stat -c '%n %Y' <files> 2>/dev/null | md5sum`. If equal to the

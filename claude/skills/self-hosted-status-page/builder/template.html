@@ -128,6 +128,10 @@ line.gl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}line.gl.solid{
 <p class="asof">Each experiment or work item and its outcome.</p>
 <section><div class="cardsx" id="cards"></div></section>
 </main>
+<main id="plan" class="tab" data-name="Plan" hidden>
+<p class="asof" id="plan-asof"></p>
+<div id="plan-body" style="display:contents"></div>
+</main>
 <main id="tickets" class="tab" data-name="Tickets" hidden>
 <section><h2>Issues and pull requests</h2><p class="sub" id="tcount"></p><div class="scroll"><table id="ttable"></table></div></section>
 </main>
@@ -163,6 +167,40 @@ if(D.gantt&&D.gantt.jobs){ganttChart(document.getElementById("gantt"),D.gantt,{u
  N.work.forEach(w=>wt.append(el("tr",{},el("td",{},w.body||""),el("td",{},w.pr!=null?String(w.pr):"none"),el("td",{},w.ticket!=null?String(w.ticket):""),el("td",{},w.state||""),el("td",{},w.waits_on||""))));fb.append(el("div",{class:"scroll"},wt))}
  if(Array.isArray(N.information)&&N.information.length){fb.append(el("h3",{},"For your information (nothing to do)"));N.information.forEach(r=>{fb.append(el("p",{},el("b",{},r.what||"")));if(r.detail)fb.append(el("p",{},r.detail));if(r.source)fb.append(el("p",{class:"sub"},"Source: "+r.source+"."))})}
  fb.append(el("p",{class:"sub"},"Source: needs-owner.json"+(N.source?" ("+N.source+")":"")+(N.updated?", updated "+N.updated:"")+"."))}})();
+const sv=(t,a={},s)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",t);for(const[x,v]of Object.entries(a))n.setAttribute(x,v);if(s!==undefined)n.textContent=s;return n};
+function hbars(host,rows,opt){const W=920,L=opt.L||190,H=opt.H||34,T=8,h=T+rows.length*H+26,max=opt.max,x=v=>L+v/max*(W-L-90);
+ const svg=sv("svg",{viewBox:`0 0 ${W} ${h}`,role:"img","aria-label":opt.aria}),tip=el("div",{class:"tip",hidden:""});
+ rows.forEach((r,i)=>{const y=T+i*H;svg.append(sv("text",{x:0,y:y+H/2+4,"font-size":14},r.label));let cur=0;
+  r.segs.forEach(s=>{const x0=x(cur),w=Math.max(0,x(cur+s.v)-x0-2);const q=sv("rect",{x:x0,y:y+6,width:w,height:H-14,fill:s.c||"var(--muted)",rx:2,tabindex:0});
+   const show=()=>{tip.textContent=`${s.n}: ${s.t||s.v}`;tip.hidden=false;const b=q.getBoundingClientRect(),o=host.getBoundingClientRect();tip.style.left=Math.max(0,Math.min(b.left-o.left,o.width-240))+"px";tip.style.top=(b.bottom-o.top+4)+"px"};
+   q.addEventListener("pointerenter",show);q.addEventListener("focus",show);q.addEventListener("pointerleave",()=>tip.hidden=true);q.addEventListener("blur",()=>tip.hidden=true);svg.append(q);
+   if(w>60&&s.lab!==false)svg.append(sv("text",{x:x0+6,y:y+H/2+4,"font-size":12,style:"fill:var(--bg);pointer-events:none"},s.lab||s.n));cur+=s.v});
+  svg.append(sv("text",{x:x(cur)+6,y:y+H/2+4,"font-size":12,class:"q"},r.total||""))});
+ svg.append(sv("text",{x:0,y:h-6,"font-size":12,class:"q"},opt.foot||""));host.append(svg,tip)}
+(function plan(){const P=D.plan,body=document.getElementById("plan-body"),asof=document.getElementById("plan-asof");
+ if(!P){asof.textContent="No plan.json in the data directory; this tab stays empty until one is written.";return}
+ asof.textContent=P.asof||"";
+ const sec=(o,dflt)=>{const s=el("section",{},el("h2",{},o.title||dflt));if(o.sub)s.append(el("p",{class:"sub"},o.sub));body.append(s);return s};
+ const legend=(s,l)=>{if(l&&l.length)s.append(el("div",{class:"legend"},...l.map(([k,t])=>el("span",{},el("i",{class:"k "+k}),t))))};
+ const G=P.goals;if(G&&(G.rows||[]).length){const s=sec(G,"Goals"),host=el("div",{class:"chart"}),rows=G.rows,W=920,H=52,L=150,R=230;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${rows.length*H+10}`,role:"img","aria-label":"Today against the supported range"});
+  rows.forEach((r,i)=>{const y=i*H+8,x=v=>L+v/r.today*(W-L-R),g=r.range,u=r.unit?" "+r.unit:"";svg.append(sv("text",{x:0,y:y+22,"font-size":14},r.label));
+   svg.append(sv("rect",{x:L,y:y+10,width:W-L-R,height:16,fill:"var(--line)",rx:2}));
+   if(g)svg.append(sv("rect",{x:x(g[0]),y:y+6,width:Math.max(6,x(g[1])-x(g[0])),height:24,fill:"var(--accent)",rx:3}));
+   svg.append(sv("text",{x:W-R+12,y:y+20,"font-size":14},`${r.today}${u} → ${g?(g[0]===g[1]?g[0]:g[0]+"–"+g[1])+u:"?"}`));
+   svg.append(sv("text",{x:W-R+12,y:y+38,"font-size":11,class:"q"},r.note||""))});
+  host.append(svg);s.append(host)}
+ const B=P.board;if(B&&(B.rows||[]).length){const s=sec(B,"Where the wins are");legend(s,B.legend);const t=el("table",{class:"board"}),hr=el("tr");
+  [B.corner||"Goal",...(B.columns||[])].forEach(c=>hr.append(el("th",{},c)));t.append(el("thead",{},hr));const tb=el("tbody");
+  B.rows.forEach(r=>{const tr=el("tr",{},el("th",{class:"r"},r.goal));(r.cells||[]).forEach(list=>{const td=el("td");list.forEach(c=>{const k=el("span",{class:"chip "+c.state},el("b",{},c.name));if(c.detail)k.append(el("small",{},c.detail));td.append(k)});tr.append(td)});tb.append(tr)});
+  t.append(tb);s.append(el("div",{class:"scroll"},t))}
+ const X=P.rejected;if(X&&(X.rows||[]).length){const s=sec(X,"Checked and rejected"),tb=el("tbody");X.rows.forEach(([a,c])=>tb.append(el("tr",{},el("td",{},a),el("td",{},c))));s.append(el("div",{class:"scroll"},el("table",{},tb)))}
+ const cat=c=>"var(--"+(["c1","c2","c3","c4","c5","cx"].includes(c)?c:"cx")+")";
+ (P.charts||[]).forEach(C=>{const s=sec(C,"Chart"),host=el("div",{class:"chart"});
+  hbars(host,(C.rows||[]).map(r=>({label:r.label||"",total:r.total||"",segs:r.segs.map(g=>({n:g.name,v:g.value,c:cat(g.cat),t:g.text,lab:g.label}))})),{max:C.max,L:C.label_width||80,H:C.row_height||44,aria:C.title||"Chart",foot:C.foot||""});
+  s.append(host);if((C.notes||[]).length)s.append(el("ul",{},...C.notes.map(n=>el("li",{},n))))});
+ const K=P.stack;if(K&&(K.rows||[]).length){const s=sec(K,"What runs, and what to do with it");legend(s,K.legend);const st=el("div",{class:"stack"});
+  K.rows.forEach(r=>{const d=el("div");(r.items||[]).forEach(i=>{const p=el("span",{class:"pc "+i.state},el("b",{},i.name));if(i.note)p.append(el("small",{},i.note));d.append(p)});st.append(el("div",{class:"row"},el("span",{},r.layer),d))});s.append(st)}})();
 (function cards(){const h=document.getElementById("cards");for(const c of D.cards||[]){const o=OUT[c.outcome]||OUT.waiting,row=(k,v)=>v?el("p",{class:"res"},el("b",{},k+" "),v):null;
  h.append(el("article",{class:"xc "+o.c},el("header",{},el("span",{class:"m"},c.id||""),el("h3",{},c.title||""),el("span",{class:"oc o-"+o.c},o.m+" "+o.l)),
   c.why?el("div",{class:"fbox"},el("b",{},o.m+" "+o.l.toUpperCase()+": "+c.why),el("span",{},"Record: "+(c.record||"-"))):null,row("Result.",c.result||"Pending.")))}})();

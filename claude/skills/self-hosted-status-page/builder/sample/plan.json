@@ -1,0 +1,64 @@
+{
+ "asof": "The sprint plan reference: where the sprint stands against its goals, what was found, and what was ruled out. It does not change as the day goes on; where a result says otherwise, the Results tab decides.",
+ "goals": {
+  "title": "The sprint's goals",
+  "sub": "The bar is today's value. The marked range is what the evidence supports, with overlaps counted once.",
+  "rows": [
+   {"label": "Full test run", "today": 110, "range": [90, 96], "unit": "min", "note": "Fixed waits stay"},
+   {"label": "Warm build", "today": 240, "range": [125, 185], "unit": "s", "note": "Excludes repeated tool calls"},
+   {"label": "Package size", "today": 240, "range": [195, 200], "unit": "MiB", "note": "No engine rebuild needed"},
+   {"label": "Power to ready", "today": 43, "range": null, "unit": "s", "note": "Unknown until the boot is profiled"}
+  ]
+ },
+ "board": {
+  "title": "Where the wins are, and where the sprint left them",
+  "legend": [["ok", "evidence holds"], ["test", "plausible, not measured"], ["rule", "rests on a ruling"]],
+  "columns": ["Easy", "Needs a long rebuild", "Big swing"],
+  "rows": [
+   {"goal": "Tests", "cells": [
+     [{"state": "ok", "name": "Shorter restart waits", "detail": "measured: 9 to 11 s off two tests"}, {"state": "rule", "name": "Keep the arming step", "detail": "the bar is not met"}],
+     [{"state": "test", "name": "Reset cause read at boot", "detail": "firmware reports it"}],
+     [{"state": "test", "name": "Reorder the boot path", "detail": "profile the boot first"}]]},
+   {"goal": "Build", "cells": [
+     [{"state": "ok", "name": "One prebuilt toolchain", "detail": "7 min per bump"}],
+     [{"state": "test", "name": "Compile cache", "detail": "hit rate unknown"}],
+     []]},
+   {"goal": "Size", "cells": [
+     [{"state": "ok", "name": "One font file", "detail": "5.8 MiB"}],
+     [{"state": "bad", "name": "Smaller engine flag", "detail": "23 % smaller, fails smoothness"}],
+     []]}
+  ]
+ },
+ "rejected": {
+  "title": "Checked and rejected",
+  "rows": [
+   ["Narrow the device match, as written", "The match selects nothing, so the board would lose its network."],
+   ["Shorten the network wait", "A product limit: a slow router would lose a boot attempt."],
+   ["Replace the scanner", "The tree records why it stays."]
+  ]
+ },
+ "charts": [
+  {"title": "A test run, 110 minutes", "sub": "Only the dark segments belong to the image.", "max": 112, "label_width": 80, "row_height": 44, "foot": "Minutes.",
+   "rows": [{"label": "Full run", "total": "110 min", "segs": [
+     {"name": "Fixed test windows", "value": 42, "cat": "cx", "text": "42 min, not touched", "label": "Fixed 42"},
+     {"name": "Installs", "value": 24, "cat": "c3", "text": "24 min", "label": "Installs 24"},
+     {"name": "Hard boots", "value": 14, "cat": "c2", "text": "14 min", "label": "Boots 14"},
+     {"name": "Restarts", "value": 10, "cat": "c1", "text": "10 min", "label": "Restarts 10"},
+     {"name": "Host work", "value": 10, "cat": "c5", "text": "10 min", "label": "Host 10"},
+     {"name": "Other", "value": 10, "cat": "c4", "text": "about 10 min", "label": false}]}],
+   "notes": ["The image can touch installs, boots and restarts: 48 minutes."]},
+  {"title": "Builds", "sub": "Each bar is its own scale of minutes.", "max": 60, "label_width": 150, "row_height": 40, "foot": "Minutes. Hover a segment for its time.",
+   "rows": [
+    {"label": "Warm", "total": "4 min", "segs": [{"name": "Root filesystem", "value": 2.4, "cat": "c1", "text": "144 s", "label": "rootfs"}, {"name": "Everything else", "value": 1.6, "cat": "cx", "text": "96 s", "label": false}]},
+    {"label": "Kernel change", "total": "41 min", "segs": [{"name": "Kernel", "value": 11, "cat": "c2", "text": "11 min", "label": "kernel"}, {"name": "Modules", "value": 19, "cat": "c3", "text": "19 min", "label": "modules"}, {"name": "Packaging and image", "value": 11, "cat": "c5", "text": "11 min", "label": "packaging"}]}]}
+ ],
+ "stack": {
+  "title": "What runs, and what to do with it",
+  "legend": [["ok", "keep"], ["test", "trim"], ["rule", "your call"], ["bad", "remove"]],
+  "rows": [
+   {"layer": "Screen", "items": [{"state": "ok", "name": "Browser engine"}, {"state": "test", "name": "Engine build flag", "note": "default today"}]},
+   {"layer": "Services", "items": [{"state": "ok", "name": "Network daemons"}, {"state": "test", "name": "Swap unit", "note": "own unit"}]},
+   {"layer": "Build", "items": [{"state": "bad", "name": "Empty layers"}, {"state": "rule", "name": "Third-party layer", "note": "licence question"}]}
+  ]
+ }
+}

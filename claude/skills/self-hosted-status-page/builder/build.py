@@ -45,6 +45,7 @@ if sched:
     data["gantt"] = sched
     data["gantt_updated"] = time.strftime("%H:%M", time.localtime(os.path.getmtime(os.path.join(a.data, "schedule.json"))))
 data["needs_owner"] = load("needs-owner.json")
+data["plan"] = load("plan.json")
 data["issue_tracking"] = load("issue-tracking.json")
 rp = os.path.join(a.data, "roster.md")
 if os.path.exists(rp):
