@@ -19,6 +19,32 @@ import sys
 
 UTC = dt.timezone.utc
 WAKE = re.compile(r'<teammate-message teammate_id="([^"]+)"')
+# Each threshold's default is also its ceiling: a config may lower one, never raise it.
+CEILINGS = {"idle_minutes": 10, "close_after_minutes": 30, "refresh_context_k": 250, "refresh_age_minutes": 120}
+EXEMPT = "no agent is exempt from CLOSE? or REFRESH?; delete the key"
+REMOVED = {"standing": EXEMPT, "hold_open": EXEMPT, "ignore": EXEMPT,
+           "handover_stale_minutes": "REFRESH? names the handover and when it was written; delete the key"}
+
+
+class ConfigError(Exception):
+    pass
+
+
+def thresholds(cfg, warn):
+    """The config's thresholds, each clamped to its ceiling; `warn` hears every clamp."""
+    for key in REMOVED:
+        if key in cfg:
+            raise ConfigError(f"config key '{key}' was removed: {REMOVED[key]}")
+    out = {}
+    for key, ceiling in CEILINGS.items():
+        value = cfg.get(key, ceiling)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not value > 0:
+            raise ConfigError(f"{key} must be a positive number, got {value!r}")
+        if value > ceiling:
+            warn(f"{key} {value} is over the ceiling {ceiling}; using {ceiling}")
+            value = ceiling
+        out[key] = value
+    return out
 
 
 def ts(text):
@@ -195,13 +221,14 @@ class Team:
                     elif c.get("name") == "SendMessage":
                         self.lead_sends.append((when, args.get("to")))
 
-    def doc(self, kind, name):
+    def doc_name(self, kind, name):
         pattern = self.cfg.get(kind)
-        if not pattern:
-            return None
-        name = self.cfg.get(kind + "_aliases", {}).get(name, name)
-        path = os.path.join(self.cfg["docs_dir"], pattern.format(name=name))
-        return path if os.path.exists(path) else None
+        return pattern.format(name=self.cfg.get(kind + "_aliases", {}).get(name, name)) if pattern else None
+
+    def doc(self, kind, name):
+        file = self.doc_name(kind, name)
+        path = file and os.path.join(self.cfg["docs_dir"], file)
+        return path if path and os.path.exists(path) else None
 
 
 def hm(when, tz):
@@ -214,34 +241,34 @@ def mtime(path):
 
 def findings(team, now, cfg):
     """Each finding is (kind, agent, text). Proposals are for the lead to execute; nothing is sent."""
-    out, idle_m, tz = [], cfg.get("idle_minutes", 10), cfg["tz"]
-    standing = set(cfg.get("standing", []))
-    stale_m = cfg.get("handover_stale_minutes", 120)
+    out, tz = [], cfg["tz"]
+    ctx_k, age_m = cfg["refresh_context_k"], cfg["refresh_age_minutes"]
     for name, a in sorted(team.agents.items()):
-        if name in cfg.get("ignore", []):
-            continue
-        state = a.state(now, idle_m)
+        state = a.state(now, cfg["idle_minutes"])
         for when, who, stop in a.wakes(team.sent_to(name)):
             out.append(("WOKEN", name, f"closed at {hm(stop, tz)}, woken by {who} at {hm(when, tz)}"))
         retro, handover = team.doc("retro", name), team.doc("handover", name)
         if state == "stopped" and not retro:
-            out.append(("NO-RETRO", name, f"stopped at {hm(a.last_stop, tz)} with no {cfg.get('retro', 'retro')} on disk"))
+            out.append(("NO-RETRO", name, f"stopped at {hm(a.last_stop, tz)} with no {team.doc_name('retro', name) or 'retro'} on disk"))
         if state == "silent mid-turn":
             out.append(("SILENT", name, f"mid-turn and silent since {hm(a.current.last, tz)}: hung, or stopped without a record"))
-        if state == "idle" and name not in standing and name not in cfg.get("hold_open", []):
-            age = (now - a.current.last).total_seconds() / 60
-            if age >= cfg.get("close_after_minutes", 30):
+        if state == "idle":
+            idle = (now - a.current.last).total_seconds() / 60
+            if idle >= cfg["close_after_minutes"]:
                 ask = "propose CLOSE" if retro else "ask for its retro, then propose CLOSE"
-                out.append(("CLOSE?", name, f"idle {age:.0f} min, not a standing role: {ask}"))
-        limit = cfg.get("refresh_context_k")
-        if limit and name in standing and state in ("idle", "working") and a.current.context >= limit * 1000:
-            out.append(("REFRESH?", name, f"context {a.current.context / 1e3:.0f}k, at or over {limit}k: propose a fresh one after its handover"))
-        if name in standing and state in ("idle", "working"):
-            h = mtime(handover)
-            if not h:
-                out.append(("HANDOVER", name, f"standing role with no {cfg.get('handover')} on disk"))
-            elif (now - h).total_seconds() / 60 > stale_m:
-                out.append(("HANDOVER", name, f"handover last written {hm(h, tz)}, over {stale_m} min ago"))
+                out.append(("CLOSE?", name, f"idle {idle:.0f} min: {ask}"))
+        if state in ("idle", "working", "silent mid-turn"):
+            over = []
+            if a.current.context >= ctx_k * 1000:
+                over.append(f"context {a.current.context / 1e3:.0f}k, at or over {ctx_k}k")
+            age = (now - a.current.first).total_seconds() / 60
+            if age >= age_m:
+                over.append(f"{age:.0f} min old, at or over {age_m} min")
+            if over:
+                h = mtime(handover)
+                then = (f"handover written {hm(h, tz)}: spawn a fresh one from it" if h else
+                        f"no {team.doc_name('handover', name) or 'handover'} on disk: ask for one, then spawn a fresh one")
+                out.append(("REFRESH?", name, f"{'; '.join(over)}: {then}"))
     return out
 
 
@@ -253,6 +280,11 @@ def main(argv=None):
     args = ap.parse_args(argv)
     with open(args.config) as fh:
         cfg = json.load(fh)
+    try:
+        cfg.update(thresholds(cfg, lambda text: print(text, file=sys.stderr)))
+    except ConfigError as err:
+        print(f"{args.config}: {err}", file=sys.stderr)
+        return 2
     cfg["tz"] = dt.datetime.now().astimezone().tzinfo
     now = ts(args.now) if args.now else dt.datetime.now(UTC)
     team = Team(cfg)
@@ -263,7 +295,7 @@ def main(argv=None):
                 continue
             t = a.tokens()
             mtok = sum(t.values()) / 1e6
-            print(f"{name:22} {a.state(now, cfg.get('idle_minutes', 10)):16} {hm(a.current.last, cfg['tz']):5} "
+            print(f"{name:22} {a.state(now, cfg['idle_minutes']):16} {hm(a.current.last, cfg['tz']):5} "
                   f"{hm(a.last_stop, cfg['tz']):5} {(a.model or '-'):7} {mtok:6.1f} {a.current.context / 1e3:6.0f} "
                   f"{hm(mtime(team.doc('handover', name)), cfg['tz']):8} {'yes' if team.doc('retro', name) else '-'}")
         return 0

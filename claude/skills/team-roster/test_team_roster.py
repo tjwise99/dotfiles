@@ -1,5 +1,6 @@
 """Constructed cases for team_roster: each finding has a case that must raise it and a valid variant that must not."""
 import contextlib
+import datetime as dt
 import io
 import json
 import os
@@ -13,14 +14,21 @@ NOW = "2026-01-15T12:00:00Z"
 
 
 def at(minute):
-    return f"2026-01-15T{11 + minute // 60:02d}:{minute % 60:02d}:00Z" if minute < 60 else \
-        f"2026-01-15T{11 + minute // 60:02d}:{minute % 60:02d}:00Z"
+    """Minutes after 11:00; NOW is minute 60. Negative minutes are before 11:00."""
+    return (dt.datetime(2026, 1, 15, 11, tzinfo=dt.timezone.utc) + dt.timedelta(minutes=minute)) \
+        .strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def assistant(minute, *content, mid=None):
     return {"type": "assistant", "timestamp": at(minute),
             "message": {"id": mid or f"m{minute}-{len(content)}", "content": list(content),
                         "usage": {"input_tokens": 10, "output_tokens": 5}}}
+
+
+def big(minute, context):
+    row = assistant(minute, text("ok"))
+    row["message"]["usage"]["cache_read_input_tokens"] = context
+    return row
 
 
 def text(t):
@@ -63,14 +71,14 @@ class Fixture:
         with open(lead, "w") as f:
             f.writelines(json.dumps(r) + "\n" for r in self.lead_rows)
         cfg = {"team": TEAM, "projects_dir": self.proj, "lead_transcripts": [lead], "docs_dir": self.docs,
-               "handover": "handover-{name}.md", "retro": "retro-{name}.md", "idle_minutes": 10,
-               "close_after_minutes": 30, "handover_stale_minutes": 120}
+               "handover": "handover-{name}.md", "retro": "retro-{name}.md"}
         cfg.update(extra)
         path = os.path.join(self.dir, "cfg.json")
         json.dump(cfg, open(path, "w"))
-        out = io.StringIO()
-        with contextlib.redirect_stdout(out):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             rc = team_roster.main(["--config", path, "--now", NOW, cmd])
+        self.err = err.getvalue()
         return rc, out.getvalue()
 
 
@@ -86,7 +94,8 @@ class Findings(unittest.TestCase):
         f.stop(11, "a")
         rc, out = f.run()
         self.assertEqual(rc, 1)
-        self.assertIn("NO-RETRO  a:", out)
+        self.assertIn("NO-RETRO  a: stopped at", out)
+        self.assertIn("with no retro-a.md on disk", out)
         f.doc("retro-a.md")
         self.assertEqual(f.run(), (0, "clean\n"))
 
@@ -116,10 +125,9 @@ class Findings(unittest.TestCase):
         rc, out = f.run()
         self.assertIn("CLOSE?    a: idle 55 min", out)
         self.assertIn("ask for its retro", out)
-        _, out = f.run(standing=["a"])
-        self.assertNotIn("CLOSE?", out)
-        _, out = f.run(hold_open=["a"])
-        self.assertNotIn("CLOSE?", out)
+        f2 = Fixture()
+        f2.agent("a", [assistant(35, text("done"))])
+        self.assertEqual(f2.run(), (0, "clean\n"))
 
     def test_silent_mid_turn(self):
         f = Fixture()
@@ -130,28 +138,91 @@ class Findings(unittest.TestCase):
         f2.agent("a", [assistant(55, tool("Bash", command="x"))])
         self.assertEqual(f2.run(), (0, "clean\n"))
 
-    def test_standing_role_handover(self):
-        f = Fixture()
-        f.agent("a", [assistant(55, text("ok"))])
-        _, out = f.run(standing=["a"])
-        self.assertIn("HANDOVER  a: standing role with no handover", out)
-        f.doc("handover-a.md")
-        self.assertEqual(f.run(standing=["a"]), (0, "clean\n"))
-        f.doc("handover-b.md")
-        os.remove(os.path.join(f.docs, "handover-a.md"))
-        _, out = f.run(standing=["a"], handover_aliases={"a": "b"})
-        self.assertEqual(out, "clean\n")
-
     def test_refresh_on_context_size(self):
         f = Fixture()
-        row = assistant(55, text("ok"))
-        row["message"]["usage"]["cache_read_input_tokens"] = 500000
-        f.agent("a", [row])
-        f.doc("handover-a.md")
-        _, out = f.run(standing=["a"], refresh_context_k=400)
-        self.assertIn("REFRESH?  a: context 500k", out)
-        self.assertEqual(f.run(standing=["a"], refresh_context_k=600), (0, "clean\n"))
-        self.assertEqual(f.run(standing=["a"]), (0, "clean\n"))
+        f.agent("a", [big(55, 300000)])
+        _, out = f.run()
+        self.assertIn("REFRESH?  a: context 300k", out)
+        f2 = Fixture()
+        f2.agent("a", [big(55, 200000)])
+        self.assertEqual(f2.run(), (0, "clean\n"))
+        _, out = f2.run(refresh_context_k=150)
+        self.assertIn("REFRESH?  a: context 200k", out)
+
+    def test_refresh_on_age(self):
+        f = Fixture()
+        f.agent("a", [assistant(-70, text("start")), assistant(55, text("ok"))])
+        _, out = f.run()
+        self.assertIn("REFRESH?  a: 130 min old", out)
+        f2 = Fixture()
+        f2.agent("a", [assistant(-50, text("start")), assistant(55, text("ok"))])
+        self.assertEqual(f2.run(), (0, "clean\n"))
+        _, out = f2.run(refresh_age_minutes=60)
+        self.assertIn("REFRESH?  a: 110 min old", out)
+
+    def test_refresh_names_handover(self):
+        f = Fixture()
+        f.agent("a", [big(55, 300000)])
+        _, out = f.run()
+        self.assertIn("no handover-a.md on disk: ask for one, then spawn a fresh one", out)
+        f.doc("handover-b.md")
+        _, out = f.run(handover_aliases={"a": "b"})
+        self.assertIn("handover written", out)
+        self.assertNotIn("no handover", out)
+
+    def test_refresh_whatever_the_state(self):
+        working = big(55, 300000)
+        working["message"]["content"] = [tool("Bash", command="x")]
+        silent = big(20, 300000)
+        silent["message"]["content"] = [tool("Bash", command="x")]
+        for row, state in ((working, "working"), (silent, "SILENT")):
+            f = Fixture()
+            f.agent("a", [row])
+            _, out = f.run()
+            self.assertIn("REFRESH?  a: context 300k", out, state)
+
+    def test_refresh_skips_stopped(self):
+        f = Fixture()
+        f.agent("a", [big(10, 300000)])
+        f.doc("retro-a.md")
+        f.stop(11, "a")
+        self.assertEqual(f.run(), (0, "clean\n"))
+
+    def test_raised_threshold_is_clamped(self):
+        f = Fixture()
+        f.agent("a", [assistant(5, text("done"))])
+        _, out = f.run(close_after_minutes=600)
+        self.assertIn("CLOSE?    a: idle 55 min", out)
+        self.assertIn("close_after_minutes 600 is over the ceiling 30", f.err)
+        f2 = Fixture()
+        f2.agent("a", [big(55, 300000)])
+        _, out = f2.run(refresh_context_k=10000, refresh_age_minutes=10000, idle_minutes=10000)
+        self.assertIn("REFRESH?  a: context 300k", out)
+        for key in ("refresh_context_k", "refresh_age_minutes", "idle_minutes"):
+            self.assertIn(key, f2.err)
+        f3 = Fixture()
+        f3.agent("a", [assistant(20, tool("Bash", command="x"))])
+        _, out = f3.run(idle_minutes=10000)
+        self.assertIn("SILENT    a:", out)
+        _, out = f3.run(idle_minutes=5)
+        self.assertEqual(f3.err, "")
+
+    def test_bad_threshold_fails(self):
+        f = Fixture()
+        f.agent("a", [assistant(55, text("ok"))])
+        for bad in ("30", 0, -1, None, True, float("nan")):
+            rc, _ = f.run(close_after_minutes=bad)
+            self.assertEqual(rc, 2, bad)
+            self.assertIn("close_after_minutes", f.err)
+
+    def test_removed_keys_fail(self):
+        for key in ("standing", "hold_open", "ignore", "handover_stale_minutes"):
+            f = Fixture()
+            f.agent("a", [assistant(55, text("ok"))])
+            rc, out = f.run(**{key: []})
+            self.assertEqual((rc, out), (2, ""), key)
+            self.assertIn(f"'{key}' was removed", f.err)
+        self.assertEqual(f.run(), (0, "clean\n"))
 
     def test_other_session_ignored(self):
         f = Fixture()

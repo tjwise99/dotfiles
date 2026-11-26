@@ -2,9 +2,9 @@
 name: team-roster
 description: >-
   Read a Claude Code agent team's state from disk without waking any agent: who is working, idle,
-  stopped or silent mid-turn; who was messaged after being closed, and by whom; which standing roles
-  have a stale handover; which stopped agents left no retro; which idle task agents to close; and the
-  tokens and context size of each agent. Prints proposals for the lead to act on and sends nothing.
+  stopped or silent mid-turn; who was messaged after being closed, and by whom; which stopped agents
+  left no retro; which idle agents to close; which agents are too old or too full to keep and should
+  be replaced by a fresh one; and the tokens and context size of each agent. Prints proposals for the lead to act on and sends nothing.
   Invoke when coordinating a team of teammates, before any shift change or close, before messaging an
   agent you are not sure is open, and when reporting what a team cost.
 ---
@@ -20,6 +20,10 @@ description: >-
    `Agent` calls (spawns) and its `SendMessage` calls.
 3. **The project's docs directory.** Whether `handover-<name>.md` and `retro-<name>.md` (or the
    patterns you give) exist, and when each handover was last written.
+
+Every agent is a task agent: one agent per task, closed when the task ends, replaced by a fresh one
+when it has run too long. No config key exempts an agent from a proposal, and no threshold can be
+raised past its ceiling.
 
 ```sh
 python3 ~/.claude/skills/team-roster/team_roster.py --config <session>/team.json roster  # one row per agent
@@ -38,16 +42,28 @@ python3 ~/.claude/skills/team-roster/team_roster.py --config <session>/team.json
   It names the sender and the time. A message sent before the close and delivered after is not
   counted. A woken agent rereads its whole context, so each one is a cost someone should not have paid.
 - **`NO-RETRO`**: a stopped agent left no retro on disk.
-- **`CLOSE?`**: a task agent (not in `standing`, not in `hold_open`) has been idle for
-  `close_after_minutes`. The proposal says whether to ask for its retro first.
-- **`HANDOVER`**: a standing role has no handover on disk, or its handover is older than
-  `handover_stale_minutes`.
+- **`CLOSE?`**: an agent has been idle for `close_after_minutes`. The proposal says whether to ask
+  for its retro first.
 - **`SILENT`**: as the state above.
-- **`REFRESH?`**: a standing role's context (`ctx k`) is at or over `refresh_context_k`. Propose a
-  fresh one after it brings its handover current. Off unless the key is set.
+- **`REFRESH?`**: an agent that is not stopped has a context (`ctx k`) at or over
+  `refresh_context_k`, or its current life began `refresh_age_minutes` or more ago. Propose a fresh
+  one in its place. The proposal names its handover and when it was written, or says there is none
+  to ask for; how current the handover is, the lead judges.
 
 `roster` also prints each agent's total tokens and `ctx k`: the prompt size of its newest model call,
-which is how full its context is. A standing role with a large `ctx` is the one to refresh first.
+which is how full its context is.
+
+## Ceilings
+
+Each threshold's default is its ceiling. A config may set a lower value; a higher one is clamped to
+the ceiling with a warning on stderr, so a large number cannot mute a proposal.
+
+| Threshold | Ceiling | Why |
+|---|---|---|
+| `idle_minutes` | 10 | an open turn with no write for longer than this is reported `silent mid-turn`, not `working` |
+| `close_after_minutes` | 30 | an idle agent whose task is done costs a context reread on every message; half an hour is enough for the lead to send the next step of the same task |
+| `refresh_context_k` | 250 | a fresh teammate starts near 70k (system prompt, instructions, memory); 250k leaves about 180k for one task, and single-task agents measured on one team finished under 300k |
+| `refresh_age_minutes` | 120 | single-task agents measured on one team mostly finished within 90 min; past two hours an agent is carrying more than one task |
 
 ## What it cannot tell you
 
@@ -60,8 +76,7 @@ These are not on disk; only an agent (or the person) can say them.
   only record.
 - **What an agent is waiting on, or what it intends next.** That is in its context, not on disk.
 - **Who is "on the roster" by the team's own rules.** The script lists every agent that ever ran in
-  the lead's sessions. Which ones the team still counts is a project decision: say it with
-  `standing`, `hold_open` and `ignore`.
+  the lead's sessions.
 
 ## Config (one JSON file per session; keep it with the session, never in this skill)
 
@@ -73,11 +88,11 @@ These are not on disk; only an agent (or the person) can say them.
 | `lead_name` | the name the lead's own messages carry (default `team-lead`) |
 | `docs_dir`, `handover`, `retro` | where handovers and retros live, and their names (`{name}` is replaced) |
 | `handover_aliases`, `retro_aliases` | `{agent: name used in the doc file}` when the two differ |
-| `standing` | roles that live across tasks: refreshed, never proposed for close |
-| `hold_open` | task agents kept open on purpose (a later task is already theirs) |
-| `ignore` | names never reported (the lead) |
-| `idle_minutes`, `close_after_minutes`, `handover_stale_minutes` | thresholds (defaults 10, 30, 120) |
-| `refresh_context_k` | context size, in thousands of tokens, at which a standing role is proposed for refresh (off if absent) |
+| `idle_minutes`, `close_after_minutes`, `refresh_context_k`, `refresh_age_minutes` | thresholds, each a positive number no higher than its ceiling (see Ceilings) |
+
+`standing`, `hold_open`, `ignore` and `handover_stale_minutes` were removed. A config that still
+carries one is refused with exit 2, naming the key: ignoring it would leave its author believing an
+agent is exempt.
 
 ## When to run it
 
