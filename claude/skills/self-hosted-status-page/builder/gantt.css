@@ -1,0 +1,99 @@
+/* Reads the page's tokens only. Rows: 48 px for running and waiting, 34 px for finished, 24 px closed row, 8 px spacing unit. */
+.g2{position:relative;font:13px/1.35 var(--body);color:var(--fg);display:grid;gap:8px;min-width:0}
+.g2>*{min-width:0}
+.g2 button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:left;cursor:pointer}
+.g2 button:focus-visible,.g2-box:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.g2-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:center}
+.g2-modes{display:flex}
+.g2 .g2-modes button{padding:6px 12px;border:1px solid var(--line2);background:var(--panel)}
+.g2 .g2-modes button+button{border-left:0}
+.g2 .g2-modes button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.g2-key{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--fg2);align-items:center}
+.g2-key>span{white-space:nowrap}
+.g2-key i{display:inline-block;position:static;width:22px;margin-right:6px;vertical-align:-1px}
+.g2 .late{color:var(--o-fail-t);font-weight:600}.g2 .warn{color:var(--o-void-t);font-weight:600}
+/* marks */
+.g2-bar{position:absolute;top:0;height:10px;box-sizing:border-box;border-radius:2px;overflow:hidden;display:block;color:var(--fg)}
+.g2-bar.k-passed{background:var(--o-pass)}
+.g2-bar.k-failed{background:var(--o-fail)}
+.g2-bar.k-design{background:var(--panel);border:2px solid var(--o-fail)}
+.g2-bar.k-void{background:repeating-linear-gradient(45deg,var(--o-void) 0 3px,var(--panel) 3px 6px);border:1px solid var(--o-void)}
+.g2-bar.k-stopped{background:var(--panel);border:2px solid var(--o-void)}
+.g2-bar.k-np,.g2-bar.k-unknown{background:var(--panel);border:2px dotted var(--o-np)}
+.g2-bar.k-ended{background:var(--panel);border:2px solid var(--muted)}
+.g2-bar.k-cut,.g2-bar.k-dropped{background:linear-gradient(var(--muted),var(--muted)) center/100% 2px no-repeat}
+.g2-bar.k-waiting{background:var(--raise);border:1px dashed var(--muted)}
+.g2-bar.k-running{background:var(--raise);border:1px solid var(--fg)}
+.g2-bar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--fg)}
+.g2-bar .lateseg{position:absolute;top:0;bottom:0;border-bottom:4px solid var(--o-fail)}
+.g2-key .k-running{background:linear-gradient(90deg,var(--fg) 60%,var(--raise) 60%)}
+.g2-plan{position:absolute;top:-3px;height:16px;box-sizing:border-box;border:1px solid var(--muted);border-radius:3px;display:block}
+.g2-key .g2-plan{height:14px}
+/* the machine row at the top of a machine lane: hold and idle; blank is in use */
+.g2 .g2-hold{position:absolute;top:4px;height:20px;box-sizing:border-box;z-index:2;border:1px solid var(--fg2);background:repeating-linear-gradient(90deg,var(--fg2) 0 1px,var(--raise) 1px 5px);overflow:hidden;white-space:nowrap}
+.g2-hold span{display:inline-block;background:var(--panel);padding:0 4px;font-size:12px;line-height:16px;margin:1px}
+.g2-holdlab{position:absolute;top:5px;font-size:12px;line-height:16px;font-weight:600;background:var(--panel);padding:0 2px;z-index:2}
+.g2-idle{position:absolute;top:13px;border-top:2px dotted var(--muted);display:block}
+.g2-idle span{position:absolute;left:50%;top:-10px;transform:translateX(-50%);background:var(--panel);padding:0 4px;font-size:12px;line-height:16px;color:var(--muted)}
+.g2 .g2-key .g2-hold{position:static;display:inline-block;width:22px;margin-right:6px;height:14px;vertical-align:-3px}
+.g2-key .g2-idle{position:static;display:inline-block;width:22px;margin-right:6px;vertical-align:3px}
+.k-hold.g2-pill{color:var(--fg2)}.k-idle.g2-pill{color:var(--muted)}
+.g2 .g2-holdrow{border-left:6px solid transparent;border-image:repeating-linear-gradient(0deg,var(--fg2) 0 1px,var(--raise) 1px 4px) 0 0 0 6px}
+.g2-holdrow .g2-nm{font-style:italic}
+.g2-idlerow{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;padding:2px 8px;color:var(--muted);font-size:12px;border-bottom:1px dotted var(--line2)}
+/* words */
+.g2-pill{white-space:nowrap;font-weight:600}
+.k-passed.g2-pill{color:var(--o-pass-t)}.k-void.g2-pill,.k-stopped.g2-pill{color:var(--o-void-t)}.k-np.g2-pill,.k-unknown.g2-pill{color:var(--o-np-t)}
+.k-cut.g2-pill,.k-dropped.g2-pill,.k-ended.g2-pill,.k-waiting.g2-pill{color:var(--muted)}
+.k-failed.g2-pill{background:var(--o-fail-t);color:var(--bg);padding:0 6px;border-radius:2px}
+.k-design.g2-pill{color:var(--o-fail-t);border:1px solid currentColor;padding:0 5px;border-radius:2px}
+.g2-sub{color:var(--fg2);font-size:12px}.g2-sub .id{color:var(--muted);white-space:nowrap}
+.g2-nm{font-weight:600}.k-passed .g2-nm{font-weight:400}
+/* chart */
+.g2-box{overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);background:var(--panel)}
+.g2-in{position:relative}
+.g2-axis,.g2-lane{display:flex;border-bottom:1px solid var(--line2)}
+.g2-lane:last-child{border-bottom:0}
+.g2-name{position:sticky;left:0;z-index:4;flex:0 0 184px;box-sizing:border-box;padding:8px;background:var(--panel);border-right:1px solid var(--line2);display:flex;flex-direction:column;gap:2px}
+.g2-plot{position:relative;flex:none}
+.g2-axis .g2-plot{height:44px}
+.g2-axis span{position:absolute;white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}
+.g2-axis .hr{bottom:4px;color:var(--muted)}.g2-axis .mk{color:var(--fg);font-weight:600}
+.g2-axis .nowp{top:3px;background:var(--fg);color:var(--bg);padding:0 6px;border-radius:2px;font-weight:600}
+.g2-axis .stall{top:4px;text-align:center;color:var(--muted);background:var(--raise);overflow:hidden}
+.g2-line{position:absolute;top:44px;bottom:0;width:1px;background:var(--muted);z-index:0}
+.g2-line.now{width:2px;margin-left:-1px;background:var(--fg);top:20px}
+.g2 .g2-job{position:absolute;z-index:1;padding-top:12px;display:block}
+.g2-lab{position:sticky;left:192px;display:inline-flex;flex-direction:column;background:var(--panel);white-space:nowrap;padding-right:4px}
+.g2-l1{line-height:17px}
+.g2 .g2-tog{position:absolute;left:8px;height:24px;font-size:12px;color:var(--fg2);white-space:nowrap}
+.g2 .g2-tog:hover{text-decoration:underline}
+.g2 .g2-seg{position:absolute;height:24px;z-index:1}
+.g2-seg .g2-bar{left:0;right:0;top:8px;height:8px;box-shadow:0 0 0 1px var(--panel)}
+.g2-seg .k-failed,.g2-seg .k-design,.g2-seg .k-void{top:5px;height:14px}
+.g2-none{position:sticky;left:192px;display:inline-block;padding:10px 8px;color:var(--muted)}
+.g2-odd{position:sticky;left:192px;padding:4px 8px}
+.g2-shut{position:sticky;left:184px;z-index:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));background:var(--panel);border-top:1px solid var(--line2);box-sizing:border-box}
+/* list, shared by the closed rows and the phone view */
+.g2 .g2-item{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;padding:6px 8px;align-items:start;border-bottom:1px solid var(--line)}
+.g2-time{font-variant-numeric:tabular-nums;color:var(--fg2);white-space:nowrap}
+.g2-body{min-width:0;overflow-wrap:anywhere}.g2-body .g2-nm{font-weight:400}.g2-body .g2-sub{display:block}
+.g2-meter{display:block;height:6px;background:var(--raise);border:1px solid var(--fg);margin-top:4px}.g2-meter i{display:block;height:100%;background:var(--fg)}
+.g2-list{display:grid;gap:16px}.g2-list section{display:grid;gap:0;border:1px solid var(--line);background:var(--panel)}
+.g2-list h4{margin:0;padding:8px;background:var(--raise);font:600 14px/1.2 var(--body)}
+.g2-list .g2-none{position:static}.g2 .g2-list .g2-tog{position:static;height:44px;padding:0 8px}
+.g2 .g2-list .g2-item{min-height:44px}
+.g2-list .g2-detail{padding:8px 8px 12px;border-bottom:1px solid var(--line2)}
+/* selection */
+.g2.sel [data-id]:not(.in){opacity:.28}
+.g2 .g2-job[aria-pressed="true"] .g2-lab{box-shadow:0 2px 0 var(--fg)}
+.g2 .g2-item.on{box-shadow:inset 0 0 0 1px var(--fg2)}
+/* detail */
+.g2-detail{display:grid;gap:3px;overflow-wrap:anywhere}
+.g2-dh{margin-bottom:4px}
+.g2-kv{display:grid;grid-template-columns:68px minmax(0,1fr);gap:8px}.g2-kv>:first-child{color:var(--muted)}
+.g2-tip{position:absolute;z-index:8;width:380px;max-width:calc(100% - 8px);box-sizing:border-box;padding:8px 10px;background:var(--panel);border:1px solid var(--fg2);font-size:12px;pointer-events:none}
+.g2-panel{position:relative;border:1px solid var(--line2);background:var(--panel);padding:12px 64px 12px 12px}
+.g2-panel .g2-detail{max-width:90ch}
+.g2 .g2-x{position:absolute;top:10px;right:12px;text-decoration:underline}
+@media (forced-colors:active){.g2-bar,.g2-bar .fill{forced-color-adjust:none}}

@@ -1,0 +1,28 @@
+{
+ "date": "2026-01-15",
+ "window": ["09:00", "17:00"],
+ "timezone": "UTC",
+ "tz_label": "UTC",
+ "final_start": "16:00",
+ "lanes": [["host", "Build host"], ["rig", "Test rig"], ["gates", "Reviews and gates"], ["work", "Analysis and code"]],
+ "resources": {"host": "host", "rig": "rig"},
+ "window_note": "Sample day, 09:00 to 17:00.",
+ "idle_reasons": [
+  {"resource": "rig", "from": "10:30", "to": "11:15", "why": "Held for the firmware update; no run may start until it is verified."}
+ ],
+ "jobs": [
+  {"id": "J1-build", "label": "J1-build: build the image", "name": "Build the image", "group": "host", "lane": "host", "state": "done",
+   "planned": ["09:00", "10:00"], "actual": ["09:05", "10:10"], "waits_on": [], "decides": "whether the image builds from a clean tree",
+   "outcome": {"result": "passed", "why": "built in 65 minutes", "record": "build-0001"}, "day": "2026-01-15"},
+  {"id": "J2-run", "label": "J2-run: suite on the rig", "name": "Suite on the rig", "group": "rig", "lane": "rig", "state": "failed",
+   "planned": ["11:15", "12:00"], "actual": ["11:20", "12:05"], "waits_on": ["J1-build"], "decides": "whether all checks pass on the rig",
+   "outcome": {"result": "failed", "why": "check 4 of 12 failed", "record": "run-0002"}, "day": "2026-01-15"},
+  {"id": "J2-review", "label": "J2-review: review of the run", "name": "Review of the run", "group": "gates", "lane": "gates", "state": "done",
+   "planned": ["12:05", "12:30"], "actual": ["12:05", "12:25"], "waits_on": ["J2-run"], "decides": "whether the failure is the code or the rig",
+   "outcome": {"result": "passed", "why": "failure traced to the code", "record": "review-0002.md"}, "day": "2026-01-15"},
+  {"id": "J3-fix", "label": "J3-fix: fix check 4", "name": "Fix check 4", "group": "work", "lane": "work", "state": "waiting",
+   "planned": ["12:30", "14:00"], "waits_on": ["J2-review"], "decides": "whether the fix lands", "day": "2026-01-15"},
+  {"id": "J4-run", "label": "J4-run: rerun the suite", "name": "Rerun the suite", "group": "rig", "lane": "rig", "state": "waiting",
+   "planned": ["14:00", "15:00"], "waits_on": ["J3-fix"], "decides": "whether the fix clears check 4", "day": "2026-01-15"}
+ ]
+}

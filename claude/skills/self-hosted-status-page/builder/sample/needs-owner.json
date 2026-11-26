@@ -1,0 +1,13 @@
+{
+ "updated": "12:10",
+ "source": "sample",
+ "items": [
+  {"order": 1, "what": "Approve the fix approach", "action": "Reply yes or no", "deadline": "13:00", "why_then": "the fix job starts at 12:30", "if_nothing": "the fix is not started", "link": "https://example.invalid/issue/1"}
+ ],
+ "work": [
+  {"body": "Fix check 4", "pr": 12, "ticket": 7, "state": "waiting", "waits_on": "J2-review"}
+ ],
+ "information": [
+  {"what": "The rig is held 10:30 to 11:15", "detail": "A firmware update is in progress; nothing for you to do.", "source": "schedule.json idle_reasons"}
+ ]
+}

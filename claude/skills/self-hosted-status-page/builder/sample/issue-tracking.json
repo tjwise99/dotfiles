@@ -1,0 +1,7 @@
+{
+ "updated": "12:10",
+ "items": [
+  {"kind": "issue", "number": 7, "name": "Check 4 fails on the rig", "state": "open", "waits_on": [], "url": "https://example.invalid/issue/7"},
+  {"kind": "pr", "number": 12, "name": "Fix check 4", "state": "draft", "waits_on": ["J2-review"], "url": "https://example.invalid/pr/12"}
+ ]
+}

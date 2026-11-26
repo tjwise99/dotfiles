@@ -1,0 +1,5 @@
+[
+ {"id": "J1", "title": "Build the image", "outcome": "passed", "why": "built in 65 minutes", "record": "build-0001", "result": "The image builds from a clean tree."},
+ {"id": "J2", "title": "Suite on the rig", "outcome": "failed", "why": "check 4 of 12 failed", "record": "run-0002", "result": "Eleven of twelve checks passed; check 4 failed on a timeout."},
+ {"id": "J4", "title": "Rerun the suite", "outcome": "waiting"}
+]
