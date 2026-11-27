@@ -141,6 +141,9 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
 - **Decisions are the user's — walk trades conversationally first.** Honest pros and cons in prose,
   not option menus or document dumps; state a lean and let the user call it. Never bury a decision in
   a plan or ADR draft: plan approval is not approval of a decision inside it.
+- **Work a design visually, not textually.** Present a design as C4 diagrams (or a similar
+  structured notation) in an artifact with clearly defined tabs, one per view or concern, rather
+  than as prose in the conversation.
 - **Treat a "why" as a first-class request, not an interruption.** When the user asks why something
   is built or decided the way it is — or pushes back on it — ground the answer in the actual tree
   (the ADR, the file, the gate) before reaching for generics, and verify the premise there first.
