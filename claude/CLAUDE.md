@@ -204,12 +204,26 @@ Account **`tjwise99`**. Use `gh` for all API work — it authenticates itself an
   fit half the content is two ADRs. Brief an ADR writer with the decisions it records, never the
   design's component list: reviewers check against the brief, so a component-list brief yields an
   architecture tour that passes review.
+- **Trade-study tooling before building it.** Survey what existing tools cover before writing one;
+  build only when none fits, and say why. Every tool built is one more to maintain, test and
+  document. A real trade study is an ADR in the repo that owns the decision, and may land in the
+  same ticket as the implementation that dogfoods it; a choice without a real trade study needs no
+  ADR.
+- **Prefer building reusable automated scripts where possible.**
 - **Search the repo before escalating — a repo-answerable question is never the human's to answer.**
   A convention, precedent, prior commit, sibling file, or existing gate that settles it *is* the
   answer: find it and apply it. Escalate only a genuine fork that nothing in the tree decides.
   Handing up a question the repo already answers — including relaying a delegate's such question
   instead of resolving it from the tree yourself — is a failure, not caution. This recurs across
   sessions; it is the specific thing this rule exists to stop.
+- **Minor questions go to an engineering agent; the rest come to the user.** A minor fork (a clock
+  frame, where a helper lives, an instrument choice, a requirement's wording) is ruled by the typed
+  engineering agent for its topic — an architect, `testing-architect`, `systems-requirements-engineer`
+  for a requirements question — and the ruling recorded on the ticket. Scope, anything irreversible, changing a bound the tree already
+  sets, and whatever the architect cannot settle from the tree go to the user, one question at a
+  time with a lean. Stay on one ticket; never park a decision to start the next.
+- **No agent memory.** Knowledge worth keeping goes into a reviewed, merged document; the state of
+  work lives in tickets and PRs. Never write to the auto-memory directory.
 - **When a correction recurs, stop correcting the instance and find what is not gating the class** —
   and record the reason, so the next editor meets an argument rather than a gap.
 - **When you delete a mechanism, grep the whole tree for its name.** A justfile `[doc()]`, a workflow
