@@ -1,11 +1,18 @@
 ---
-description: Front-load discovery for a ticket or task — fan out read-only recon, surface the real surface area and every open decision, and stop for human answers before any plan or code.
-argument-hint: <issue-number | task description>
+description: Step 1 of /work-ticket only — front-load discovery on an existing ticket whose design is settled. Fans out read-only recon, verifies the ticket's premise, surfaces every open decision, and stops for human answers before /plan. Never the entry point for an open-ended request; a request to restructure, consolidate, condense or redesign goes to /design-first.
+argument-hint: <issue-number>
 ---
 
 # Discover
 
-Input: **`$ARGUMENTS`** — an issue number, or a task in prose.
+Input: issue number **`$ARGUMENTS`**.
+
+**Scope: the `/work-ticket` flow, and nothing else.** This command is step 1 of `/work-ticket`, run on
+a ticket that already exists and whose target shape is already decided. It is not a way to take stock
+of a system, survey duplication, or work out what something should become — that is design work, and
+it goes to **`/design-first`**, which produces the approved design the ticket is then written from. If
+the input is prose rather than an issue number, or the ticket asks for a structure nobody has designed
+yet, stop and say so: run `/design-first` instead.
 
 Move discovery *before* planning, so unknowns surface now — while they are cheap — instead of
 mid-implementation, where they get resolved by guessing or by inventing scope no one asked for. This
