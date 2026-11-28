@@ -49,8 +49,14 @@ The brief also carries these instructions, every time:
 - **Escalate, never invent.** Any fork the inputs do not settle — scope, anything irreversible, a
   capability someone uses — is listed for the human with its options and a lean. The architect does
   not decide it.
+- **Settle facts from the source, never hand up an unknown you can check.** "Don't invent" means read
+  the code — this repo's and any system it relies on — not list what you have not looked at. An
+  unknown reaches the human only when no file, command or test available here can settle it.
 
-The architect writes the design to a file:
+**The architect's deliverable is the design page itself** (§3 says what it must show), written as the
+HTML file the lead publishes. The architect owns that file for the life of the design and makes every
+revision in it directly; the lead publishes and never re-derives the page from another document. It
+holds:
 
 - C4 views as Mermaid C4 blocks (`C4Context`, `C4Container`, `C4Component`), each in a **Before**
   version (today) and an **After** version (the target): the L1 context, the L2 containers, and one
@@ -82,22 +88,29 @@ The architect writes the design to a file:
   Build only what none fits, and say why.
 - **Generality nobody needs is not built.** Build the smallest thing that does the job end to end.
 
-## 3. Independent reads
+## 3. The human sees it first
 
-Before the human sees the design, two reviewers read it **cold**, each spawned with only its mandate
-file and the inputs. Use the plan mandates, with the design in the `plan:` slot and the recon files in
-the `discovery:` slot:
+The page goes to the human **before any review**. The human catches premise errors on sight — a wrong
+reading of what was asked, a constraint that should not be one — and no reviewer working from the same
+premises can. Reviewing a design whose premise is wrong spends a round on the wrong thing. Each premise
+correction goes to the architect, who revises the page; the lead republishes.
+
+## 4. Independent reads
+
+Once the human has read the page and its premises stand, two reviewers read it **cold**, each spawned
+with only its mandate file and the inputs. Use the plan mandates, with the design in the `plan:` slot
+and the recon files in the `discovery:` slot:
 
 - `~/.claude/reviews/plan-completeness.md` — what does the design leave undecided that the build would
   have to invent?
 - `~/.claude/reviews/plan-overbuild.md` — what does the design contain that the request does not need?
 
-They cross-examine each other's findings. The architect answers every finding or adds it to the open
-decisions. Nothing reaches the human while a hole or a cut is unanswered.
+They cross-examine each other's findings. The architect answers every finding in the page or adds it
+to the open decisions.
 
-## 4. The human reviews it as a page
+## 5. The page, and walking the decisions
 
-The design goes to the human as **an artifact page, never as prose in the conversation**:
+The design reaches the human as **an artifact page, never as prose in the conversation**:
 
 - **real C4**: L1 context, L2 containers, L3 components, drawn with Mermaid's C4 notation (Person,
   System, Container, Component, boundaries, relationships) — not flowcharts labelled as C4;
@@ -115,7 +128,7 @@ honest pros and cons in prose, not an option menu, and a lean, and let the human
 not handed up. Scope, anything irreversible, and changing a bound the tree already sets go to the
 human. Each answer goes back into the page, and the page is republished.
 
-## 5. Write the ticket from the approved design
+## 6. Write the ticket from the approved design
 
 Once every open decision is answered and the human approves the design:
 
